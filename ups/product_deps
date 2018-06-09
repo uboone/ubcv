@@ -31,16 +31,17 @@ table_fragment_end
 product                 version
 ubevt                   v06_80_01
 larcv                   v06_70_00b
+larlite                 v06_70_00b
 cetbuildtools	        v7_03_03	-	only_for_build
 end_product_list
 
-qualifier      ubevt          larcv          
-c2:debug       c2:debug       c2:debug       
-c2:opt         c2:opt         c2:opt         
-c2:prof        c2:prof        c2:prof        
-e15:debug      e15:debug      e15:debug      
-e15:opt        e15:opt        e15:opt        
-e15:prof       e15:prof       e15:prof       
+qualifier      ubevt          larcv          larlite
+c2:debug       c2:debug       c2:debug       c2:debug
+c2:opt         c2:opt         c2:opt         c2:opt
+c2:prof        c2:prof        c2:prof        c2:prof
+e15:debug      e15:debug      e15:debug      e15:debug
+e15:opt        e15:opt        e15:opt        e15:opt
+e15:prof       e15:prof       e15:prof       e15:prof
 end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:

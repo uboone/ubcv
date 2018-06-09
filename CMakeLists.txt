@@ -49,7 +49,6 @@ find_ups_boost( v1_53_0 )
 find_ups_product( canvas )
 find_ups_product( ubevt v1_00_00 )
 find_ups_product( larevt v1_00_00 )
-find_ups_product( larsim v1_00_00 )
 find_ups_product( larcv v1_00_00 )
 
 # macros for dictionary and simple_plugin
