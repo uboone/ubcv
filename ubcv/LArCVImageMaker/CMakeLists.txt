@@ -14,8 +14,8 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 	  LIBRARY_NAME     uboonecode_uboone_LArCVImageMaker
 	  LIB_LIBRARIES
 	  	   larcorealg_Geometry
-		   uboone_Geometry
-		   ubooneobj_MuCS
+		   ubcore_Geometry
+		   ubobj_MuCS
 		   larcore_Geometry_Geometry_service
 	   	   nutools_ParticleNavigation lardataobj_Simulation
 		   lardataobj_RecoBase
@@ -51,9 +51,9 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 	      	   TFileMetadataMicroBooNE_service
 	      	   FileCatalogMetadataMicroBooNE_service
 		   LArCVMetaMaker_service
-		   ubooneobj_MuCS
+		   ubobj_MuCS
 		   larcorealg_Geometry
-		   uboone_Geometry
+		   ubcore_Geometry
 		   larcore_Geometry_Geometry_service
 		   nutools_ParticleNavigation lardataobj_Simulation
                    larevt_CalibrationDBI_IOVData
