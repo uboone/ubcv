@@ -39,7 +39,7 @@ ProcessDriver: {
     SuperaWire: {
       Verbosity: 2
       OutImageLabel:    "wire"
-      LArWireProducer:  "simnfspl1 gauss"
+      LArWireProducer:  "butcher"
       TimeOffset:       2400
     }
     SuperaOpDigit: {
