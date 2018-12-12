@@ -1,4 +1,3 @@
-
 #include "ubevt/Utilities/FileCatalogMetadataMicroBooNE.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art/Framework/Services/System/FileCatalogMetadata.h"
@@ -95,14 +94,14 @@ void util::LArCVMetaMaker::postEndJob()
 }
 
 //------------------------------------------------------------
-void util::LArCVMetaMaker::preProcessEvent(const art::Event& evt)
+void util::LArCVMetaMaker::preProcessEvent(const art::Event& evt, art::ScheduleContext)
 //------------------------------------------------------------
 {
   std::cout << "This is before event process" << std::endl;
 }
 
 //------------------------------------------------------------
-void util::LArCVMetaMaker::postProcessEvent(const art::Event& evt)
+void util::LArCVMetaMaker::postProcessEvent(const art::Event& evt, art::ScheduleContext)
 //------------------------------------------------------------
 {
   size_t run    = evt.run();
@@ -222,4 +221,3 @@ namespace util{
   DEFINE_ART_SERVICE(LArCVMetaMaker)
 
 } // namespace util  
-

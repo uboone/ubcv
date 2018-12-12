@@ -34,8 +34,8 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 		   ${ART_FRAMEWORK_SERVICES_REGISTRY}
 		   ${ART_FRAMEWORK_SERVICES_OPTIONAL}
 		   ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
-		   art_Persistency_Common canvas
-		   art_Persistency_Provenance canvas
+                   art_Persistency_Common
+                   art_Persistency_Provenance
 		   art_Utilities canvas
 		   ${MF_MESSAGELOGGER}
 		   
@@ -78,8 +78,8 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 		   ${ART_FRAMEWORK_SERVICES_REGISTRY}
 		   ${ART_FRAMEWORK_SERVICES_OPTIONAL}
 		   ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
-		   art_Persistency_Common canvas
-		   art_Persistency_Provenance canvas
+                   art_Persistency_Common
+                   art_Persistency_Provenance
 		   art_Utilities canvas
 		   ${MF_MESSAGELOGGER}
 		   
@@ -96,6 +96,7 @@ simple_plugin(LArCVMetaMaker "service"
 	      FileCatalogMetadataMicroBooNE_service
 	      ${ART_FRAMEWORK_SERVICES_SYSTEM_FILECATALOGMETADATA_SERVICE}	      
 	      art_Utilities canvas
+              art_Framework_Principal
 	      ${MF_MESSAGELOGGER}
 	      
 	      ${FHICLCPP}
