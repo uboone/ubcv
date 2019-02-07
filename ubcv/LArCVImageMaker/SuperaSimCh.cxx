@@ -5,8 +5,8 @@
 #include "LAr2Image.h"
 #include "ImageMetaMakerFactory.h"
 #include "PulledPork3DSlicer.h"
-#include "DataFormat/EventImage2D.h"
-#include "DataFormat/DataFormatUtil.h"
+#include "larcv/core/DataFormat/EventImage2D.h"
+#include "larcv/core/DataFormat/DataFormatUtil.h"
 namespace larcv {
 
   static SuperaSimChProcessFactory __global_SuperaSimChProcessFactory__;

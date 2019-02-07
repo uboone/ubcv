@@ -7,7 +7,7 @@
 #include "ImageMetaMakerFactory.h"
 #include "ImageMetaMaker.h"
 #include "PulledPork3DSlicer.h"
-#include "DataFormat/EventImage2D.h"
+#include "larcv/core/DataFormat/EventImage2D.h"
 
 namespace larcv {
 

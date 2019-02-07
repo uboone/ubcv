@@ -1,9 +1,10 @@
-set( LARCV_LIB -L$ENV{LARCV_LIBDIR} -llarcv )
+set( LARCV_LIB -L$ENV{LARCV_LIBDIR} -lLArCVCoreBase -lLArCVCoreCPPUtil -lLArCVCoreDataFormat -lLArCVCoreProcessor -lLArCVCorePyUtil -lLArCVCoreJSON -lLArCVAppImageMod )
 set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
 
 set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
 
-include_directories ( $ENV{LARCV_COREDIR} $ENV{LARLITE_COREDIR} )
+#include_directories ( $ENV{LARCV_COREDIR} $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} )
+include_directories ( $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} )
 
 link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARCV_LIB} ${LARLITE_LIB} ) # All execs need this.
 

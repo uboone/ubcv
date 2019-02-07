@@ -2,7 +2,7 @@
 #define __SUPERACHSTATUS_CXX__
 
 #include "SuperaChStatus.h"
-#include "DataFormat/EventChStatus.h"
+#include "larcv/core/DataFormat/EventChStatus.h"
 
 namespace larcv {
 

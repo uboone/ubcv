@@ -30,7 +30,7 @@ table_fragment_end
 
 product                 version
 ubevt                   v08_00_00_03
-larcv                   v06_70_00c
+#larcv                   v06_70_00c
 larlite                 v06_70_00c
 cetbuildtools	        v7_06_04	-	only_for_build
 end_product_list
