@@ -1,12 +1,10 @@
-set( LARCV_LIB -L$ENV{LARCV_LIBDIR} -lLArCVCoreBase -lLArCVCoreCPPUtil -lLArCVCoreDataFormat -lLArCVCoreProcessor -lLArCVCorePyUtil -lLArCVCoreJSON -lLArCVAppImageMod )
 set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
 
 set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
 
-#include_directories ( $ENV{LARCV_COREDIR} $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} )
-include_directories ( $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} )
+include_directories ( $ENV{LARLITE_COREDIR} ${LARCV_INCLUDE_DIR} )
 
-link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARCV_LIB} ${LARLITE_LIB} ) # All execs need this.
+link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ) # All execs need this.
 
 #add_subdirectory(job)
 
@@ -105,6 +103,13 @@ simple_plugin(LArCVMetaMaker "service"
 	      ${ROOT_BASIC_LIB_LIST}
               BASENAME_ONLY
 )
+
+target_link_libraries( uboonecode_uboone_LArCVImageMaker LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+target_link_libraries( SSNetHitProducer_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+target_link_libraries( LArSoftSuperaSriver_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+target_link_libraries( RSEFilter_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+target_link_libraries( VPlaneHandler_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+target_link_libraries( LArCVMetaMaker_service LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
 
 # install_headers()
 install_fhicl()

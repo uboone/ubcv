@@ -82,6 +82,22 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/ubcv/ubdlintegration/CMakeLists.txt")
   message(FATAL_ERROR "The ubdlintegration submodule was not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
 endif()
 
+# EXTERNAL non-UPS LIBS
+set( EXTERN_LIBDIR $ENV{HOME}/sl7_ubbuild02_libs )
+#set( EXTERN_LIBDIR $ENV{MRB_INSTALL} )
+
+# --- ZeroMQ
+set( ZeroMQ_DIR "${EXTERN_LIBDIR}/libzmq/share/cmake/ZeroMQ" )
+find_package(ZeroMQ REQUIRED CONFIG)
+
+set( cppzmq_DIR "${EXTERN_LIBDIR}/libzmq/share/cmake/cppzmq" )
+find_package(cppzmq REQUIRED CONFIG)
+
+# --- LArCV
+set( larcv_DIR "${EXTERN_LIBDIR}/larcv/lib/cmake/larcv" )
+find_package(larcv REQUIRED CONFIG)
+
+
 # ADD SOURCE CODE SUBDIRECTORIES HERE
 add_subdirectory(ubcv)
 
