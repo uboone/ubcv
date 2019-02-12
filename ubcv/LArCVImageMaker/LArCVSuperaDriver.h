@@ -72,7 +72,7 @@ namespace larcv {
     inline std::vector<std::string> ProcessNames() const
     { return _driver.process_names(); }
 
-    ProcessDriver driver() { return _driver; };
+    ProcessDriver& driver() { return _driver; };
 
   private:
 
