@@ -16,14 +16,17 @@ namespace ubdldata {
       _meta_xmax(0),
       _meta_ymax(0),
       _ncols(0),
-      _nrows(0)
+      _nrows(0),
+      _id(-1),
+      _pixel_width(0),
+      _pixel_height(0)
   {
     
   }
 
   pixeldata::pixeldata( std::vector< std::vector<float> >& data_v,
 			float meta_xmin, float meta_ymin, float meta_xmax, float meta_ymax,
-			int ncols, int nrows, int dim_per_point, int label,
+			int ncols, int nrows, int id, int dim_per_point, int label,
 			bool data_is_array_indices ) 
     : _dim_per_point(dim_per_point),
       _label(label),
@@ -32,9 +35,12 @@ namespace ubdldata {
       _meta_xmax(meta_xmax),
       _meta_ymax(meta_ymax),
       _ncols(ncols),
-      _nrows(nrows)
+      _nrows(nrows),
+      _id(id),
+      _pixel_width(0),
+      _pixel_height(0)
   {
-
+    
     // sanity checks
     if ( _meta_xmin>_meta_xmax ) throw std::runtime_error( "pixeldata::pixeldata(...) input xmin>xmax!" );
     if ( _meta_ymin>_meta_ymax ) throw std::runtime_error( "pixeldata::pixeldata(...) input ymin>ymax!" );

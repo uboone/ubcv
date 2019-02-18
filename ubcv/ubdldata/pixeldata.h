@@ -49,8 +49,9 @@ namespace ubdldata {
     /// constructor with all inputs prepared
     pixeldata( std::vector< std::vector<float> >& data_v,
 	       float meta_xmin, float meta_ymin, float meta_xmax, float meta_ymax,
-	       int ncols, int nrows, int dim_per_point=2, int label=0, bool data_is_array_indices=false );
-    ~pixeldata() {}
+	       int ncols, int nrows, int id=-1, int dim_per_point=2, int label=0, 
+	       bool data_is_array_indices=false );
+    virtual ~pixeldata() {}
 
     /// return number of (x,y) points which have data
     int   len() const { return _data_v.size()/_dim_per_point; };
@@ -78,6 +79,9 @@ namespace ubdldata {
 
     /// get row given y-coordinate
     int   row( float y, bool checkbounds=false ) const;
+
+    /// get id number (example, use for plane ID)
+    int  id() const { return _id; };
 
     /// check if region represented contains (x,y)
     bool  contains( float x, float y ) const;
@@ -119,6 +123,7 @@ namespace ubdldata {
     float _meta_ymax;
     int   _ncols;
     int   _nrows;
+    int   _id;
     float _pixel_width;
     float _pixel_height;
     
