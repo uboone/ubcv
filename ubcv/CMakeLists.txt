@@ -1,2 +1,3 @@
 add_subdirectory(LArCVImageMaker)
+add_subdirectory(ubdldata)
 add_subdirectory(ubdlintegration)
