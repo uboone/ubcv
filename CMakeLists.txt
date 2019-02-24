@@ -85,24 +85,26 @@ endif()
 # EXTERNAL non-UPS LIBS
 #set( EXTERN_LIBDIR $ENV{HOME}/sl7_ubbuild02_libs )
 set( EXTERN_LIBDIR $ENV{MRB_INSTALL} )
+set( UPS_PRODUCT_DIR /uboone/app/users/tmw/ups_dev/products )
 
 # --- ZeroMQ
-set( ZeroMQ_DIR "${EXTERN_LIBDIR}/libzmq/install/share/cmake/ZeroMQ" )
+set( ZeroMQ_DIR "${UPS_PRODUCT_DIR}/libzmq/v4_3_1/Linux64bit+3.10-2.17_e17_prof/share/cmake/ZeroMQ" )
 find_package(ZeroMQ REQUIRED CONFIG)
 
-set( cppzmq_DIR "${EXTERN_LIBDIR}/cppzmq/install/share/cmake/cppzmq" )
+set( cppzmq_DIR "${UPS_PRODUCT_DIR}/cppzmq/v4_3_0/Linux64bit+3.10-2.17_e17_prof/share/cmake/cppzmq" )
 find_package(cppzmq REQUIRED CONFIG)
 
 # --- LArCV
-set( larcv_DIR "${EXTERN_LIBDIR}/ubdl/larcv/build/installed/lib/cmake/larcv" )
+set( larcv_DIR "${UPS_PRODUCT_DIR}/ubdl/v1_0_0/Linux64bit+3.10-2.17_e17_prof/larcv/build/installed/lib/cmake/larcv" )
 find_package(larcv REQUIRED CONFIG)
 
 # --- UB LArCV APP
-set( ublarcvapp_DIR "${EXTERN_LIBDIR}/ubdl/ublarcvapp/build/lib/cmake/ublarcvapp" )
+set( ublarcvapp_DIR "${UPS_PRODUCT_DIR}/ubdl/v1_0_0/Linux64bit+3.10-2.17_e17_prof/ublarcvapp/build/lib/cmake/ublarcvapp" )
 find_package(ublarcvapp REQUIRED CONFIG)
 
 # --- Torch
-set( Torch_DIR "${EXTERN_LIBDIR}/libtorch/share/cmake/Torch" )
+#set( Torch_DIR "${EXTERN_LIBDIR}/libtorch/share/cmake/Torch" )
+set( Torch_DIR "${UPS_PRODUCT_DIR}/libtorch/v1_0_1/Linux64bit+3.10-2.17_e17_prof_openblas_nonnpack/share/cmake/Torch" )
 find_package( Torch CONFIG )
 
 # ADD SOURCE CODE SUBDIRECTORIES HERE
