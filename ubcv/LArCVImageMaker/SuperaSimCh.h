@@ -49,6 +49,7 @@ namespace larcv {
   private:
 
     unsigned short _origin;
+    bool _tick_backward;
 
   };
 

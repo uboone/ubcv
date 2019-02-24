@@ -18,7 +18,7 @@ namespace supera {
 			 const larcv::EventChStatus& ev_chstatus,
 			 const std::vector<float>& row_compression_factor,
 			 const std::vector<float>& col_compression_factor,
-			 const int time_offset );
+			 const int time_offset, const bool edep_at_anode=false );
 
   std::vector<larcv::Image2D>
     SimEnergyDeposit2LArFlowImages( const std::vector<larcv::ImageMeta>& meta_v,
@@ -28,7 +28,7 @@ namespace supera {
 				    const larcv::EventChStatus& ev_chstatus,
 				    const std::vector<float>& row_compression_factor,
 				    const std::vector<float>& col_compression_factor,
-				    const int time_offset );
+				    const int time_offset, const bool edep_at_anode=false );
   
 }
 #endif

@@ -47,6 +47,10 @@ namespace larcv {
 
     void finalize();
 
+  protected:
+    
+    bool _tick_backward; ///< fill image2d rows in reverse-tick order (old, default behavior)
+
   };
 
   /**

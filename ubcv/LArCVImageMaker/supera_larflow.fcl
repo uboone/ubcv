@@ -3,8 +3,8 @@ ProcessDriver: {
   Verbosity:    1
   EnableFilter: false
   RandomAccess: false
-  ProcessType:  ["SuperaMetaMaker","SuperaWire","SuperaChStatus","WireMask","SuperaLArFlow"]
-  ProcessName:  ["SuperaMetaMaker","SuperaWire","SuperaChStatus","WireMask","SuperaLArFlow"]
+  ProcessType:  ["SuperaMetaMaker","SuperaWire","SuperaChStatus","SuperaLArFlow"]
+  ProcessName:  ["SuperaMetaMaker","SuperaWire","SuperaChStatus","SuperaLArFlow"]
 
   IOManager: {
     Verbosity:   2
@@ -44,14 +44,20 @@ ProcessDriver: {
       OutImageLabel:    "wire"
       LArWireProducer:  "butcher"
       TimeOffset:       2400
+      TickBackward: false
     }
     SuperaLArFlow: {
       Verbosity: 0
-      OutImageLabel:      "larflow"
-      LArMCTruthProducer: "generator"
-      WireProducer:       "wire"
-      ChStatusProducer:   "wire"
-      LArSimEdepProducer: "ionization"
+      OutImageLabel:       "larflow"
+      LArMCTruthProducer:  "generator"
+      LArMCTrackProducer:  "mcreco"
+      LArMCShowerProducer: "mcreco"
+      WireProducer:        "wire"
+      ChStatusProducer:    "wire"
+      #LArSimEdepProducer: "largeant TPCActive"
+      #LArSimChProducer:   "largeant"
+      LArSimChProducer:    "driftWC simpleSC"
+      EdepAtAnode: true
     }
   }
 }

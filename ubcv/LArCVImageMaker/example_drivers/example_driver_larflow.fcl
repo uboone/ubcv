@@ -3,7 +3,8 @@
 BEGIN_PROLOG
 
 SuperaLArFlow: @local::SuperaWholeView
-SuperaLArFlow.supera_params: "../supera_larflow.fcl"
+#SuperaLArFlow.supera_params: "../supera_larflow.fcl"
+SuperaLArFlow.supera_params: "../supera_mctruth.fcl"
 
 
 END_PROLOG

@@ -33,6 +33,7 @@ namespace larcv {
     else {
       throw std::runtime_error("SuperaLArFlow: must specifc only one SimCh or SimEdep producer");
     }
+    _edep_at_anode     = cfg.get<bool>("EdepAtAnode",false);
   }
 
   void SuperaLArFlow::initialize()
@@ -71,49 +72,61 @@ namespace larcv {
     std::vector<larcv::ROIType_t> track2type_v;
     if ( !_use_edep ) {
       // MCShower and MCTrack objects needed for SimCh method
-      LARCV_DEBUG() << "load mctrack" << std::endl;
-      for(auto const& mctrack : LArData<supera::LArMCTrack_t>()) {
-	//std::cout << "mctrack id=" << mctrack.TrackID() << " pdg=" << mctrack.PdgCode() << " origin=" << mctrack.Origin() << std::endl;
-	
-	if(_origin && ((unsigned short)(mctrack.Origin())) != _origin) continue;
-	
-	if(mctrack.TrackID() >= track2type_v.size())
-	  track2type_v.resize(mctrack.TrackID()+1,larcv::ROIType_t::kROIUnknown);
-	track2type_v[mctrack.TrackID()] = larcv::PdgCode2ROIType(mctrack.PdgCode());
-	
-	if(mctrack.MotherTrackID() >= track2type_v.size())
-	  track2type_v.resize(mctrack.MotherTrackID()+1,larcv::ROIType_t::kROIUnknown);
-	track2type_v[mctrack.MotherTrackID()] = larcv::PdgCode2ROIType(mctrack.MotherPdgCode());
-	
-	if(mctrack.AncestorTrackID() >= track2type_v.size())
-	  track2type_v.resize(mctrack.AncestorTrackID()+1,larcv::ROIType_t::kROIUnknown);
-	track2type_v[mctrack.AncestorTrackID()] = larcv::PdgCode2ROIType(mctrack.AncestorPdgCode());
+      //LARCV_DEBUG() << "load mctrack" << std::endl;
+      try {
+	for(auto const& mctrack : LArData<supera::LArMCTrack_t>()) {
+	  //std::cout << "mctrack id=" << mctrack.TrackID() << " pdg=" << mctrack.PdgCode() << " origin=" << mctrack.Origin() << std::endl;
+	  
+	  if(_origin && ((unsigned short)(mctrack.Origin())) != _origin) continue;
+	  
+	  if(mctrack.TrackID() >= track2type_v.size())
+	    track2type_v.resize(mctrack.TrackID()+1,larcv::ROIType_t::kROIUnknown);
+	  track2type_v[mctrack.TrackID()] = larcv::PdgCode2ROIType(mctrack.PdgCode());
+	  
+	  if(mctrack.MotherTrackID() >= track2type_v.size())
+	    track2type_v.resize(mctrack.MotherTrackID()+1,larcv::ROIType_t::kROIUnknown);
+	  track2type_v[mctrack.MotherTrackID()] = larcv::PdgCode2ROIType(mctrack.MotherPdgCode());
+	  
+	  if(mctrack.AncestorTrackID() >= track2type_v.size())
+	    track2type_v.resize(mctrack.AncestorTrackID()+1,larcv::ROIType_t::kROIUnknown);
+	  track2type_v[mctrack.AncestorTrackID()] = larcv::PdgCode2ROIType(mctrack.AncestorPdgCode());
+	}
+      }
+      catch( std::exception& e ) {
+	LARCV_CRITICAL() << "Error loading mctrack info: " << e.what() << std::endl;
+	throw cet::exception("SuperLArFlow") << __FUNCTION__ << ":" << __FILE__ << ":" <<  __LINE__ << std::endl;
       }
       
-      LARCV_DEBUG() << "load mcshower" << std::endl;
-      for(auto const& mcshower : LArData<supera::LArMCShower_t>()) {
-	
-	if(_origin && ((unsigned short)(mcshower.Origin())) != _origin) continue;
-	
-	if(mcshower.TrackID() >= track2type_v.size())
-	  track2type_v.resize(mcshower.TrackID()+1,larcv::ROIType_t::kROIUnknown);
-	track2type_v[mcshower.TrackID()] = larcv::PdgCode2ROIType(mcshower.PdgCode());
-	
-	if(mcshower.MotherTrackID() >= track2type_v.size())
-	  track2type_v.resize(mcshower.MotherTrackID()+1,larcv::ROIType_t::kROIUnknown);
-	track2type_v[mcshower.MotherTrackID()] = larcv::PdgCode2ROIType(mcshower.MotherPdgCode());
-	
-	if(mcshower.AncestorTrackID() >= track2type_v.size())
-	  track2type_v.resize(mcshower.AncestorTrackID()+1,larcv::ROIType_t::kROIUnknown);
-	track2type_v[mcshower.AncestorTrackID()] = larcv::PdgCode2ROIType(mcshower.AncestorPdgCode());
-	
-	for(auto const& daughter_track_id : mcshower.DaughterTrackID()) {
-	  if(daughter_track_id == larcv::kINVALID_UINT)
-	    continue;
-	  if(daughter_track_id >= track2type_v.size())
-	    track2type_v.resize(daughter_track_id+1,larcv::ROIType_t::kROIUnknown);
-	  track2type_v[daughter_track_id] = track2type_v[mcshower.TrackID()];
+      //LARCV_DEBUG() << "load mcshower" << std::endl;
+      try {
+	for(auto const& mcshower : LArData<supera::LArMCShower_t>()) {
+	  
+	  if(_origin && ((unsigned short)(mcshower.Origin())) != _origin) continue;
+	  
+	  if(mcshower.TrackID() >= track2type_v.size())
+	    track2type_v.resize(mcshower.TrackID()+1,larcv::ROIType_t::kROIUnknown);
+	  track2type_v[mcshower.TrackID()] = larcv::PdgCode2ROIType(mcshower.PdgCode());
+	  
+	  if(mcshower.MotherTrackID() >= track2type_v.size())
+	    track2type_v.resize(mcshower.MotherTrackID()+1,larcv::ROIType_t::kROIUnknown);
+	  track2type_v[mcshower.MotherTrackID()] = larcv::PdgCode2ROIType(mcshower.MotherPdgCode());
+	  
+	  if(mcshower.AncestorTrackID() >= track2type_v.size())
+	    track2type_v.resize(mcshower.AncestorTrackID()+1,larcv::ROIType_t::kROIUnknown);
+	  track2type_v[mcshower.AncestorTrackID()] = larcv::PdgCode2ROIType(mcshower.AncestorPdgCode());
+	  
+	  for(auto const& daughter_track_id : mcshower.DaughterTrackID()) {
+	    if(daughter_track_id == larcv::kINVALID_UINT)
+	      continue;
+	    if(daughter_track_id >= track2type_v.size())
+	      track2type_v.resize(daughter_track_id+1,larcv::ROIType_t::kROIUnknown);
+	    track2type_v[daughter_track_id] = track2type_v[mcshower.TrackID()];
+	  }
 	}
+      }
+      catch (std::exception& e) {
+	LARCV_CRITICAL() << "Error loading mcshower info: " << e.what() << std::endl;
+	throw cet::exception("SuperLArFlow") << __FUNCTION__ << ":" << __FILE__ << ":" <<  __LINE__ << std::endl;
       }
     }
 
