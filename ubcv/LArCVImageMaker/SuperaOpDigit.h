@@ -17,7 +17,7 @@
 #include "FMWKInterface.h"
 #include "ParamsImage2D.h"
 #include "ImageMetaMaker.h"
-#include "larcv/core/DataFormat/Image2D.h"
+#include "DataFormat/Image2D.h"
 
 namespace larcv {
 

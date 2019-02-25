@@ -3,8 +3,8 @@ ProcessDriver: {
   Verbosity:    1
   EnableFilter: false
   RandomAccess: false
-  ProcessType:  ["SuperaMetaMaker","SuperaSimCh","SuperaMCROI","SuperaWire","SuperaChStatus","SuperaLArFlow"]
-  ProcessName:  ["SuperaMetaMaker","SuperaSimCh","SuperaMCROI","SuperaWire","SuperaChStatus","SuperaLArFlow"]
+  ProcessType:  ["SuperaMetaMaker","SuperaSimCh","SuperaInstanceImage","SuperaMCROI","SuperaWire","SuperaChStatus","SuperaLArFlow"]
+  ProcessName:  ["SuperaMetaMaker","SuperaSimCh","SuperaInstanceImage","SuperaMCROI","SuperaWire","SuperaChStatus","SuperaLArFlow"]
 
   IOManager: {
     Verbosity:   2
@@ -31,13 +31,13 @@ ProcessDriver: {
     }
     WireMask: {
       Verbosity: 2
-      ChStatusProducer: "wire"
-      ImageProducer:    "wire"
+      ChStatusProducer: "wiremc"
+      ImageProducer:    "wiremc"
     }
     SuperaChStatus: {
       Verbosity: 2
       LArChStatusProducer: "chstatus"
-      OutChStatusLabel:    "wire"
+      OutChStatusLabel:    "wiremc"
     }
     SuperaSimCh: {
       Verbosity: 2
@@ -53,7 +53,7 @@ ProcessDriver: {
     }
     SuperaWire: {
       Verbosity: 2
-      OutImageLabel:    "wire"
+      OutImageLabel:    "wiremc"
       LArWireProducer:  "butcher"
       TimeOffset:       2400
       TickBackward: true
@@ -64,13 +64,24 @@ ProcessDriver: {
       LArMCTruthProducer:  "generator"
       LArMCTrackProducer:  "mcreco"
       LArMCShowerProducer: "mcreco"
-      WireProducer:        "wire"
-      ChStatusProducer:    "wire"
-      #LArSimEdepProducer: "largeant TPCActive"
-      #LArSimEdepProducer: "ionization"
-      #LArSimChProducer: "largeant"
+      WireProducer:        "wiremc"
+      ChStatusProducer:    "wiremc"
       LArSimChProducer: "driftWC simpleSC"
       EdepAtAnode: true
+      TickBackward: true
+    }
+    SuperaInstanceImage: {
+      Verbosity: 0
+      OutImageLabel:        "instance"
+      AncestorImageLabel:   "ancestor"
+      OutROILabel:          "segment"
+      LArMCTruthProducer:   "generator"
+      LArMCTrackProducer:   "mcreco"
+      LArMCShowerProducer:  "mcreco"
+      LArSimChProducer:     "largeant"
+      ChStatusProducer:     "wiremc"
+      Origin: 0
+      TimeOffset:       2400
     }
     SuperaMCROI: {
       Verbosity: 2

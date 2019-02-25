@@ -16,8 +16,8 @@
 //#ifndef __CINT__
 //#ifndef __CLING__
 #include <iostream>
-#include "larcv/core/Base/larcv_base.h"
-#include "larcv/core/Processor/ProcessDriver.h"
+#include "Base/larcv_base.h"
+#include "Processor/ProcessDriver.h"
 #include "FMWKInterface.h"
 #include "SuperaTypes.h"
 #include "SuperaBase.h"

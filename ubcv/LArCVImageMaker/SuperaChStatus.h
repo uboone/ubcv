@@ -13,7 +13,7 @@
     @{*/
 #ifndef __SUPERACHSTATUS_H__
 #define __SUPERACHSTATUS_H__
-#include "larcv/core/DataFormat/ChStatus.h"
+#include "DataFormat/ChStatus.h"
 #include "SuperaBase.h"
 #include "FMWKInterface.h"
 #include "ParamsChStatus.h"

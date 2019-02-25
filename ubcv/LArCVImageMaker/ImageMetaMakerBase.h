@@ -14,8 +14,8 @@
 #ifndef __IMAGEMETAMAKERBASE_H__
 #define __IMAGEMETAMAKERBASE_H__
 
-#include "larcv/core/Base/larcv_base.h"
-#include "larcv/core/DataFormat/ImageMeta.h"
+#include "Base/larcv_base.h"
+#include "DataFormat/ImageMeta.h"
 #include "FMWKInterface.h"
 
 namespace supera {

@@ -71,6 +71,7 @@ ProcessDriver: {
       #LArSimChProducer: "largeant"
       LArSimChProducer: "driftWC simpleSC"
       EdepAtAnode: true
+      TickBackward: false
     }
     SuperaMCROI: {
       Verbosity: 2

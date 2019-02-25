@@ -2,7 +2,7 @@
 #define __SUPERA_LARFLOW_LAR2IMAGE_CXX__
 
 #include "LArFlowLAr2Image.h"
-#include "larcv/core/Base/larcv_logger.h"
+#include "Base/larcv_logger.h"
 #include "LArUtil/Geometry.h"
 
 #include "larevt/SpaceChargeServices/SpaceChargeService.h" 
@@ -130,7 +130,7 @@ namespace supera {
 	    }
 	    else {
 	      // old simch
-	      x = edep.x;
+	      double x = edep.x;
 	      supera::ApplySCE(x,y,z);
 	      pos3d[0] = x;
 	    }
@@ -198,10 +198,12 @@ namespace supera {
     std::vector<larcv::Image2D> img_vis_v;
     for ( auto const& img : flow_v ) {
       const larcv::ImageMeta& meta = img.meta();
+      float origin_y = meta.min_y();
+      if ( tick_backward )
+	origin_y = meta.max_y();
       larcv::ImageMeta meta_out(meta.width(), meta.height(), 
 				int( meta.rows()/row_compression_factor.at(meta.plane()) ), int( meta.cols()/col_compression_factor.at(meta.plane()) ),
-				//meta.min_x(), meta.max_y(), 
-				meta.min_x(), meta.min_y(), 
+				meta.min_x(), origin_y,
 				meta.plane() );
       larcv::Image2D img_out( meta_out );
       img_out.paint(0.0);
@@ -272,7 +274,8 @@ namespace supera {
 				  const larcv::EventChStatus& ev_chstatus,
 				  const std::vector<float>& row_compression_factor,
 				  const std::vector<float>& col_compression_factor,			 
-				  const int time_offset, const bool edep_at_anode ) {
+				  const int time_offset, const bool edep_at_anode, 
+				  const bool tick_backward ) {
 
     std::cout << "SimEnergyDeposit2LArFlowImages: start" << std::endl;
     LARCV_SINFO() << "Filling Pixel-flow truth image..." << std::endl;
@@ -502,10 +505,12 @@ namespace supera {
     std::vector<larcv::Image2D> comp_out_v;
     for ( auto const& flowimg : flow_v ) {
       const larcv::ImageMeta& meta = flowimg.meta();
+      float origin_y = meta.min_y();
+      if ( tick_backward )
+	origin_y = meta.max_y();
       larcv::ImageMeta meta_out(meta.width(), meta.height(), 
 				int( meta.rows()/row_compression_factor.at(meta.plane()) ), int( meta.cols()/col_compression_factor.at(meta.plane()) ),
-				//meta.min_x(), meta.max_y(), 
-				meta.min_x(), meta.min_y(), 
+				meta.min_x(), origin_y,
 				meta.plane() );
       larcv::Image2D img_out( meta_out );
       img_out.paint(0.0);

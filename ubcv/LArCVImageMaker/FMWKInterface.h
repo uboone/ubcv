@@ -4,7 +4,7 @@
 //#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 #include "larcore/Geometry/Geometry.h"
 #include "fhiclcpp/ParameterSet.h"
-#include "larcv/core/Base/PSet.h"
+#include "Base/PSet.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Wire.h"

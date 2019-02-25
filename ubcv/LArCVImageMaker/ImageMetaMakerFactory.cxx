@@ -1,7 +1,7 @@
 #ifndef __IMAGEMETAMAKERFACTORY_CXX__
 #define __IMAGEMETAMAKERFACTORY_CXX__
 
-#include "larcv/core/Base/larcv_logger.h"
+#include "Base/larcv_logger.h"
 #include "ImageMetaMakerFactory.h"
 #include "ImageMetaFromConfig.h"
 #include "PulledPork3DSlicer.h"

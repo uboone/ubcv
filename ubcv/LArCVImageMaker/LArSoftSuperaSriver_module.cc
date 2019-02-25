@@ -32,7 +32,7 @@
 
 #include "LArCVMetaMaker.h"
 #include "LArCVSuperaDriver.h"
-#include "larcv/core/Base/PSet.h"
+#include "Base/PSet.h"
 
 class LArSoftSuperaSriver;
 

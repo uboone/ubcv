@@ -3,8 +3,8 @@
 //#ifndef __CINT__
 //#ifndef __CLING__
 #include "FMWKInterface.h"
-#include "larcv/core/DataFormat/Image2D.h"
-#include "larcv/core/DataFormat/EventChStatus.h"
+#include "DataFormat/Image2D.h"
+#include "DataFormat/EventChStatus.h"
 #include <map>
 
 namespace supera {

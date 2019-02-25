@@ -9,7 +9,7 @@ SuperaLArFlow: @local::SuperaWholeView
 
 # full-mctruth: segment+instance+ancestor+larflow
 # when using ups larcv/larlite
-SuperaLArFlow.supera_params: "../supera_mctruth.fcl" 
+SuperaLArFlow.supera_params: "../supera_mctruth_all.fcl" 
 
 # full-mctruth: segment+instance+ancestor+larflow
 # when using ubdl

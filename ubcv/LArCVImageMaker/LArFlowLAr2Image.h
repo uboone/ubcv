@@ -3,8 +3,8 @@
 //#ifndef __CINT__
 //#ifndef __CLING__
 #include "FMWKInterface.h"
-#include "larcv/core/DataFormat/Image2D.h"
-#include "larcv/core/DataFormat/EventChStatus.h"
+#include "DataFormat/Image2D.h"
+#include "DataFormat/EventChStatus.h"
 
 namespace supera {
 
@@ -29,7 +29,8 @@ namespace supera {
 				    const larcv::EventChStatus& ev_chstatus,
 				    const std::vector<float>& row_compression_factor,
 				    const std::vector<float>& col_compression_factor,
-				    const int time_offset, const bool edep_at_anode=false );
+				    const int time_offset, const bool edep_at_anode=false,
+				    const bool tick_backward=true );
   
 }
 #endif

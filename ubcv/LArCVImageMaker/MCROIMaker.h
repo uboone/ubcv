@@ -11,10 +11,10 @@
 //#include "SimulationBase/MCParticle.h"
 
 // LArCV
-#include "larcv/core/Base/larcv_base.h"
-#include "larcv/core/Base/Range.h"
-#include "larcv/core/DataFormat/ROI.h"
-#include "larcv/core/DataFormat/DataFormatUtil.h"
+#include "Base/larcv_base.h"
+#include "Base/Range.h"
+#include "DataFormat/ROI.h"
+#include "DataFormat/DataFormatUtil.h"
 #include "FMWKInterface.h"
 
 namespace supera {
