@@ -20,6 +20,7 @@ namespace larcv {
     SuperaBase::configure(cfg);
     supera::ParamsImage2D::configure(cfg);
     supera::ImageMetaMaker::configure(cfg);
+    _tick_backward = cfg.get<bool>("TickBackward",true);
   }
 
   void SuperaWire::initialize()
@@ -52,7 +53,7 @@ namespace larcv {
       throw larbys();
     }
 
-    auto image_v = supera::Wire2Image2D(meta_v, LArData<supera::LArWire_t>(), TimeOffset());
+    auto image_v = supera::Wire2Image2D(meta_v, LArData<supera::LArWire_t>(), TimeOffset(), _tick_backward);
 
     for(size_t plane=0; plane<image_v.size(); ++plane) {
       auto& image = image_v[plane];
