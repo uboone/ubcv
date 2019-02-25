@@ -13,7 +13,8 @@ namespace supera {
     kLArMCTruth_t,   ///< simb::MCTruth
     kLArMCTrack_t,   ///< sim::MCTrack
     kLArMCShower_t,  ///< sim::MCShower
-    kLArSimCh_t,      ///< sim::SimChannel
+    kLArSimCh_t,     ///< sim::SimChannel
+    kLArSimEdep_t,   ///< sim::SimEnergyDeposit
     kLArDataTypeMax 
   };
 
@@ -27,6 +28,7 @@ namespace supera {
   template<> LArDataType_t LArDataType<supera::LArMCTrack_t>();
   template<> LArDataType_t LArDataType<supera::LArMCShower_t>();
   template<> LArDataType_t LArDataType<supera::LArSimCh_t>();
+  template<> LArDataType_t LArDataType<supera::LArSimEdep_t>();
 
   class RSEID {
   public:

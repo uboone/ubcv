@@ -24,6 +24,7 @@ namespace larcv {
   
   void SuperaBase::configure(const PSet& cfg)
   {
+
     _time_offset  = cfg.get<int>("TimeOffset",2400);
     
     auto producer_wire     = cfg.get<std::string>("LArWireProducer",    "");
@@ -33,6 +34,7 @@ namespace larcv {
     auto producer_mctrack  = cfg.get<std::string>("LArMCTrackProducer", "");
     auto producer_mcshower = cfg.get<std::string>("LArMCShowerProducer","");
     auto producer_simch    = cfg.get<std::string>("LArSimChProducer",   "");
+    auto producer_simedep  = cfg.get<std::string>("LArSimEdepProducer", "");
 
     if(!producer_wire.empty()    ) {
       LARCV_INFO() << "Requesting Wire data product by " << producer_wire << std::endl;
@@ -69,6 +71,11 @@ namespace larcv {
       Request(supera::LArDataType_t::kLArSimCh_t, producer_simch);
     }
 
+    if(!producer_simedep.empty()   ) {
+      LARCV_INFO() << "Requesting SimEnergyDeposit data product by " << producer_simedep << std::endl;
+      Request(supera::LArDataType_t::kLArSimEdep_t, producer_simedep);
+    }
+
   }
 
   void SuperaBase::initialize()
@@ -92,6 +99,7 @@ namespace larcv {
     _ptr_hit_v      = nullptr;
     _ptr_opdigit_v  = nullptr;
     _ptr_sch_v      = nullptr;
+    _ptr_sed_v      = nullptr;
     _ptr_mctruth_v  = nullptr;
     _ptr_mct_v      = nullptr;
     _ptr_mcs_v      = nullptr;
@@ -108,6 +116,9 @@ namespace larcv {
 
   template <> const std::vector<supera::LArSimCh_t>& SuperaBase::LArData<supera::LArSimCh_t>() const
   { if(!_ptr_sch_v) throw larbys("SimCh data pointer not available"); return *_ptr_sch_v; }
+
+  template <> const std::vector<supera::LArSimEdep_t>& SuperaBase::LArData<supera::LArSimEdep_t>() const
+  { if(!_ptr_sed_v) throw larbys("SimEdep data pointer not available"); return *_ptr_sed_v; }
 
   template <> const std::vector<supera::LArMCTruth_t>& SuperaBase::LArData<supera::LArMCTruth_t>() const
   { if(!_ptr_mctruth_v) throw larbys("MCTruth data pointer not available"); return *_ptr_mctruth_v; }
@@ -138,6 +149,9 @@ namespace larcv {
 
   template <> void SuperaBase::LArData(const std::vector<supera::LArSimCh_t>& data_v)
   { _ptr_sch_v = (std::vector<supera::LArSimCh_t>*)(&data_v); }
+
+  template <> void SuperaBase::LArData(const std::vector<supera::LArSimEdep_t>& data_v)
+  { _ptr_sed_v = (std::vector<supera::LArSimEdep_t>*)(&data_v); }
   
 }
 #endif

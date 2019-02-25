@@ -5,8 +5,8 @@
 #include "Instance2Image.h"
 #include "ImageMetaMakerFactory.h"
 #include "PulledPork3DSlicer.h"
-#include "DataFormat/EventImage2D.h"
-#include "DataFormat/DataFormatUtil.h"
+#include "larcv/core/DataFormat/EventImage2D.h"
+#include "larcv/core/DataFormat/DataFormatUtil.h"
 namespace larcv {
 
   static SuperaInstanceImageProcessFactory __global_SuperaInstanceImageProcessFactory__;
@@ -69,8 +69,8 @@ namespace larcv {
     // the map I need to make
     // [trackid] -> [ancenstor id]
 
-    std::cout << "==============================================" << std::endl;
-    std::cout << "MC Track Scraping" << std::endl;
+    //std::cout << "==============================================" << std::endl;
+    LARCV_DEBUG() << "MC Track Scraping" << std::endl;
 
     std::map<int,int> trackid2ancestorid;
 
@@ -88,8 +88,8 @@ namespace larcv {
       trackid2ancestorid[mctrack.TrackID()] = mctrack.AncestorTrackID();
     }
 
-    std::cout << "==============================================" << std::endl;
-    std::cout << "MC Shower Scraping" << std::endl;
+    //std::cout << "==============================================" << std::endl;
+    LARCV_DEBUG() << "MC Shower Scraping" << std::endl;
     for(auto const& mcshower : LArData<supera::LArMCShower_t>()) {
 
       // std::cout << "mcshower: "

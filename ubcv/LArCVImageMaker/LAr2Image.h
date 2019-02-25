@@ -3,9 +3,9 @@
 //#ifndef __CINT__
 //#ifndef __CLING__
 #include "FMWKInterface.h"
-#include "DataFormat/Image2D.h"
-#include "DataFormat/Pixel2DCluster.h"
-#include "DataFormat/Voxel3D.h"
+#include "larcv/core/DataFormat/Image2D.h"
+#include "larcv/core/DataFormat/Pixel2DCluster.h"
+#include "larcv/core/DataFormat/Voxel3D.h"
 
 namespace supera {
 
@@ -25,11 +25,11 @@ namespace supera {
   //
   larcv::Image2D Wire2Image2D(const larcv::ImageMeta& meta,
 			      const std::vector<supera::LArWire_t>& wires,
-			      const int time_offset=0);
+			      const int time_offset=0, const bool tick_backward=false);
   
   std::vector<larcv::Image2D> Wire2Image2D(const std::vector<larcv::ImageMeta>& meta_v,
 					   const std::vector<supera::LArWire_t>& wires,
-					   const int time_offset=0);
+					   const int time_offset=0, const bool tick_backward=false);
 
   //
   // OpDigit => Image2D
@@ -44,7 +44,7 @@ namespace supera {
   std::vector<larcv::Image2D> SimCh2Image2D(const std::vector<larcv::ImageMeta>& meta_v,
 					    const std::vector<larcv::ROIType_t>& track2type_v,
 					    const std::vector<supera::LArSimCh_t>& sch_v,
-					    const int time_offset);
+					    const int time_offset, const bool tick_backward=false);
 
   //
   // SimChannel => Voxel3D

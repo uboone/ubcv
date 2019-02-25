@@ -23,10 +23,10 @@
 
 #include "LArCVMetaMaker.h"
 #include "LArCVSuperaDriver.h"
-#include "Base/PSet.h"
+#include "larcv/core/Base/PSet.h"
 
-#include "DataFormat/EventImage2D.h"
-#include "DataFormat/IOManager.h"
+#include "larcv/core/DataFormat/EventImage2D.h"
+#include "larcv/core/DataFormat/IOManager.h"
 
 #include "TFile.h"
 #include "TTree.h"

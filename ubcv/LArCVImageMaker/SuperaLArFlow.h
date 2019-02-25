@@ -20,7 +20,7 @@
 #include "FMWKInterface.h"
 #include "ImageMetaMaker.h"
 #include "ParamsImage2D.h"
-#include "DataFormat/Image2D.h"
+#include "larcv/core/DataFormat/Image2D.h"
 
 namespace larcv {
 
@@ -52,7 +52,12 @@ namespace larcv {
   private:
 
     unsigned short _origin;
+    std::string    _wire_producer;
     std::string    _chstatus_producer;
+    std::string    _simch_producer;
+    std::string    _simedep_producer;
+    bool           _use_edep;
+    bool           _edep_at_anode;
 
   };
 

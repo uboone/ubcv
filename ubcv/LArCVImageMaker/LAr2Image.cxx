@@ -2,7 +2,7 @@
 #define __SUPERA_LAR2IMAGE_CXX__
 
 #include "LAr2Image.h"
-#include "Base/larcv_logger.h"
+#include "larcv/core/Base/larcv_logger.h"
 
 namespace supera {
 
@@ -16,7 +16,7 @@ namespace supera {
     const int ymin = (meta.min_y() >= 0 ? meta.min_y() : 0);
     larcv::Image2D img(meta);
 
-    LARCV_SINFO() << "Filling an image: " << meta.dump();
+    LARCV_SINFO() << "Filling an image: " << meta.dump() << std::endl;
     LARCV_SINFO() << "(ymin,ymax) = (" << ymin << "," << ymax << ")" << std::endl;
 
     for(auto const& h : hits) {
@@ -50,7 +50,7 @@ namespace supera {
   
   larcv::Image2D Wire2Image2D(const larcv::ImageMeta& meta,
 			      const std::vector<supera::LArWire_t>& wires,
-			      const int time_offset)
+			      const int time_offset, const bool tick_backward)
   {
     //int nticks = meta.rows();
     //int nwires = meta.cols();
@@ -60,7 +60,7 @@ namespace supera {
     larcv::Image2D img(meta);
     img.paint(0.);
     
-    LARCV_SINFO() << "Filling an image: " << meta.dump();
+    LARCV_SINFO() << "Filling an image: " << meta.dump() << std::endl;
     LARCV_SINFO() << "(ymin,ymax) = (" << ymin << "," << ymax << ")" << std::endl;
 
     for (auto const& wire : wires) {
@@ -114,28 +114,62 @@ namespace supera {
 	    start_index = ymin;
 	    LARCV_SDEBUG() << "Corrected Start index = " << start_index << std::endl;
 	  }
-	  LARCV_SDEBUG() << "Calling a reverse_copy..." << std::endl
-			 << "      source wf : start index = " << range.begin_index() << " length = " << adcs.size() << std::endl
-			 << "      (row,col) : (" << (ymax - end_index) << "," << col << ")" << std::endl
-			 << "      nskip     : "  << nskip << std::endl
-			 << "      nsample   : "  << nsample << std::endl;
-	  try {
-	    img.reverse_copy(ymax - end_index,
-			     col,
-			     adcs,
-			     nskip,
-			     nsample);
-	  } catch (const ::larcv::larbys& err) {
-	    LARCV_SCRITICAL() << "Attempted to fill an image..." << std::endl
-			      << meta.dump()
-			      << "(ymin,ymax) = (" << ymin << "," << ymax << ")" << std::endl
-			      << "Called a reverse_copy..." << std::endl
-			      << "      source wf : plane = " << wire_id.Plane << " wire = " << wire_id.Wire << std::endl
-			      << "      timing    : start index = " << range.begin_index() << " length = " << adcs.size() << std::endl
-			      << "      (row,col) : (" << (ymax - end_index) << "," << col << ")" << std::endl
-			      << "      nskip     : "  << nskip << std::endl
-			      << "Re-throwing an error:" << std::endl;
-	    throw err;
+
+	  // copy the data (either forward or backward tick direction
+	  if ( tick_backward ) {
+	    // LARCV_SDEBUG() << "Calling a reverse_copy..." << std::endl
+	    // 		   << "      source wf : start index = " << range.begin_index() << " length = " << adcs.size() << std::endl
+	    // 		   << "      (row,col) : (" << (ymax - end_index) << "," << col << ")" << std::endl
+	    // 		   << "      nskip     : "  << nskip << std::endl
+	    // 		   << "      nsample   : "  << nsample << std::endl;
+	    try {
+	      img.reverse_copy(ymax - end_index,
+			       col,
+			       adcs,
+			       nskip,
+			       nsample);
+	    }
+	    catch (const ::larcv::larbys& err) {
+	      LARCV_SCRITICAL() << "Attempted to fill an image..." << std::endl
+				<< meta.dump()
+				<< "(ymin,ymax) = (" << ymin << "," << ymax << ")" << std::endl
+				<< "Called a reverse_copy..." << std::endl
+				<< "      source wf : plane = " << wire_id.Plane << " wire = " << wire_id.Wire << std::endl
+				<< "      timing    : start index = " << range.begin_index() << " length = " << adcs.size() << std::endl
+				<< "      (row,col) : (" << (ymax - end_index) << "," << col << ")" << std::endl
+				<< "      nskip     : "  << nskip << std::endl
+				<< "Re-throwing an error:" << std::endl;
+	      throw err;
+	    }
+	  }//end of tick backward
+	  else {
+	    // forward copy: tick and image rows are in same orientation
+
+	    // LARCV_SDEBUG() << "Calling a forward_copy..." << std::endl
+	    // 		   << "      source wf : start index = " << range.begin_index() << " length = " << adcs.size() << std::endl
+	    // 		   << "      (row,col) : (" << (start_index - ymin) << "," << col << ")" << std::endl
+	    // 		   << "      nskip     : "  << nskip << std::endl
+	    // 		   << "      nsample   : "  << nsample << std::endl;
+	    try {
+	      img.forward_copy(start_index-ymin,
+			       col,
+			       adcs,
+			       nskip,
+			       nsample);
+	    }
+	    catch (const ::larcv::larbys& err) {
+	      LARCV_SCRITICAL() << "Attempted to fill an image..." << std::endl
+				<< meta.dump()
+				<< "(ymin,ymax) = (" << ymin << "," << ymax << ")" << std::endl
+				<< "Called a forward_copy..." << std::endl
+				<< "      source wf : plane = " << wire_id.Plane << " wire = " << wire_id.Wire << std::endl
+				<< "      timing    : start index = " << range.begin_index() << " length = " << adcs.size() << std::endl
+				<< "      (row,col) : (" << (start_index - ymin) << "," << col << ")" << std::endl
+				<< "      nskip     : "  << nskip << std::endl
+				<< "Re-throwing an error:" << std::endl;
+	      throw err;
+	    }
+	    
 	  }
 	}
       }
@@ -146,12 +180,12 @@ namespace supera {
   std::vector<larcv::Image2D>
   Wire2Image2D(const std::vector<larcv::ImageMeta>& meta_v,
 	       const std::vector<supera::LArWire_t>& wires,
-	       const int time_offset)
+	       const int time_offset, const bool tick_backward)
   {
     std::vector<larcv::Image2D> res_v;
     for (size_t p = 0; p < ::supera::Nplanes(); ++p) {
       auto const& meta = meta_v.at(p);
-      res_v.emplace_back(Wire2Image2D(meta,wires,time_offset));
+      res_v.emplace_back(Wire2Image2D(meta,wires,time_offset,tick_backward));
       res_v.back().index(res_v.size()-1);
     }
     return res_v;
@@ -190,12 +224,12 @@ namespace supera {
   SimCh2Image2D(const std::vector<larcv::ImageMeta>& meta_v,
 		const std::vector<larcv::ROIType_t>& track2type_v,
 		const std::vector<supera::LArSimCh_t>& sch_v,
-		const int time_offset)
+		const int time_offset, const bool tick_backward)
   {
     LARCV_SINFO() << "Filling semantic-segmentation ground truth image..." << std::endl;
     std::vector<larcv::Image2D> img_v;
     for (auto const& meta : meta_v) {
-      LARCV_SINFO() << meta.dump();
+      //LARCV_SINFO() << meta.dump() << std::endl;
       img_v.emplace_back(larcv::Image2D(meta));
     }
 
@@ -205,6 +239,7 @@ namespace supera {
 	column.resize(img.meta().rows() + 1, (float)(::larcv::kROIUnknown));
     }
 
+    int nlabeled = 0;
     for (auto const& sch : sch_v) {
       auto ch = sch.Channel();
       auto const& wid = ::supera::ChannelToWireID(ch);
@@ -228,23 +263,38 @@ namespace supera {
 	if (tick < meta.min_y()) continue;
 	if (tick >= meta.max_y()) continue;
 	// Where is this tick in column vector?
-	size_t index = (size_t)(meta.max_y() - tick);
+	size_t index = 0;
+	if ( tick_backward )
+	  index = (size_t)(meta.max_y() - tick);
+	else
+	  index = (size_t)(tick-meta.min_y());
 	// Pick type
 	double energy = 0;
 	::larcv::ROIType_t roi_type =::larcv::kROIUnknown;
 	for (auto const& edep : tick_ides.second) {
 	  if (edep.energy < energy) continue;
-	  if (std::abs(edep.trackID) >= (int)(track2type_v.size())) continue;
+	  if (std::abs(edep.trackID) >= (int)(track2type_v.size())) {
+	    //std::cout << "Edep trackid " << std::abs(edep.trackID) << " is out of track2type_v map: " << track2type_v.size() << std::endl;
+	    continue;
+	  }
 	  auto temp_roi_type = track2type_v[std::abs(edep.trackID)];
-	  if (temp_roi_type ==::larcv::kROIUnknown) continue;
+	  if (temp_roi_type ==::larcv::kROIUnknown) {
+	    //LARCV_SDEBUG() << "Label from valid edep is ROIUnknown" << std::endl;
+	    //std::cout << "Label from valid edep is ROIUnknown" << std::endl;
+	    continue;
+	  }
 	  energy = edep.energy;
 	  roi_type = (::larcv::ROIType_t)temp_roi_type;
 	}
+	if ( roi_type!=::larcv::kROIUnknown )
+	  nlabeled++;
 	column[index] = roi_type;
       }
       // mem-copy column vector
       img.copy(0, col, column, img.meta().rows());
     }
+    //LARCV_SDEBUG() << "nlabeled=" << nlabeled << std::endl;
+    //std::cout << "nlabeled=" << nlabeled << std::endl;
     return img_v;
   }
 

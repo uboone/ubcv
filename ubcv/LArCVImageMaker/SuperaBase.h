@@ -14,9 +14,9 @@
 #ifndef __SUPERABASE_H__
 #define __SUPERABASE_H__
 
-#include "Processor/ProcessBase.h"
-#include "Processor/ProcessFactory.h"
-#include "DataFormat/ImageMeta.h"
+#include "larcv/core/Processor/ProcessBase.h"
+#include "larcv/core/Processor/ProcessFactory.h"
+#include "larcv/core/DataFormat/ImageMeta.h"
 #include "FMWKInterface.h"
 #include "SuperaTypes.h"
 #include "ImageMetaMakerBase.h"
@@ -79,6 +79,7 @@ namespace larcv {
     std::vector<supera::LArHit_t>*      _ptr_hit_v;
     std::vector<supera::LArOpDigit_t>*  _ptr_opdigit_v;
     std::vector<supera::LArSimCh_t>*    _ptr_sch_v;
+    std::vector<supera::LArSimEdep_t>*  _ptr_sed_v;
     std::vector<supera::LArMCTruth_t>*  _ptr_mctruth_v;
     std::vector<supera::LArMCTrack_t>*  _ptr_mct_v;
     std::vector<supera::LArMCShower_t>* _ptr_mcs_v;
@@ -96,6 +97,8 @@ namespace larcv {
   template <> const std::vector<supera::LArOpDigit_t>& SuperaBase::LArData<supera::LArOpDigit_t>() const;
 
   template <> const std::vector<supera::LArSimCh_t>& SuperaBase::LArData<supera::LArSimCh_t>() const;
+
+  template <> const std::vector<supera::LArSimEdep_t>& SuperaBase::LArData<supera::LArSimEdep_t>() const;
 
   template <> const std::vector<supera::LArMCTruth_t>& SuperaBase::LArData<supera::LArMCTruth_t>() const;
 
@@ -116,6 +119,8 @@ namespace larcv {
   template <> void SuperaBase::LArData(const std::vector<supera::LArMCShower_t>& data_v);
 
   template <> void SuperaBase::LArData(const std::vector<supera::LArSimCh_t>& data_v);
+
+  template <> void SuperaBase::LArData(const std::vector<supera::LArSimEdep_t>& data_v);
 
   /**
      \class larcv::SuperaBaseFactory
