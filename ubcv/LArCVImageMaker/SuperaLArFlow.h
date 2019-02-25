@@ -58,6 +58,7 @@ namespace larcv {
     std::string    _simedep_producer;
     bool           _use_edep;
     bool           _edep_at_anode;
+    bool           _tick_backward;
 
   };
 

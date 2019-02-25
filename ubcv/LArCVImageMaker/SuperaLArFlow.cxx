@@ -33,7 +33,8 @@ namespace larcv {
     else {
       throw std::runtime_error("SuperaLArFlow: must specifc only one SimCh or SimEdep producer");
     }
-    _edep_at_anode     = cfg.get<bool>("EdepAtAnode",false);
+    _edep_at_anode     = cfg.get<bool>("EdepAtAnode",true);
+    _tick_backward     = cfg.get<bool>("TickBackward",true);
   }
 
   void SuperaLArFlow::initialize()
@@ -150,7 +151,7 @@ namespace larcv {
 						 *ev_chstatus,
 						 row_compression_factor, 
 						 col_compression_factor, 
-						 TimeOffset() );
+						 TimeOffset(), _edep_at_anode, _tick_backward );
       ev_image->Emplace(std::move(image_v));
     }
     else {

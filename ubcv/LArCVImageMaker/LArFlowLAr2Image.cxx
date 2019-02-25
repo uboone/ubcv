@@ -21,7 +21,7 @@ namespace supera {
 			 const larcv::EventChStatus& ev_chstatus,
 			 const std::vector<float>& row_compression_factor,
 			 const std::vector<float>& col_compression_factor,			 
-			 const int time_offset, const bool edep_at_anode ) {
+			 const int time_offset, const bool edep_at_anode, const bool tick_backward ) {
     
     LARCV_SINFO() << "Filling Pixel-flow truth image... (with time_offset=" << time_offset << ")" << std::endl;
 
@@ -90,8 +90,8 @@ namespace supera {
 
 	  if (tick <= meta.min_y()) continue;
 	  if (tick >= meta.max_y()) continue;
+
 	  // Where is this tick in column vector?
-	  //size_t index = (size_t)(meta.max_y() - tick);
 	  int row   = (int)meta.row(tick); // compressed position
 	  if ( row<0 || row>=(int)meta.rows() ) continue;
 
@@ -120,13 +120,21 @@ namespace supera {
 	    // set img coords
 	    // SCE position
 	    double y,z;
-	    //x = edep.x;
 	    y = edep.y;
 	    z = edep.z;
 	    //LARCV_SINFO() << "edep (y,z)=" << "(" << y << "," << z << ") tick=" << tick << " ides=" << tick_ides.first << std::endl;
 	    
-	    //supera::ApplySCE(x,y,z);
-	    pos3d[0] = 150;
+	    if ( edep_at_anode ) {
+	      // the case for wirecell simch
+	      pos3d[0] = 150;
+	    }
+	    else {
+	      // old simch
+	      x = edep.x;
+	      supera::ApplySCE(x,y,z);
+	      pos3d[0] = x;
+	    }
+
 	    pos3d[1] = y;
 	    pos3d[2] = z;
 	    imgcoords[0] = row;		    
@@ -223,9 +231,6 @@ namespace supera {
 	      
 	      int r = rout *int(row_compression_factor.at(plane)) + dr;
 	      int c = clout*int(col_compression_factor.at(plane)) + dc;
-
-	      //if ( img.pixel(r,c)<0 )
-	      //continue;
 
 	      float pixenergy = energyimg.pixel( r, c );
 	      float flow      = flowimg.pixel(r,c);

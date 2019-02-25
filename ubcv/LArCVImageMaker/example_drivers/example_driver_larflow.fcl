@@ -3,8 +3,17 @@
 BEGIN_PROLOG
 
 SuperaLArFlow: @local::SuperaWholeView
-#SuperaLArFlow.supera_params: "../supera_larflow.fcl"
-SuperaLArFlow.supera_params: "../supera_mctruth.fcl"
+
+# larflow only
+#SuperaLArFlow.supera_params: "../supera_larflow.fcl" 
+
+# full-mctruth: segment+instance+ancestor+larflow
+# when using ups larcv/larlite
+SuperaLArFlow.supera_params: "../supera_mctruth.fcl" 
+
+# full-mctruth: segment+instance+ancestor+larflow
+# when using ubdl
+#SuperaLArFlow.supera_params: "../supera_mctruth_ubdl.fcl" 
 
 
 END_PROLOG

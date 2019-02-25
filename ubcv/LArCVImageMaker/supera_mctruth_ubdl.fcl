@@ -49,14 +49,14 @@ ProcessDriver: {
       LArSimChProducer:    "driftWC simpleSC"
       Origin: 1
       TimeOffset:       2400
-      TickBackward: true
+      TickBackward: false
     }
     SuperaWire: {
       Verbosity: 2
       OutImageLabel:    "wire"
       LArWireProducer:  "butcher"
       TimeOffset:       2400
-      TickBackward: true
+      TickBackward: false
     }
     SuperaLArFlow: {
       Verbosity: 0
