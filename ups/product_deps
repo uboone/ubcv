@@ -29,31 +29,22 @@ table_fragment_end
 # Add the dependent product and version
 
 product                 version
-=======
 ubevt                   v08_00_00_06
-# larcv/larlite dependencies for now
-# ------------------------------
 larcv                   v06_70_00c
 larlite                 v06_70_00c
-# depdencies we'll use for ssnet integration
-# ------------------------------
-#libtorch                v1_0_1
-#cppzmq                  v4_3_0
-#ubdl                    v1_0_0
-# ------------------------------
 cetbuildtools	        v7_11_00	-	only_for_build
 end_product_list
 
-qualifier      ubevt          larcv          larlite     libtorch                       cppzmq       ubdl
-c2:debug       c2:debug       c2:debug       c2:debug    c2:debug                       c2:debug     c2:debug
-c2:opt         c2:opt         c2:opt         c2:opt      c2:opt                         c2:opt       c2:opt
-c2:prof        c2:prof        c2:prof        c2:prof     c2:prof                        c2:prof      c2:prof
-e15:debug      e15:debug      e15:debug      e15:debug   e15:debug                      e15:debug    e15:debug
-e15:opt        e15:opt        e15:opt        e15:opt     e15:opt                        e15:opt      e15:opt
-e15:prof       e15:prof       e15:prof       e15:prof    e15:prof                       e15:prof     e15:prof
-e17:debug      e17:debug      e17:debug      e17:debug   e17:debug                      e17:debug    e17:debug
-e17:opt        e17:opt        e17:opt        e17:opt     e17:opt                        e17:opt      e17:opt
-e17:prof       e17:prof       e17:prof       e17:prof    e17:nonnpack:openblas:prof     e17:prof     e17:prof
+qualifier      ubevt          larcv          larlite        
+c2:debug       c2:debug       c2:debug       c2:debug       
+c2:opt         c2:opt         c2:opt         c2:opt         
+c2:prof        c2:prof        c2:prof        c2:prof        
+e15:debug      e15:debug      e15:debug      e15:debug      
+e15:opt        e15:opt        e15:opt        e15:opt        
+e15:prof       e15:prof       e15:prof       e15:prof       
+e17:debug      e17:debug      e17:debug      e17:debug
+e17:opt        e17:opt        e17:opt        e17:opt
+e17:prof       e17:prof       e17:prof       e17:prof
 end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:
