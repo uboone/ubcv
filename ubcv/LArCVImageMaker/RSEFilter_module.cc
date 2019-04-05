@@ -50,6 +50,7 @@ private:
 
 
 RSEFilter::RSEFilter(fhicl::ParameterSet const & p)
+: EDFilter(p)
 {
 
   std::string runlist;
