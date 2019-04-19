@@ -55,6 +55,7 @@ find_ups_product( larevt v1_00_00 )
 find_ups_product( art v1_00_00 )
 find_ups_product( larcore )
 find_ups_product( nutools )
+find_ups_product( ubobj )
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
