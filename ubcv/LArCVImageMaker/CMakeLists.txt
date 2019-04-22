@@ -1,11 +1,11 @@
 set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
 
-set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
+#set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
 
 # use with ubdl
 #include_directories ( $ENV{LARLITE_COREDIR} ${LARCV_INCLUDE_DIR} )
 # use with ups larcv
-include_directories ( $ENV{LARLITE_COREDIR} $ENV{LARCV_INCDIR} )
+include_directories ( $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} )
 
 # use with ups larcv
 link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} -L$ENV{LARCV_LIBDIR} -llarcv ) # All execs need this
@@ -29,7 +29,7 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 		   larcoreobj_SummaryData
 		   lardataobj_RawData
 		   lardata_RecoObjects
-		   ${UBOONECODE_LIB}
+		   #${UBOONECODE_LIB}
 		   nusimdata_SimulationBase
 		   ${LARRECO_LIB}
 		   ${LARDATA_LIB}
@@ -73,7 +73,7 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    larevt_Filters
                    larevt_CalibrationDBI_IOVData
                    larevt_CalibrationDBI_Providers
-		   ${UBOONECODE_LIB}
+		   #${UBOONECODE_LIB}
 		   nusimdata_SimulationBase
 		   ${LARRECO_LIB}
 		   ${LARDATA_LIB}
