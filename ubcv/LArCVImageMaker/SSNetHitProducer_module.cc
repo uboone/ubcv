@@ -70,7 +70,7 @@ private:
 
 
 SSNetHitProducer::SSNetHitProducer(fhicl::ParameterSet const & p)
-// :
+: EDProducer(p)
 // Initialize member data here.
 {
 
