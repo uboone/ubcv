@@ -2,7 +2,7 @@
 #define __SUPERA_LAR2IMAGE_CXX__
 
 #include "LAr2Image.h"
-#include "Base/larcv_logger.h"
+#include "larcv/core/Base/larcv_logger.h"
 
 namespace supera {
 

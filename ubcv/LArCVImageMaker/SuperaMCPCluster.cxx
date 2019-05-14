@@ -2,8 +2,8 @@
 #define __SUPERAMCPCLUSTER_CXX__
 
 #include "SuperaMCPCluster.h"
-#include "DataFormat/EventROI.h"
-#include "DataFormat/EventPixel2D.h"
+#include "larcv/core/DataFormat/EventROI.h"
+#include "larcv/core/DataFormat/EventPixel2D.h"
 #include "LAr2Image.h"
 
 namespace larcv {

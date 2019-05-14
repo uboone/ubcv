@@ -65,7 +65,7 @@ include(BuildPlugins)
 
 # activate this to build SSNET/DL Integration
 # commented out for now until ready
-# set( USE_DL_INTEGRATION 1 )
+set( USE_DL_INTEGRATION 1 )
 
 if ( USE_DL_INTEGRATION )
 
@@ -96,24 +96,29 @@ if ( USE_DL_INTEGRATION )
   #set( UPS_PRODUCT_DIR /uboone/app/users/tmw/ups_dev/products ) # for development with new ups products
 
   # --- ZeroMQ
-  set( ZeroMQ_DIR "${UPS_PRODUCT_DIR}/libzmq/v4_3_1/Linux64bit+3.10-2.17_e17_prof/share/cmake/ZeroMQ" )
+  set( ZeroMQ_DIR "$ENV{LIBZMQ_FQ_DIR}/share/cmake/ZeroMQ" )
   find_package(ZeroMQ REQUIRED CONFIG)
 
-  set( cppzmq_DIR "${UPS_PRODUCT_DIR}/cppzmq/v4_3_0/Linux64bit+3.10-2.17_e17_prof/share/cmake/cppzmq" )
+  set( cppzmq_DIR "$ENV{CPPZMQ_DIR}/share/cmake/cppzmq" )
   find_package(cppzmq REQUIRED CONFIG)
 
   # --- LArCV
-  set( larcv_DIR "${UPS_PRODUCT_DIR}/ubdl/v1_0_0/Linux64bit+3.10-2.17_e17_prof/larcv/build/installed/lib/cmake/larcv" )
+  set( larcv_DIR "$ENV{LARCV_BUILDDIR}/installed/lib/cmake/larcv" )
   find_package(larcv REQUIRED CONFIG)
 
   # --- UB LArCV APP
-  set( ublarcvapp_DIR "${UPS_PRODUCT_DIR}/ubdl/v1_0_0/Linux64bit+3.10-2.17_e17_prof/ublarcvapp/build/lib/cmake/ublarcvapp" )
+  set( ublarcvapp_DIR "$ENV{UBLARCVAPP_BASEDIR}/build/lib/cmake/ublarcvapp" )
   find_package(ublarcvapp REQUIRED CONFIG)
 
   # --- Torch
-  #set( Torch_DIR "${EXTERN_LIBDIR}/libtorch/share/cmake/Torch" )
-  set( Torch_DIR "${UPS_PRODUCT_DIR}/libtorch/v1_0_1/Linux64bit+3.10-2.17_e17_prof_openblas_nonnpack/share/cmake/Torch" )
+  set( Torch_DIR "$ENV{LIBTORCH_DIR}/$ENV{LIBTORCH_FQ_DIR}/share/cmake/Torch" )
+  #set( Torch_DIR "${UPS_PRODUCT_DIR}/libtorch/v1_0_1/Linux64bit+3.10-2.17_e17_prof_openblas_nonnpack/share/cmake/Torch" )
   find_package( Torch CONFIG )
+
+  # --- Python
+  find_package( PythonInterp 2.7 REQUIRED )
+  find_package( PythonLibs 2.7 REQUIRED )
+  #find_package( Numpy REQUIRED )
 
 endif()
 
