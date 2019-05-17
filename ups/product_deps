@@ -33,7 +33,7 @@ ubevt                   v08_00_00_13
 #larcv                   v06_70_00c
 #larlite                 v06_70_00c
 ubdl                    v1_0_0
-libtorch                v1_0_1
+libtorch                v1_0_1_nonuma
 cppzmq                  v4_3_0
 cetbuildtools	        v7_11_00	-	only_for_build
 end_product_list
