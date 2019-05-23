@@ -1,22 +1,16 @@
 set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
+set( LARCV_LIB   -L$ENV{LARCV_LIBDIR}   -llarcv )
 
 #set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
 
-# use with ubdl
-#include_directories ( $ENV{LARLITE_COREDIR} ${LARCV_INCLUDE_DIR} )
-# use with ups larcv
-include_directories ( $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} )
+# use with dllee
+include_directories ( $ENV{LARLITE_COREDIR} $ENV{LARCV_INCDIR} )
 
 # use with ups larcv
-link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} -L$ENV{LARCV_LIBDIR} -llarcv ) # All execs need this
-# use with ubdl
-#link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB}) # All execs need this
+link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ${LARCV_LIB} ) # All execs need this
 
-#add_subdirectory(job)
-
-art_make( EXCLUDE LArCVMetaMaker_service.cc
-	  BASENAME_ONLY
-	  LIBRARY_NAME     ubcv_LArCVImageMaker
+art_make( BASENAME_ONLY
+	  LIBRARY_NAME     ubcv_ubdllee
 	  LIB_LIBRARIES
 	  	   larcorealg_Geometry
 		   ubcore_Geometry
@@ -29,7 +23,7 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 		   larcoreobj_SummaryData
 		   lardataobj_RawData
 		   lardata_RecoObjects
-		   #${UBOONECODE_LIB}
+		   ${UBOONECODE_LIB}
 		   nusimdata_SimulationBase
 		   ${LARRECO_LIB}
 		   ${LARDATA_LIB}
@@ -51,8 +45,9 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 		   ${ROOT_GDML}
 		   ${ROOT_BASIC_LIB_LIST}
 
-          MODULE_LIBRARIES 	  		   
-		   ubcv_LArCVImageMaker
+          MODULE_LIBRARIES 	  	
+	  	   ubcv_LArCVImageMaker
+		   ubcv_ubdldata
 	      	   TFileMetadataMicroBooNE_service
 	      	   FileCatalogMetadataMicroBooNE_service
 		   LArCVMetaMaker_service
@@ -73,7 +68,7 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    larevt_Filters
                    larevt_CalibrationDBI_IOVData
                    larevt_CalibrationDBI_Providers
-		   #${UBOONECODE_LIB}
+		   ${UBOONECODE_LIB}
 		   nusimdata_SimulationBase
 		   ${LARRECO_LIB}
 		   ${LARDATA_LIB}
@@ -87,6 +82,10 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    art_Persistency_Provenance
 		   art_Utilities canvas
 		   ${MF_MESSAGELOGGER}
+
+		   #${LARCV_LIB} 
+		   ${LARLITE_LIB} 
+		   #${TORCH_LIBRARIES}
 		   
 		   ${FHICLCPP}
 		   cetlib_except
@@ -95,29 +94,6 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 		   ${ROOT_GDML}
 		   ${ROOT_BASIC_LIB_LIST}
 		)
-
-simple_plugin(LArCVMetaMaker "service"
-	      TFileMetadataMicroBooNE_service
-	      FileCatalogMetadataMicroBooNE_service
-	      ${ART_FRAMEWORK_SERVICES_SYSTEM_FILECATALOGMETADATA_SERVICE}	      
-	      art_Utilities canvas
-              art_Framework_Principal
-	      ${MF_MESSAGELOGGER}
-	      
-	      ${FHICLCPP}
-	      cetlib cetlib_except
-	      ${ROOT_BASIC_LIB_LIST}
-              BASENAME_ONLY
-)
-
-if (USE_DL_INTEGRATION)
-  target_link_libraries( uboonecode_uboone_LArCVImageMaker LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-  target_link_libraries( SSNetHitProducer_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-  target_link_libraries( LArSoftSuperaSriver_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-  target_link_libraries( RSEFilter_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-  target_link_libraries( VPlaneHandler_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-  target_link_libraries( LArCVMetaMaker_service LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-endif()
 
 # install_headers()
 install_fhicl()
