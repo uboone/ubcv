@@ -89,8 +89,7 @@ namespace larcv {
   bool LArCVSuperaDriver::process(size_t run, size_t subrun, size_t event, bool autosave_entry) 
   {
     _driver.set_id(run,subrun,event);
-    //return _driver.process_entry(autosave_entry);
-    return _driver.process_entry();
+    return _driver.process_entry(autosave_entry);
   }
 
   void LArCVSuperaDriver::finalize() { _driver.finalize(); }

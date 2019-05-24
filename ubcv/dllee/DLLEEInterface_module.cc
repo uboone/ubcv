@@ -122,6 +122,8 @@ private:
   // std::vector<float> _pixelthresholds_forsavedscores;
   
 
+  void saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_imgs );
+
 };
 
 /**
@@ -201,6 +203,7 @@ void DLLEEInterface::produce(art::Event & e)
   runLiteMaker( e, opflash_vv );
 
   // get larcv products
+  LARCV_INFO() << "Run SUPERA" << std::endl;
   std::vector<larcv::Image2D> wholeview_v;
   int nwholeview_imgs = runSupera( e, wholeview_v );
   LARCV_INFO() << "number of wholeview images: " << nwholeview_imgs << std::endl;
@@ -233,7 +236,7 @@ void DLLEEInterface::produce(art::Event & e)
   //saveArtProducts( e, wholeview_v, showermerged_v, trackmerged_v );
 
   // prepare the output
-  //larcv::IOManager& io = _supera.driver().io_mutable();
+ 
   
   // // save the wholeview images back to the supera IO
   // larcv::EventImage2D* ev_imgs  = (larcv::EventImage2D*) io.get_data( larcv::kProductImage2D, "wire" );
@@ -263,13 +266,7 @@ void DLLEEInterface::produce(art::Event & e)
   // ev_merged[0]->Emplace( std::move(showermerged_v) );
   // ev_merged[1]->Emplace( std::move(trackmerged_v) );
 
-  // // save entry
-  // //std::cout << "saving entry" << std::endl;
-  // io.save_entry();
-  
-  // // we clear entries ourselves
-  // //std::cout << "clearing entry" << std::endl;
-  // io.clear_entry();
+  saveLArCVProducts( wholeview_v );
   
 }
 
@@ -343,8 +340,8 @@ int DLLEEInterface::runSupera( art::Event& e, std::vector<larcv::Image2D>& whole
   _supera.process(e.id().run(),e.id().subRun(),e.id().event(), autosave_entry);
 
   // get the images
-  //auto ev_imgs  = (larcv::EventImage2D*) _supera.driver().io_mutable().get_data( larcv::kProductImage2D, "wire" );
-  //ev_imgs->Move( wholeview_imgs );
+  auto ev_imgs  = (larcv::EventImage2D*) _supera.driver().io_mutable().get_data( larcv::kProductImage2D, "wire" );
+  ev_imgs->Move( wholeview_imgs );
   
   return wholeview_imgs.size();
 }
@@ -539,6 +536,28 @@ int DLLEEInterface::runSupera( art::Event& e, std::vector<larcv::Image2D>& whole
   
 //   ev.put( std::move(ppixdata_v) );
 // }
+
+/**
+ * save LArCV products to file
+ *
+ */
+void DLLEEInterface::saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_v ) {
+  
+  larcv::IOManager& io_larcv = _supera.driver().io_mutable();
+
+  // save wholeview ADC images
+  auto ev_imgs  = (larcv::EventImage2D*) io_larcv.get_data( larcv::kProductImage2D, "wire" );
+  ev_imgs->Emplace( std::move(wholeview_v) );
+
+  // save entry
+  LARCV_INFO() << "saving LARCV entry" << std::endl;
+  io_larcv.save_entry();
+  
+  // we clear entries ourselves
+  LARCV_INFO() << "clearing entry" << std::endl;
+  io_larcv.clear_entry();
+
+}
 
 
 /**
