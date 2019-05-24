@@ -96,6 +96,15 @@ private:
   std::string _supera_config;        //< supera config file
   int runSupera( art::Event& e, std::vector<larcv::Image2D>& wholeview_imgs );
 
+  // ssnet image
+  std::string _ssnet_producer;
+  bool getSSNetFromArt( art::Event const& e, 
+			const std::string ssnet_producer, 
+			const std::vector<larcv::Image2D>& wholeview_v,
+			std::vector< larcv::Image2D >& shower_v,
+			std::vector< larcv::Image2D >& track_v );
+
+
   // image processing/splitting/cropping
   // Cropper_t   _cropping_method;
   // std::string _cropping_method_name;
@@ -122,7 +131,9 @@ private:
   // std::vector<float> _pixelthresholds_forsavedscores;
   
 
-  void saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_imgs );
+  void saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_imgs,
+			  std::vector<larcv::Image2D>& shower_v,
+			  std::vector<larcv::Image2D>& track_v );
 
 };
 
@@ -149,7 +160,6 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   for ( auto const& opflash_producer : _litemaker_opflash_producer_v )
     _litemaker.Register( opflash_producer, larlite::data::kOpFlash );
 
-
   // ---------------
   // supera config
   // ---------------
@@ -169,6 +179,10 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   // configure supera (convert art::Event::CalMod -> Image2D)
   _supera.configure(supera_cfg);
 
+  // ---------------
+  // ssnet
+  // ---------------
+  _ssnet_producer = p.get<std::string>("SSNetProducerName");
 
   // // check cfg content top level
   // larcv::PSet main_cfg = larcv::CreatePSetFromFile(supera_cfg).get<larcv::PSet>("ProcessDriver");
@@ -207,6 +221,28 @@ void DLLEEInterface::produce(art::Event & e)
   std::vector<larcv::Image2D> wholeview_v;
   int nwholeview_imgs = runSupera( e, wholeview_v );
   LARCV_INFO() << "number of wholeview images: " << nwholeview_imgs << std::endl;
+
+  // recover ssnet info
+  LARCV_INFO() << "Get SSNet From Art Event" << std::endl;
+  std::vector< larcv::Image2D > shower_v;
+  std::vector< larcv::Image2D > track_v;
+  bool has_ssnet = getSSNetFromArt( e, _ssnet_producer, wholeview_v,
+				    shower_v, track_v );
+  LARCV_INFO() << "SSnet loaded: " << has_ssnet << std::endl;
+  if ( has_ssnet )  {
+    LARCV_INFO() << "  number of trackimgs=" << track_v.size() 
+		 << " showerimgs=" << shower_v.size() << std::endl;
+  }
+  
+  // PMT Precuts
+
+  // CROI
+
+  // Tagger
+
+  // Vertexer
+
+  // Likelihood
 
   // // we often have to pre-process the image, e.g. split it.
   // // eventually have options here. But for now, wholeview splitter
@@ -266,8 +302,70 @@ void DLLEEInterface::produce(art::Event & e)
   // ev_merged[0]->Emplace( std::move(showermerged_v) );
   // ev_merged[1]->Emplace( std::move(trackmerged_v) );
 
-  saveLArCVProducts( wholeview_v );
+  saveLArCVProducts( wholeview_v, shower_v, track_v );
   
+}
+
+/**
+ * retrive SSNet data from the Art file
+ *
+ */
+bool DLLEEInterface::getSSNetFromArt( art::Event const& e, const std::string ssnet_producer, 
+				      const std::vector<larcv::Image2D>& wholeview_v,
+				      std::vector< larcv::Image2D >& shower_v,
+				      std::vector< larcv::Image2D >& track_v ) {
+  
+  LARCV_DEBUG() << "Get SSNet data" << std::endl;
+  art::Handle< std::vector<ubdldata::pixeldata> > ssnet_handle;
+  e.getByLabel( ssnet_producer, ssnet_handle );
+  if ( !ssnet_handle.isValid() ) {
+    std::cerr << "Attempted to load SSNet ubdldata::pixeldata. label=" << ssnet_producer << std::endl;
+    throw cet::exception("DLLEEInterface") << "Could not load SSNet data, label=" << ssnet_producer << "." << std::endl;
+  }
+  LARCV_INFO() << "Successfully retreived art product" << std::endl;
+  
+  for ( auto const& pixdata : *ssnet_handle ) {
+    if ( pixdata.dim_per_point()!=4 ) {
+      throw cet::exception("DLLEEInterface") << "Not the expected number of points! expected=4 vs found=" << pixdata.dim_per_point() << std::endl;
+    }
+    LARCV_DEBUG() << "pixdata has " << pixdata.len() << " points with " << pixdata.dim_per_point() << " values per point" << std::endl;
+    //std::vector<float> bbox = pixdata.as_vector_bbox(); // xmin, ymin, xmax, ymax
+    //float width  = bbox[2]-bbox[0];
+    //float height = bbox[3]-bbox[1]; 
+    const larcv::ImageMeta& meta = wholeview_v.at( pixdata.id() ).meta();
+    LARCV_DEBUG() << "storing pixdata into " << meta.dump();
+
+    larcv::Image2D showerimg( meta );
+    larcv::Image2D trackimg( meta );
+    showerimg.paint(0);
+    trackimg.paint(0);
+    LARCV_DEBUG() << "made blank shower/track images" << std::endl;
+    for ( size_t ipt=0; ipt<(size_t)pixdata.len(); ipt++ ) {
+      std::vector<float> pix = pixdata.point(ipt);
+      try {
+	if ( pix[1]==meta.min_y() ) {
+	  pix[1] += 0.5;
+	}
+	size_t col = meta.col( pix[0] );
+	size_t row = meta.row( pix[1] );
+	float shr = pix[2];
+	float trk = pix[3];
+	showerimg.set_pixel( row, col, shr );
+	trackimg.set_pixel( row, col, trk );
+      }
+      catch (std::exception& e ) {
+	LARCV_DEBUG() << "failure to load pixdata point[" << ipt << "] "  << std::endl;
+	LARCV_DEBUG() << " error: " << e.what() << std::endl;
+	LARCV_DEBUG() << "   nvalues=" << pix.size() << std::endl;
+	LARCV_DEBUG() << "   (wire,tick)=(" << pix[0] << "," << pix[1] << ")" << std::endl;
+      }
+    }
+    shower_v.emplace_back( std::move(showerimg) );
+    track_v.emplace_back( std::move(trackimg) );
+    LARCV_DEBUG() << "finished pixdata plane=" << pixdata.id() << std::endl;
+  }
+
+  return true;
 }
 
 /**
@@ -541,13 +639,26 @@ int DLLEEInterface::runSupera( art::Event& e, std::vector<larcv::Image2D>& whole
  * save LArCV products to file
  *
  */
-void DLLEEInterface::saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_v ) {
+void DLLEEInterface::saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_v,
+					std::vector<larcv::Image2D>& shower_v,
+					std::vector<larcv::Image2D>& track_v ) {
   
   larcv::IOManager& io_larcv = _supera.driver().io_mutable();
 
   // save wholeview ADC images
+  LARCV_DEBUG() << "Save ADC" << std::endl;
   auto ev_imgs  = (larcv::EventImage2D*) io_larcv.get_data( larcv::kProductImage2D, "wire" );
   ev_imgs->Emplace( std::move(wholeview_v) );
+
+  // save shower score images
+  LARCV_DEBUG() << "Save shower images" << std::endl;
+  auto ev_shr  = (larcv::EventImage2D*) io_larcv.get_data( larcv::kProductImage2D, "ssnetshower" );
+  ev_shr->Emplace( std::move(shower_v) );
+  
+  // save track score images
+  LARCV_DEBUG() << "Save track images" << std::endl;
+  auto ev_trk  = (larcv::EventImage2D*) io_larcv.get_data( larcv::kProductImage2D, "ssnettrack" );
+  ev_trk->Emplace( std::move(track_v) );
 
   // save entry
   LARCV_INFO() << "saving LARCV entry" << std::endl;

@@ -7,6 +7,7 @@ DLLEEInterface: {
   module_type:         "DLLEEInterface"
   Verbosity:           0
   WireProducerName:    "butcher"
+  SSNetProducerName:   "ssnet"
   OpFlashBeamProducers: ["simpleFlashBeam","simpleFlashCosmic"]
   SuperaConfigFile:     "supera_dllee_interface.fcl"
 }
