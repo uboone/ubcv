@@ -3,7 +3,6 @@
 
 #include "LArFlowLAr2Image.h"
 #include "Base/larcv_logger.h"
-#include "LArUtil/Geometry.h"
 
 #include "larevt/SpaceChargeServices/SpaceChargeService.h" 
 #include "lardata/DetectorInfoServices/DetectorClocksService.h" 
@@ -27,7 +26,6 @@ namespace supera {
 
     // flow enum
     enum { kU2V=0, kU2Y, kV2U, kV2Y, kY2U, kY2V };
-    const larutil::Geometry& geo = *(larutil::Geometry::GetME());    
     
     // we create for each plane:
     //  2 images that list column in other images
@@ -139,7 +137,7 @@ namespace supera {
 	    pos3d[2] = z;
 	    imgcoords[0] = row;		    
 	    for (int p=0; p<3; p++) {
-	      imgcoords[p+1] = (int)(geo.WireCoordinate( pos3d, p )+0.5);
+	      imgcoords[p+1] = (int)(supera::NearestWire(pos3d.data(),p));
 	    }
 	    //LARCV_SINFO() << "   p=" << plane << " col=" << col
 	    //<< " wire=(" << imgcoords[1] << "," << imgcoords[2]<< "," << imgcoords[3] << ")" << std::endl;
@@ -283,7 +281,6 @@ namespace supera {
     // flow enum
     enum { kU2V=0, kU2Y, kV2U, kV2Y, kY2U, kY2V };
     int target_plane[6] = { 1, 2, 0, 2, 0, 1 };
-    //const larutil::Geometry& geo = *(larutil::Geometry::GetME());    
     art::ServiceHandle<geo::Geometry> geom;
     //const float driftvelocity = 0.1098; // hand-coded for current mcc9-beta velocity
     const float driftvelocity = supera::DriftVelocity();
@@ -411,7 +408,6 @@ namespace supera {
 			  << e;
 	continue;
       }
-      //const geo::TPCGeo& tpcGeo = geom->TPC(tpc, cryostat);
       
       //Define charge drift direction: driftcoordinate (x, y or z) and driftsign (positive or negative). Also define coordinates perpendicular to drift direction.
       // unused int driftcoordinate = std::abs(tpcGeo.DetectDriftDirection())-1;  //x:0, y:1, z:2

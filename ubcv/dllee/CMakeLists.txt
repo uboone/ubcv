@@ -1,18 +1,18 @@
 set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
 set( LARCV_LIB   -L$ENV{LARCV_LIBDIR}   -llarcv )
+set( UBLIST_INC $ENV{UBLITE_DIR}/source )
 
 #set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
 
 # use with dllee
-include_directories ( $ENV{LARLITE_COREDIR} $ENV{LARCV_INCDIR} )
+include_directories ( $ENV{LARLITE_COREDIR} $ENV{LARCV_INCDIR} ${UBLIST_INC} $ENV{LARSIM_INC} )
 
 # use with ups larcv
-link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ${LARCV_LIB} ) # All execs need this
+link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ${LARCV_LIB} ) 
 
 art_make( BASENAME_ONLY
 	  LIBRARY_NAME     ubcv_ubdllee
 	  LIB_LIBRARIES
-	  	   larcorealg_Geometry
 		   ubcore_Geometry
 		   ubobj_MuCS
 		   larcore_Geometry_Geometry_service
@@ -51,8 +51,9 @@ art_make( BASENAME_ONLY
 	      	   TFileMetadataMicroBooNE_service
 	      	   FileCatalogMetadataMicroBooNE_service
 		   LArCVMetaMaker_service
+		   uboonecode_uboone_LiteMaker
 		   ubobj_MuCS
-		   larcorealg_Geometry
+		   ubobj_Trigger
 		   ubcore_Geometry
 		   larcore_Geometry_Geometry_service
 		   nutools_ParticleNavigation lardataobj_Simulation
@@ -70,6 +71,7 @@ art_make( BASENAME_ONLY
                    larevt_CalibrationDBI_Providers
 		   ${UBOONECODE_LIB}
 		   nusimdata_SimulationBase
+		   ${UBOONEDAQ_DATATYPES_LIB}
 		   ${LARRECO_LIB}
 		   ${LARDATA_LIB}
 		   ${ART_FRAMEWORK_CORE}

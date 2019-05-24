@@ -3,8 +3,6 @@
 
 #include "Instance2Image.h"
 #include "Base/larcv_logger.h"
-#include "LArUtil/Geometry.h"
-
 
 namespace supera {
 

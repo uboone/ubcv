@@ -24,6 +24,9 @@
 // larsoft
 #include "lardataobj/RecoBase/OpFlash.h"
 
+// ublite
+#include "ublite/LiteMaker/ScannerAlgo.h"
+
 // ubcv
 #include "ubcv/LArCVImageMaker/LArCVSuperaDriver.h"
 #include "ubcv/LArCVImageMaker/ImageMetaMaker.h"
@@ -59,7 +62,9 @@
 class DLLEEInterface;
 
 class DLLEEInterface : public art::EDProducer, larcv::larcv_base {
+
 public:
+
   explicit DLLEEInterface(fhicl::ParameterSet const & p);
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
@@ -78,12 +83,17 @@ public:
 private:
 
   // Declare member data here.
-  int _verbosity;
+  int _verbosity;                    //< verbosity of module
 
-  // supera/image formation
-  larcv::LArCVSuperaDriver _supera;  
-  std::string _wire_producer_name;
-  std::string _supera_config;
+  // larlite scanneralgo: to make larlite products used in DL algos
+  larlite::ScannerAlgo _litemaker;   //< class used to make larlite products
+  std::vector< std::string > _litemaker_opflash_producer_v;
+  void runLiteMaker( art::Event const& e, std::vector< larlite::event_opflash >& opflash_vv );
+
+  // supera/image formation: to make larcv products used in DL algos
+  larcv::LArCVSuperaDriver _supera;  //< class used to make larcv products
+  std::string _wire_producer_name;   //< name of wire product in art file
+  std::string _supera_config;        //< supera config file
   int runSupera( art::Event& e, std::vector<larcv::Image2D>& wholeview_imgs );
 
   // image processing/splitting/cropping
@@ -122,36 +132,31 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   : larcv::larcv_base("DLLEEInterface_module")
     // Initialize member data here.
 {
-  // // Call appropriate produces<>() functions here.
-  // produces< std::vector<ubdldata::pixeldata> >();
 
-  // // read in parameters and configure
+  // verbosity
+  // ----------
+  _verbosity = p.get<int>("Verbosity",2);
+  set_verbosity( (::larcv::msg::Level_t) _verbosity );
+  _supera.set_verbosity( (::larcv::msg::Level_t) _verbosity );
 
-  // // product to get recob::wire data from
-  // _wire_producer_name = p.get<std::string>("WireProducerName");
 
-  // // name of supera configuration file
-  // _supera_config      = p.get<std::string>("SuperaConfigFile");
+  // -----------------
+  // litemaker config
+  // -----------------
+  _litemaker_opflash_producer_v = p.get<std::vector<std::string> >("OpFlashBeamProducers");
+  for ( auto const& opflash_producer : _litemaker_opflash_producer_v )
+    _litemaker.Register( opflash_producer, larlite::data::kOpFlash );
 
-  // // interace to network
-  // std::string inter   = p.get<std::string>("NetInterface");
-  // if ( inter=="Server" )
-  //   _interface = kServer;
-  // else if ( inter=="PyTorchCPU" )
-  //   _interface = kPyTorchCPU;
-  // else if ( inter=="TensorFlowCPU" )
-  //   _interface = kTensorFlowCPU;
-  // else if ( inter=="DummyServer" ) // for debugging
-  //   _interface = kDummyServer;
-  // else {
-  //   throw cet::exception("DLLEEInterface") << "unrecognized network interface, " << inter << ". "
-  // 					<< "choices: { Server, Pytorch, TensorFlow }"
-  // 					<< std::endl;
-  // }
 
-  // =========================================
-  // SUPERA CONFIGURATION
-  // --------------------
+  // ---------------
+  // supera config
+  // ---------------
+
+  // product to get recob::wire data from
+  _wire_producer_name = p.get<std::string>("WireProducerName");
+
+  // name of supera configuration file
+  _supera_config      = p.get<std::string>("SuperaConfigFile");
 
   std::string supera_cfg;
   cet::search_path finder("FHICL_FILE_PATH");
@@ -159,29 +164,27 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
     throw cet::exception("DLLEEInterface") << "Unable to find supera cfg in "  << finder.to_string() << "\n";
   std::cout << "LOADING supera config: " << supera_cfg << std::endl;
 
-  // check cfg content top level
-  larcv::PSet main_cfg = larcv::CreatePSetFromFile(supera_cfg).get<larcv::PSet>("ProcessDriver");
-
-  // get list of processors
-  std::vector<std::string> process_names = main_cfg.get< std::vector<std::string> >("ProcessName");
-  std::vector<std::string> process_types = main_cfg.get< std::vector<std::string> >("ProcessType");
-  larcv::PSet              process_list  = main_cfg.get<larcv::PSet>("ProcessList");
-  //larcv::PSet              split_cfg     = main_cfg.get<larcv::PSet>("UBSplitConfig"); 
-  
-  if ( process_names.size()!=process_types.size() ) {
-    throw std::runtime_error( "Number of Supera ProcessName(s) and ProcessTypes(s) is not the same." );
-  }
-
   // configure supera (convert art::Event::CalMod -> Image2D)
   _supera.configure(supera_cfg);
+
+
+  // // check cfg content top level
+  // larcv::PSet main_cfg = larcv::CreatePSetFromFile(supera_cfg).get<larcv::PSet>("ProcessDriver");
+
+  // // get list of processors
+  // std::vector<std::string> process_names = main_cfg.get< std::vector<std::string> >("ProcessName");
+  // std::vector<std::string> process_types = main_cfg.get< std::vector<std::string> >("ProcessType");
+  // larcv::PSet              process_list  = main_cfg.get<larcv::PSet>("ProcessList");
+  // //larcv::PSet              split_cfg     = main_cfg.get<larcv::PSet>("UBSplitConfig"); 
+  
+  // if ( process_names.size()!=process_types.size() ) {
+  //   throw std::runtime_error( "Number of Supera ProcessName(s) and ProcessTypes(s) is not the same." );
+  // }
+
 
   // configure image splitter (fullimage into detsplit image)
   //_imagesplitter.configure( split_cfg );
 
-  // verbosity
-  _verbosity = p.get<int>("Verbosity",2);
-  set_verbosity( (::larcv::msg::Level_t) _verbosity );
-  _supera.set_verbosity( (::larcv::msg::Level_t) _verbosity );
 
 }
 
@@ -192,10 +195,15 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
 void DLLEEInterface::produce(art::Event & e)
 {
 
-  // // get the wholeview images for the network
-  // std::vector<larcv::Image2D> wholeview_v;
-  // int nwholeview_imgs = runSupera( e, wholeview_v );
-  // LARCV_INFO() << "number of wholeview images: " << nwholeview_imgs << std::endl;
+  // get larlite products
+  LARCV_INFO() << "Run the LiteMaker" << std::endl;
+  std::vector< larlite::event_opflash > opflash_vv;
+  runLiteMaker( e, opflash_vv );
+
+  // get larcv products
+  std::vector<larcv::Image2D> wholeview_v;
+  int nwholeview_imgs = runSupera( e, wholeview_v );
+  LARCV_INFO() << "number of wholeview images: " << nwholeview_imgs << std::endl;
 
   // // we often have to pre-process the image, e.g. split it.
   // // eventually have options here. But for now, wholeview splitter
@@ -265,6 +273,40 @@ void DLLEEInterface::produce(art::Event & e)
   
 }
 
+/**
+ * convert larsoft products to larlite
+ *
+ * we have to covert the following products
+ *  -- opflash
+ *
+ * @param[in] e art::Event with wire data
+ * 
+ */
+void DLLEEInterface::runLiteMaker( art::Event const& e, std::vector< larlite::event_opflash >& opflash_vv ) {
+
+  // clear the event
+  _litemaker.EventClear();
+
+  // opflash products
+  for ( auto const& opflash_producer : _litemaker_opflash_producer_v ) {
+    art::Handle< std::vector<recob::OpFlash> > flash_handle;
+    e.getByLabel( opflash_producer, flash_handle );
+    if ( !flash_handle.isValid() ) {
+      std::cerr << "Attempted to load OpFlash data. label=" << opflash_producer << std::endl;
+      throw cet::exception("DLLEEInterface") << "Could not load OpFlash data, label=" << opflash_producer << "." << std::endl;
+    }
+    else {
+      LARCV_INFO() << "Loaded OpFlash data. label=" << opflash_producer << std::endl;
+    }
+    larlite::event_opflash ev_flash;
+    _litemaker.ScanData( flash_handle, &ev_flash );
+    LARCV_INFO() << "  event container " << opflash_producer << " has " << ev_flash.size() << std::endl;
+  }
+  
+  // OpHit
+
+  // Hit
+}
 
 /**
  * have supera make larcv images
@@ -297,7 +339,7 @@ int DLLEEInterface::runSupera( art::Event& e, std::vector<larcv::Image2D>& whole
 
   // execute supera
   bool autosave_entry = false;
-  //std::cout << "process event: (" << e.id().run() << "," << e.id().subRun() << "," << e.id().event() << ")" << std::endl;
+  LARCV_INFO() << "process event: (" << e.id().run() << "," << e.id().subRun() << "," << e.id().event() << ")" << std::endl;
   _supera.process(e.id().run(),e.id().subRun(),e.id().event(), autosave_entry);
 
   // get the images

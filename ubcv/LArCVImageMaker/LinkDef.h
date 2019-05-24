@@ -22,7 +22,7 @@
 //#pragma link C++ class supera::MCParticleTree+;
 //#pragma link C++ class supera::MCROIMaker+;
 #pragma link C++ class larcv::LArCVSuperaDriver;
-#pragma link C++ class larlite::LArLiteSuperaDriver+;
+//#pragma link C++ class larlite::LArLiteSuperaDriver+;
 //#pragma link C++ class larcv::SuperaMCPCluster+;
 //#pragma link C++ class larcv::SuperaKeyPointCluster+;
 #pragma link C++ class supera::GridPoint3D+;
