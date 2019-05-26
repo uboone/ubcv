@@ -21,6 +21,10 @@
 
 #include <memory>
 
+// opencv
+#include "opencv/cv.h"
+#include "opencv2/opencv.hpp"
+
 // larsoft
 #include "lardataobj/RecoBase/OpFlash.h"
 
@@ -47,6 +51,13 @@
 
 // larlite
 #include "DataFormat/opflash.h"
+#include "SelectionTool/LEEPreCuts/LEEPreCut.h"
+
+// larlitecv
+#include "TaggerCROI/TaggerCROIAlgo.h"
+#include "TaggerCROI/TaggerCROIAlgoConfig.h"
+#include "TaggerCROI/TaggerCROITypes.h"
+#include "GapChs/EmptyChannelAlgo.h"
 
 // ublarcvapp
 // #include "ublarcvapp/UBImageMod/UBSplitDetector.h"
@@ -88,7 +99,10 @@ private:
   // larlite scanneralgo: to make larlite products used in DL algos
   larlite::ScannerAlgo _litemaker;   //< class used to make larlite products
   std::vector< std::string > _litemaker_opflash_producer_v;
-  void runLiteMaker( art::Event const& e, std::vector< larlite::event_opflash >& opflash_vv );
+  std::string _litemaker_ophitbeam_producer;
+  void runLiteMaker( art::Event const& e, 
+		     std::vector< larlite::event_opflash >& opflash_vv,
+		     larlite::event_ophit& ophit_v );
 
   // supera/image formation: to make larcv products used in DL algos
   larcv::LArCVSuperaDriver _supera;  //< class used to make larcv products
@@ -135,6 +149,19 @@ private:
 			  std::vector<larcv::Image2D>& shower_v,
 			  std::vector<larcv::Image2D>& track_v );
 
+  // =================
+  //  Algorithms
+  // =================
+
+  // PMT Precuts
+  larlite::LEEPreCut m_precutalgo;
+
+  // Tagger/CROI
+  larlitecv::TaggerCROIAlgoConfig m_taggeralgo_cfg;
+  larlitecv::TaggerCROIAlgo*      m_taggeralgo;
+  larlitecv::InputPayload         m_tagger_input;
+  larlitecv::EmptyChannelAlgo     m_emptych_algo;
+
 };
 
 /**
@@ -159,6 +186,7 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   _litemaker_opflash_producer_v = p.get<std::vector<std::string> >("OpFlashBeamProducers");
   for ( auto const& opflash_producer : _litemaker_opflash_producer_v )
     _litemaker.Register( opflash_producer, larlite::data::kOpFlash );
+  _litemaker_ophitbeam_producer = p.get<std::string>("OpHitBeamProducer");
 
   // ---------------
   // supera config
@@ -180,7 +208,7 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   _supera.configure(supera_cfg);
 
   // ---------------
-  // ssnet
+  //  ssnet
   // ---------------
   _ssnet_producer = p.get<std::string>("SSNetProducerName");
 
@@ -201,6 +229,28 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   // configure image splitter (fullimage into detsplit image)
   //_imagesplitter.configure( split_cfg );
 
+  // ---------------
+  //  LEEPreCuts
+  // ---------------
+  std::string precut_ftype = p.get<std::string>("PrecutConfig");
+  if ( precut_ftype=="BNB" || precut_ftype=="MC" )
+    m_precutalgo.setDefaults( larlite::LEEPreCut::kBNB );
+  else if ( precut_ftype=="EXTBNB" )
+    m_precutalgo.setDefaults( larlite::LEEPreCut::kEXTBNB );
+  else if ( precut_ftype=="OVERLAY" )
+    m_precutalgo.setDefaults( larlite::LEEPreCut::kOVERLAY );
+  else
+    throw cet::exception("DLLEEInterface") << "Unrecognized precut config. Choices [BNB,MC,EXTBNB,OVERLAY]" << std::endl;
+
+  // ---------------
+  //  Tagger
+  // ---------------
+  std::string      tagger_cfg;
+  if( !finder.find_file( p.get<std::string>("TaggerConfigFile"), tagger_cfg) )
+    throw cet::exception("DLLEEInterface") << "Unable to find tagger cfg in "  << finder.to_string() << "\n";
+  LARCV_INFO() << "LOADING tagger config: " << tagger_cfg << std::endl;
+  m_taggeralgo_cfg = larlitecv::TaggerCROIAlgoConfig::makeConfigFromFile( tagger_cfg );
+  m_taggeralgo     = new larlitecv::TaggerCROIAlgo( m_taggeralgo_cfg );
 
 }
 
@@ -214,7 +264,8 @@ void DLLEEInterface::produce(art::Event & e)
   // get larlite products
   LARCV_INFO() << "Run the LiteMaker" << std::endl;
   std::vector< larlite::event_opflash > opflash_vv;
-  runLiteMaker( e, opflash_vv );
+  larlite::event_ophit ophit_beam_v;
+  runLiteMaker( e, opflash_vv, ophit_beam_v );
 
   // get larcv products
   LARCV_INFO() << "Run SUPERA" << std::endl;
@@ -234,11 +285,33 @@ void DLLEEInterface::produce(art::Event & e)
 		 << " showerimgs=" << shower_v.size() << std::endl;
   }
   
+  bool eventpass = true;
+
   // PMT Precuts
+  eventpass = m_precutalgo.apply( ophit_beam_v );
+  LARCV_INFO() << "PMT Precut Algo Result: " << eventpass << std::endl;
 
-  // CROI
+  // CROI/Tagger
+  m_tagger_input.clear();
+  
+  // fill tagger input: adc image
+  for ( auto const& img : wholeview_v )
+    m_tagger_input.img_v.push_back( img );
 
-  // Tagger
+  // fill tagger input: bad channels
+
+  // fill tagger input: empty channels
+  try {
+    for ( auto const &img : wholeview_v ) {
+      int p = img.meta().plane();
+      larcv::Image2D emptyimg = m_emptych_algo.labelEmptyChannels( m_taggeralgo_cfg.emptych_thresh.at(p), img );
+      m_tagger_input.gapch_v.emplace_back( std::move(emptyimg) );
+    }
+  }
+  catch (std::exception& e) {
+    std::cerr << "DLLEEInterface:: Error making empty channels: " << e.what() << std::endl;
+    throw std::runtime_error("DLLEEInterface:  ERROR");
+  }
 
   // Vertexer
 
@@ -304,6 +377,8 @@ void DLLEEInterface::produce(art::Event & e)
 
   saveLArCVProducts( wholeview_v, shower_v, track_v );
   
+  LARCV_INFO() << "Event Passed: " << eventpass << std::endl;
+
 }
 
 /**
@@ -377,7 +452,9 @@ bool DLLEEInterface::getSSNetFromArt( art::Event const& e, const std::string ssn
  * @param[in] e art::Event with wire data
  * 
  */
-void DLLEEInterface::runLiteMaker( art::Event const& e, std::vector< larlite::event_opflash >& opflash_vv ) {
+void DLLEEInterface::runLiteMaker( art::Event const& e, 
+				   std::vector< larlite::event_opflash >& opflash_vv,
+				   larlite::event_ophit& ophit_beam_v ) {
 
   // clear the event
   _litemaker.EventClear();
@@ -387,7 +464,7 @@ void DLLEEInterface::runLiteMaker( art::Event const& e, std::vector< larlite::ev
     art::Handle< std::vector<recob::OpFlash> > flash_handle;
     e.getByLabel( opflash_producer, flash_handle );
     if ( !flash_handle.isValid() ) {
-      std::cerr << "Attempted to load OpFlash data. label=" << opflash_producer << std::endl;
+      std::cerr << "Attempted to load OpFlash data. producer=" << opflash_producer << std::endl;
       throw cet::exception("DLLEEInterface") << "Could not load OpFlash data, label=" << opflash_producer << "." << std::endl;
     }
     else {
@@ -396,9 +473,23 @@ void DLLEEInterface::runLiteMaker( art::Event const& e, std::vector< larlite::ev
     larlite::event_opflash ev_flash;
     _litemaker.ScanData( flash_handle, &ev_flash );
     LARCV_INFO() << "  event container " << opflash_producer << " has " << ev_flash.size() << std::endl;
+    opflash_vv.emplace_back( std::move(ev_flash) );
   }
   
-  // OpHit
+  // OpHit: beam
+  art::Handle< std::vector<recob::OpHit> > ophit_beam_handle;
+  e.getByLabel( _litemaker_ophitbeam_producer, ophit_beam_handle );
+  if ( !ophit_beam_handle.isValid() ) {
+    std::cerr << "Failed to load OpHit (beam) data. producer=" << _litemaker_ophitbeam_producer << std::endl;
+    throw cet::exception("DLLEEInterface") << "Could not load OpHit(beam) data, producer=" << _litemaker_ophitbeam_producer << "." << std::endl;
+  }
+  try {
+    _litemaker.ScanData( ophit_beam_handle, &ophit_beam_v );
+    LARCV_INFO() << "  number of beam ophits: " << ophit_beam_v.size() << std::endl;
+  }
+  catch( std::exception& err ) {
+    throw cet::exception("DLLEEInterface") << "Failure to convert ophit (beam) data into larlite object" << std::endl;
+  }
 
   // Hit
 }
@@ -679,6 +770,8 @@ void DLLEEInterface::saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_v
  */
 void DLLEEInterface::beginJob()
 {
+
+  LARCV_DEBUG() << "initialize Supera" << std::endl;
   _supera.initialize();
 
 }
@@ -691,10 +784,10 @@ void DLLEEInterface::beginJob()
  */
 void DLLEEInterface::endJob()
 {
-  std::cout << "DLLEEInterface::endJob -- start" << std::endl;
-  std::cout << "DLinterface::endJob -- finalize IOmanager" << std::endl;
+  LARCV_DEBUG() << "finalize IOmanager" << std::endl;
   _supera.finalize();
-  std::cout << "DLLEEInterface::endJob -- finished" << std::endl;
+  LARCV_DEBUG() << "destroy tagger algo" << std::endl;
+  delete m_taggeralgo;
 }
 
 DEFINE_ART_MODULE(DLLEEInterface)

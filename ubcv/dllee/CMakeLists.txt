@@ -1,14 +1,15 @@
-set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
-set( LARCV_LIB   -L$ENV{LARCV_LIBDIR}   -llarcv )
+set( LARLITE_LIB   -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base -lSelectionTool_LEEPreCuts -lBasicTool_FhiclLite)
+set( LARCV_LIB     -L$ENV{LARCV_LIBDIR}   -llarcv )
+set( LARLITECV_LIB -L$ENV{LARLITECV_LIBDIR} -llarlitecv )
 set( UBLIST_INC $ENV{UBLITE_DIR}/source )
-
+set( LARLITE_INCLUDES $ENV{LARLITE_BASEDIR}/../ $ENV{LARLITE_COREDIR} $ENV{LARLITE_USERDEVDIR} $ENV{LARLITE_USERDEVDIR}/BasicTool $ENV{LARLITE_USERDEVDIR}/SelectionTool )
 #set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
 
 # use with dllee
-include_directories ( $ENV{LARLITE_COREDIR} $ENV{LARCV_INCDIR} ${UBLIST_INC} $ENV{LARSIM_INC} )
+include_directories ( ${LARLITE_INCLUDES} $ENV{LARCV_INCDIR} $ENV{LARCV_INCDIR}/../../app/ann_1.1.2/include ${UBLIST_INC} $ENV{LARSIM_INC} $ENV{LARLITECV_INCDIR} $ENV{OPENCV_INCDIR} )
 
 # use with ups larcv
-link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ${LARCV_LIB} ) 
+link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ${LARCV_LIB} -L$ENV{OPENCV_LIBDIR} -lopencv_core ${LARLITECV_LIB} ) 
 
 art_make( BASENAME_ONLY
 	  LIBRARY_NAME     ubcv_ubdllee

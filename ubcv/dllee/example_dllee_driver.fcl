@@ -9,7 +9,10 @@ DLLEEInterface: {
   WireProducerName:    "butcher"
   SSNetProducerName:   "ssnet"
   OpFlashBeamProducers: ["simpleFlashBeam","simpleFlashCosmic"]
+  OpHitBeamProducer:    "ophitBeam"
   SuperaConfigFile:     "supera_dllee_interface.fcl"
+  PrecutConfig:         "BNB"
+
 }
 
 UBDLLEEInterface: @local::DLLEEInterface
