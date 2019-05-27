@@ -27,8 +27,12 @@
 
 // larsoft
 #include "lardataobj/RecoBase/OpFlash.h"
+#include "lardataobj/RawData/TriggerData.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
 
 // ublite
+#include "DataFormat/trigger.h"
 #include "ublite/LiteMaker/ScannerAlgo.h"
 
 // ubcv
@@ -95,14 +99,20 @@ private:
 
   // Declare member data here.
   int _verbosity;                    //< verbosity of module
+  
+  // Track Entries processed
+  int _entries_processed;
 
   // larlite scanneralgo: to make larlite products used in DL algos
   larlite::ScannerAlgo _litemaker;   //< class used to make larlite products
   std::vector< std::string > _litemaker_opflash_producer_v;
   std::string _litemaker_ophitbeam_producer;
+  std::string _litemaker_trigger;
   void runLiteMaker( art::Event const& e, 
 		     std::vector< larlite::event_opflash >& opflash_vv,
-		     larlite::event_ophit& ophit_v );
+		     larlite::event_ophit& ophit_v,
+		     larlite::event_chstatus& badch_v,
+		     larlite::trigger& trigger );
 
   // supera/image formation: to make larcv products used in DL algos
   larcv::LArCVSuperaDriver _supera;  //< class used to make larcv products
@@ -118,6 +128,10 @@ private:
 			std::vector< larcv::Image2D >& shower_v,
 			std::vector< larcv::Image2D >& track_v );
 
+  // bad channel
+  std::string _chstatus_rawdigit_producer;
+  std::vector< larcv::Image2D > makeChStatusImage( const art::Event& e, 
+						   const std::vector<larcv::Image2D>& img_v );
 
   // image processing/splitting/cropping
   // Cropper_t   _cropping_method;
@@ -147,7 +161,8 @@ private:
 
   void saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_imgs,
 			  std::vector<larcv::Image2D>& shower_v,
-			  std::vector<larcv::Image2D>& track_v );
+			  std::vector<larcv::Image2D>& track_v,
+			  std::vector<larcv::Image2D>& badch_v );
 
   // =================
   //  Algorithms
@@ -179,6 +194,10 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   set_verbosity( (::larcv::msg::Level_t) _verbosity );
   _supera.set_verbosity( (::larcv::msg::Level_t) _verbosity );
 
+  // entries counter
+  // ----------------
+  _entries_processed = 0;
+
 
   // -----------------
   // litemaker config
@@ -187,6 +206,7 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   for ( auto const& opflash_producer : _litemaker_opflash_producer_v )
     _litemaker.Register( opflash_producer, larlite::data::kOpFlash );
   _litemaker_ophitbeam_producer = p.get<std::string>("OpHitBeamProducer");
+  _litemaker_trigger            = p.get<std::string>("TriggerProducer");
 
   // ---------------
   // supera config
@@ -250,7 +270,13 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
     throw cet::exception("DLLEEInterface") << "Unable to find tagger cfg in "  << finder.to_string() << "\n";
   LARCV_INFO() << "LOADING tagger config: " << tagger_cfg << std::endl;
   m_taggeralgo_cfg = larlitecv::TaggerCROIAlgoConfig::makeConfigFromFile( tagger_cfg );
+  LARCV_INFO() << "LOADING TaggerCROIAlgo instance" << std::endl;
   m_taggeralgo     = new larlitecv::TaggerCROIAlgo( m_taggeralgo_cfg );
+
+  // --------------
+  //  Bad Channels
+  // --------------  
+  _chstatus_rawdigit_producer = p.get<std::string>("ChStatusRawDigitProducer" );
 
 }
 
@@ -265,7 +291,9 @@ void DLLEEInterface::produce(art::Event & e)
   LARCV_INFO() << "Run the LiteMaker" << std::endl;
   std::vector< larlite::event_opflash > opflash_vv;
   larlite::event_ophit ophit_beam_v;
-  runLiteMaker( e, opflash_vv, ophit_beam_v );
+  larlite::event_chstatus ev_badch;
+  larlite::trigger  trigger;
+  runLiteMaker( e, opflash_vv, ophit_beam_v, ev_badch, trigger );
 
   // get larcv products
   LARCV_INFO() << "Run SUPERA" << std::endl;
@@ -284,7 +312,12 @@ void DLLEEInterface::produce(art::Event & e)
     LARCV_INFO() << "  number of trackimgs=" << track_v.size() 
 		 << " showerimgs=" << shower_v.size() << std::endl;
   }
-  
+
+  // Badch Inputs
+  LARCV_DEBUG() << "makeChStatusImage()" << std::endl;
+  std::vector< larcv::Image2D > badch_v = makeChStatusImage( e, wholeview_v );
+  LARCV_INFO() << "Number of BadCh images: " << badch_v.size() << std::endl;
+
   bool eventpass = true;
 
   // PMT Precuts
@@ -299,6 +332,8 @@ void DLLEEInterface::produce(art::Event & e)
     m_tagger_input.img_v.push_back( img );
 
   // fill tagger input: bad channels
+  for ( auto const& img : badch_v )
+    m_tagger_input.badch_v.push_back( img );
 
   // fill tagger input: empty channels
   try {
@@ -312,6 +347,19 @@ void DLLEEInterface::produce(art::Event & e)
     std::cerr << "DLLEEInterface:: Error making empty channels: " << e.what() << std::endl;
     throw std::runtime_error("DLLEEInterface:  ERROR");
   }
+
+  // fill tagger input: opflashes
+  for ( auto& opflash_v : opflash_vv )
+    m_tagger_input.opflashes_v.push_back( &opflash_v );
+
+  // fill tagger input: trigger data
+  m_tagger_input.p_ev_trigger = &trigger;
+  
+  // fill tagger input: run, subrun, event, entry
+  m_tagger_input.run    = e.id().run();
+  m_tagger_input.subrun = e.id().subRun();
+  m_tagger_input.event  = e.id().event();
+  m_tagger_input.entry  = _entries_processed;
 
   // Vertexer
 
@@ -375,10 +423,11 @@ void DLLEEInterface::produce(art::Event & e)
   // ev_merged[0]->Emplace( std::move(showermerged_v) );
   // ev_merged[1]->Emplace( std::move(trackmerged_v) );
 
-  saveLArCVProducts( wholeview_v, shower_v, track_v );
+  saveLArCVProducts( wholeview_v, shower_v, track_v, badch_v );
   
   LARCV_INFO() << "Event Passed: " << eventpass << std::endl;
 
+  _entries_processed += 1;
 }
 
 /**
@@ -454,7 +503,9 @@ bool DLLEEInterface::getSSNetFromArt( art::Event const& e, const std::string ssn
  */
 void DLLEEInterface::runLiteMaker( art::Event const& e, 
 				   std::vector< larlite::event_opflash >& opflash_vv,
-				   larlite::event_ophit& ophit_beam_v ) {
+				   larlite::event_ophit& ophit_beam_v,
+				   larlite::event_chstatus& badch_v,
+				   larlite::trigger& trigger ) {
 
   // clear the event
   _litemaker.EventClear();
@@ -491,7 +542,21 @@ void DLLEEInterface::runLiteMaker( art::Event const& e,
     throw cet::exception("DLLEEInterface") << "Failure to convert ophit (beam) data into larlite object" << std::endl;
   }
 
+  // Trigger
+  art::Handle< std::vector<raw::Trigger> > trigger_h;
+  e.getByLabel( _litemaker_trigger, trigger_h );
+  if ( !trigger_h.isValid() ) {
+    throw cet::exception("DLEEInterface") << "Failed to load trigger data from art file. producer=" << _litemaker_trigger << std::endl;
+  }
+  try {
+    _litemaker.ScanData( trigger_h, &trigger );
+  }
+  catch ( std::exception& err ) {
+    throw cet::exception("DLLEEInterface") << "Failed to convert trigger data into larlite object" << std::endl;
+  }
+
   // Hit
+  
 }
 
 /**
@@ -727,12 +792,110 @@ int DLLEEInterface::runSupera( art::Event& e, std::vector<larcv::Image2D>& whole
 // }
 
 /**
+ * Fill ChStatus Image
+ *
+ * @param[in] e art::Event from which we get status data
+ * @param[in] img_v vector of images to be used as template for output
+ */
+std::vector< larcv::Image2D> DLLEEInterface::makeChStatusImage( const art::Event& e,
+								const std::vector< larcv::Image2D >& img_v ) {
+  
+  larlite::event_chstatus       ev_badch;
+  std::vector< larcv::Image2D > badch_v;
+  auto const* geom = ::lar::providerFrom<geo::Geometry>();
+  
+  std::vector<bool> filled_ch( geom->Nchannels(), false );
+  std::map<geo::PlaneID::PlaneID_t,std::vector<short> > status_m;
+  
+  // If specified check RawDigit pedestal value: if negative this channel is not used by wire (set status=>-2)                                                                                              
+  if(!_chstatus_rawdigit_producer.empty()) {
+    LARCV_DEBUG() << "Check RawDigit pedestal value" << std::endl;
+    
+    art::Handle<std::vector<raw::RawDigit> > digit_h;
+
+    std::string label = _chstatus_rawdigit_producer;
+
+    if(label.find("::")<label.size()) {
+      e.getByLabel(label.substr(0,label.find("::")),
+                   label.substr(label.find("::")+2,label.size()-label.find("::")-2),
+                   digit_h);
+    }else{ e.getByLabel(_chstatus_rawdigit_producer,digit_h);}
+
+    for(auto const& digit : *digit_h) {
+      auto const ch = digit.Channel();
+      if(ch >= filled_ch.size()) throw ::larlite::DataFormatException("Found RawDigit > possible channel number!");
+      if(digit.GetPedestal()<0.) {
+        auto const wid =  geom->ChannelToWire(ch).front();
+        auto iter = status_m.find(wid.planeID().Plane);
+        if(iter != status_m.end())
+          (*iter).second[wid.Wire] = -2;
+        else{
+	  std::vector<short> status_v(geom->Nwires(wid.planeID()),5);
+          status_v[wid.Wire] = -2;
+          status_m.emplace(wid.planeID().Plane,status_v);
+        }
+        filled_ch[ch] = true;
+      }
+    }
+  }
+  
+
+  const lariov::ChannelStatusProvider& chanFilt = art::ServiceHandle<lariov::ChannelStatusService>()->GetProvider();
+  for(size_t i=0; i < geom->Nchannels(); ++i) {
+    if ( filled_ch[i] ) continue;
+    auto const wid =  geom->ChannelToWire(i).front();
+    short status = 0;
+    if (!chanFilt.IsPresent(i)) status = -1;
+    else status = (short)(chanFilt.Status(i));
+    
+    auto iter = status_m.find(wid.planeID().Plane);
+    if(iter != status_m.end())
+      (*iter).second[wid.Wire] = status;
+    else{
+      std::vector<short> status_v(geom->Nwires(wid.planeID()),5);
+      status_v[wid.Wire] = status;
+      status_m.emplace(wid.planeID().Plane,status_v);
+    }
+  }
+
+  // transfer status to image2d
+  for ( size_t p=0; p<img_v.size(); p++ ) {
+
+    const larcv::ImageMeta& meta = img_v.at(p).meta();
+    larcv::Image2D badch( meta );
+    badch.paint(0.0);
+    badch_v.emplace_back( std::move(badch) );
+  }
+    
+
+  for ( auto& it : status_m ) {
+
+    short p = (short)it.first;
+    std::vector<short>& status_v = it.second;
+    larcv::Image2D& badch = badch_v.at(p);
+    const larcv::ImageMeta& meta = badch.meta();
+    
+    for ( size_t c=0; c<meta.cols(); c++ ) {
+      size_t wire = (size_t)meta.pos_x(c);
+      if ( wire>=status_v.size() || status_v.at(wire)<4 ) {
+	badch.paint_col( c, 255.0 );
+      }
+    }
+
+  }
+
+  return badch_v;
+}
+
+
+/**
  * save LArCV products to file
  *
  */
 void DLLEEInterface::saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_v,
 					std::vector<larcv::Image2D>& shower_v,
-					std::vector<larcv::Image2D>& track_v ) {
+					std::vector<larcv::Image2D>& track_v,
+					std::vector<larcv::Image2D>& badch_v ) {
   
   larcv::IOManager& io_larcv = _supera.driver().io_mutable();
 
@@ -750,6 +913,12 @@ void DLLEEInterface::saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_v
   LARCV_DEBUG() << "Save track images" << std::endl;
   auto ev_trk  = (larcv::EventImage2D*) io_larcv.get_data( larcv::kProductImage2D, "ssnettrack" );
   ev_trk->Emplace( std::move(track_v) );
+
+
+  // save bad channel image
+  LARCV_DEBUG() << "Save BadCh images" << std::endl;
+  auto ev_bad  = (larcv::EventImage2D*) io_larcv.get_data( larcv::kProductImage2D, "badch" );
+  ev_bad->Emplace( std::move(badch_v) );
 
   // save entry
   LARCV_INFO() << "saving LARCV entry" << std::endl;
@@ -787,7 +956,7 @@ void DLLEEInterface::endJob()
   LARCV_DEBUG() << "finalize IOmanager" << std::endl;
   _supera.finalize();
   LARCV_DEBUG() << "destroy tagger algo" << std::endl;
-  delete m_taggeralgo;
+  //delete m_taggeralgo;
 }
 
 DEFINE_ART_MODULE(DLLEEInterface)
