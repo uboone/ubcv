@@ -111,7 +111,6 @@ private:
   void runLiteMaker( art::Event const& e, 
 		     std::vector< larlite::event_opflash >& opflash_vv,
 		     larlite::event_ophit& ophit_v,
-		     larlite::event_chstatus& badch_v,
 		     larlite::trigger& trigger );
 
   // supera/image formation: to make larcv products used in DL algos
@@ -132,31 +131,6 @@ private:
   std::string _chstatus_rawdigit_producer;
   std::vector< larcv::Image2D > makeChStatusImage( const art::Event& e, 
 						   const std::vector<larcv::Image2D>& img_v );
-
-  // image processing/splitting/cropping
-  // Cropper_t   _cropping_method;
-  // std::string _cropping_method_name;
-  // ublarcvapp::UBSplitDetector _imagesplitter; //< full splitter
-  // ublarcvapp::ubdllee::FixedCROIFromFlashAlgo _croifromflashalgo; //< croi from flash
-  // bool        _save_detsplit_input;
-  // bool        _save_detsplit_output;
-  // std::string _opflash_producer_name;
-  // std::vector<larcv::Image2D> _splitimg_v;              //< container holding split images
-  // int runWholeViewSplitter( const std::vector<larcv::Image2D>& wholeview_v, 
-  // 			    std::vector<larcv::Image2D>& splitimg_v,
-  // 			    std::vector<larcv::ROI>&     splitroi_v );
-  // int runCROIfromFlash( const std::vector<larcv::Image2D>& wholeview_v, 
-  // 			art::Event& e,
-  // 			std::vector<larcv::Image2D>& splitimg_v,
-  // 			std::vector<larcv::ROI>&     splitroi_v );
-  
-
-  /// save to art::Event
-  // void saveArtProducts( art::Event& ev,
-  // 			const std::vector<larcv::Image2D>& wholeimg_v,
-  // 			const std::vector<larcv::Image2D>& showermerged_v,
-  // 			const std::vector<larcv::Image2D>& trackmerged_v );
-  // std::vector<float> _pixelthresholds_forsavedscores;
   
 
   void saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_imgs,
@@ -172,11 +146,20 @@ private:
   larlite::LEEPreCut m_precutalgo;
 
   // Tagger/CROI
+  int _tagger_endpoint_limit;
   larlitecv::TaggerCROIAlgoConfig m_taggeralgo_cfg;
   larlitecv::TaggerCROIAlgo*      m_taggeralgo;
   larlitecv::InputPayload         m_tagger_input;
   larlitecv::EmptyChannelAlgo     m_emptych_algo;
-
+  bool runTagger( const art::Event& e,
+		  std::vector<larcv::Image2D>& wholeview_v,
+		  std::vector<larcv::Image2D>& badch_v, 
+		  std::vector<larlite::event_opflash>& opflash_vv,
+		  larlite::trigger& trigger, 
+		  larlitecv::ThruMuPayload& thrumu_results,
+		  larlitecv::StopMuPayload& stopmu_results,
+		  larlitecv::CROIPayload& croi_results );
+  
 };
 
 /**
@@ -272,6 +255,7 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   m_taggeralgo_cfg = larlitecv::TaggerCROIAlgoConfig::makeConfigFromFile( tagger_cfg );
   LARCV_INFO() << "LOADING TaggerCROIAlgo instance" << std::endl;
   m_taggeralgo     = new larlitecv::TaggerCROIAlgo( m_taggeralgo_cfg );
+  _tagger_endpoint_limit = p.get<int>("TaggerEndpointLimit");
 
   // --------------
   //  Bad Channels
@@ -291,9 +275,8 @@ void DLLEEInterface::produce(art::Event & e)
   LARCV_INFO() << "Run the LiteMaker" << std::endl;
   std::vector< larlite::event_opflash > opflash_vv;
   larlite::event_ophit ophit_beam_v;
-  larlite::event_chstatus ev_badch;
   larlite::trigger  trigger;
-  runLiteMaker( e, opflash_vv, ophit_beam_v, ev_badch, trigger );
+  runLiteMaker( e, opflash_vv, ophit_beam_v, trigger );
 
   // get larcv products
   LARCV_INFO() << "Run SUPERA" << std::endl;
@@ -325,41 +308,13 @@ void DLLEEInterface::produce(art::Event & e)
   LARCV_INFO() << "PMT Precut Algo Result: " << eventpass << std::endl;
 
   // CROI/Tagger
-  m_tagger_input.clear();
-  
-  // fill tagger input: adc image
-  for ( auto const& img : wholeview_v )
-    m_tagger_input.img_v.push_back( img );
-
-  // fill tagger input: bad channels
-  for ( auto const& img : badch_v )
-    m_tagger_input.badch_v.push_back( img );
-
-  // fill tagger input: empty channels
-  try {
-    for ( auto const &img : wholeview_v ) {
-      int p = img.meta().plane();
-      larcv::Image2D emptyimg = m_emptych_algo.labelEmptyChannels( m_taggeralgo_cfg.emptych_thresh.at(p), img );
-      m_tagger_input.gapch_v.emplace_back( std::move(emptyimg) );
-    }
-  }
-  catch (std::exception& e) {
-    std::cerr << "DLLEEInterface:: Error making empty channels: " << e.what() << std::endl;
-    throw std::runtime_error("DLLEEInterface:  ERROR");
-  }
-
-  // fill tagger input: opflashes
-  for ( auto& opflash_v : opflash_vv )
-    m_tagger_input.opflashes_v.push_back( &opflash_v );
-
-  // fill tagger input: trigger data
-  m_tagger_input.p_ev_trigger = &trigger;
-  
-  // fill tagger input: run, subrun, event, entry
-  m_tagger_input.run    = e.id().run();
-  m_tagger_input.subrun = e.id().subRun();
-  m_tagger_input.event  = e.id().event();
-  m_tagger_input.entry  = _entries_processed;
+  // ------------
+  larlitecv::ThruMuPayload thrumu_results;
+  larlitecv::StopMuPayload stopmu_results;
+  larlitecv::CROIPayload   croi_results;
+  bool ranTagger = runTagger( e, wholeview_v, badch_v, opflash_vv, trigger,
+			      thrumu_results, stopmu_results, croi_results );
+  LARCV_INFO() << "Tagger run: " << ranTagger << std::endl;
 
   // Vertexer
 
@@ -499,12 +454,14 @@ bool DLLEEInterface::getSSNetFromArt( art::Event const& e, const std::string ssn
  *  -- opflash
  *
  * @param[in] e art::Event with wire data
+ * @param[inout] opflash_vv vector of opflash event containers to pass back
+ * @param[inout] ophit_beam_v vector of ophits to pass back
+ * @param[inout] trigger trigger data
  * 
  */
 void DLLEEInterface::runLiteMaker( art::Event const& e, 
 				   std::vector< larlite::event_opflash >& opflash_vv,
 				   larlite::event_ophit& ophit_beam_v,
-				   larlite::event_chstatus& badch_v,
 				   larlite::trigger& trigger ) {
 
   // clear the event
@@ -569,7 +526,8 @@ void DLLEEInterface::runLiteMaker( art::Event const& e,
  * @return int number of images to process by network
  *
  */
-int DLLEEInterface::runSupera( art::Event& e, std::vector<larcv::Image2D>& wholeview_imgs ) {
+int DLLEEInterface::runSupera( art::Event& e, 
+			       std::vector<larcv::Image2D>& wholeview_imgs ) {
 
   //
   // set data product
@@ -601,206 +559,15 @@ int DLLEEInterface::runSupera( art::Event& e, std::vector<larcv::Image2D>& whole
 }
 
 /**
- * take wholeview images (one per plane in vector) and turn into subimage crops (many per plane in vector)
- *
- * passes the images into the UBSplitDetector object (_imagesplitter)
- *
- * @param[in] wholeview_v vector of whole-view images. one per plane.
- * @param[inout] splitimg_v vector of cropped images. many per plane.
- * @param[inout] splitroi_v vector ROIs for split images. many  per plane.
- *
- **/
-// int DLLEEInterface::runWholeViewSplitter( const std::vector<larcv::Image2D>& wholeview_v, 
-// 				       std::vector<larcv::Image2D>& splitimg_v,
-// 				       std::vector<larcv::ROI>&     splitroi_v ) {
-  
-//   // //
-//   // // define the image meta and image
-//   // //
-//   // std::vector<larcv::ImageMeta> meta_v;
-//   // for ( auto const& img : wholeview_v ) {
-//   //   meta_v.push_back( img.meta() );
-//   // }
-  
-//   //
-//   // debug: dump the meta definitions for the wholeview images
-//   //std::cout << "DLLEEInterface: superawire images made " << wholeview_v.size() << std::endl;
-//   // for (auto& img : wholeview_v ) {
-//   //   std::cout << img.meta().dump() << std::endl;
-//   // }  
-  
-//   //
-//   // split image into subregions
-//   //
-//   // splitimg_v.clear();
-//   // splitroi_v.clear();
-//   // try {
-//   //   _imagesplitter.process( wholeview_v, splitimg_v, splitroi_v );
-//   // }
-//   // catch (std::exception& e ) {
-//   //   throw cet::exception("DLLEEInterface") << "error splitting image: " << e.what() << std::endl;
-//   // }
-
-//   // return splitimg_v.size();
-
-// }
-
-/**
- * produce subimage crops based on the location of the in-time flash
- *
- * passes the images into an instance of FixedCROIFromFlashAlgo (_croifromflashalgo member)
- *
- * @param[in] wholeview_v vector of whole-view images. one per plane.
- * @param[in] e art::Event from which we will get the opflash objects
- * @param[inout] splitimg_v vector of cropped images. many per plane.
- * @param[inout] splitroi_v vector ROIs for split images. many  per plane.
- *
- **/
-// int DLLEEInterface::runCROIfromFlash( const std::vector<larcv::Image2D>& wholeview_v, 
-// 				   art::Event& e,
-// 				   std::vector<larcv::Image2D>& splitimg_v,
-// 				   std::vector<larcv::ROI>&     splitroi_v ) {
-
-//   // first get the opflash objects from art
-//   art::Handle<std::vector<recob::OpFlash> > data_h;
-//   //  handle sub-name
-//   if(_opflash_producer_name.find(" ")<_opflash_producer_name.size()) {
-//     e.getByLabel(_opflash_producer_name.substr(0,_opflash_producer_name.find(" ")),
-// 		 _opflash_producer_name.substr(_opflash_producer_name.find(" ")+1,_opflash_producer_name.size()-_opflash_producer_name.find(" ")-1),
-// 		 data_h);
-//   }else{ e.getByLabel(_opflash_producer_name, data_h); }
-
-//   if(!data_h.isValid()) { 
-//     std::cerr<< "Attempted to load recob::Opflash data: " << _opflash_producer_name << std::endl;
-//     throw cet::exception("DLLEEInterface") << "Could not locate recob::Opflash data!" << std::endl;
-//   }
-//   //std::cout << "Loaded opflash data" << std::endl;
-
-//   const float usec_min = 190*0.015625;
-//   const float usec_max = 320*0.015625;
-
-//   std::vector<larlite::opflash> intime_flashes_v;
-//   for ( auto const& artflash : *data_h ) {
-
-//     if ( artflash.Time()<usec_min || artflash.Time()>usec_max ) continue;
-
-//     // hmm, there is no getter for the number of entries in the PE vector. 
-//     // that seems wrong. we cheat about the number of PEs for now
-//     // next we have to make larlite objects
-//     std::vector<double> pe_v(32,0.0);
-//     for ( size_t ich=0; ich<32; ich++ ) {
-//       pe_v[ich] = artflash.PE(ich);
-//     }
-//     larlite::opflash llflash( artflash.Time(),    artflash.TimeWidth(),
-// 			      artflash.AbsTime(), artflash.Frame(),
-// 			      pe_v,
-// 			      1, 1, 1,
-// 			      artflash.YCenter(), artflash.YWidth(),
-// 			      artflash.ZCenter(), artflash.ZWidth(),
-// 			      artflash.WireCenters(),
-// 			      artflash.WireWidths() );
-//     intime_flashes_v.emplace_back( std::move(llflash) );
-//   }
-//   //std::cout << "converted into larlite opflash" << std::endl;
-
-//   // pass them to the algo to get CROI    
-//   for ( auto& llflash : intime_flashes_v ) {
-//     std::vector<larcv::ROI> flashrois = _croifromflashalgo.findCROIfromFlash( llflash );
-//     for ( auto& roi : flashrois )
-//       splitroi_v.emplace_back( std::move(roi) );
-//   }
-//   //std::cout << "create roi from flash" << std::endl;
-
-//   // cropout the regions
-//   size_t nplanes = wholeview_v.size();
-//   size_t ncrops = 0;
-//   for (size_t plane=0; plane<nplanes; plane++ ) {
-//     const larcv::Image2D& wholeimg = wholeview_v[plane];
-//     for ( auto& roi : splitroi_v ) {
-//       const larcv::ImageMeta& bbox = roi.BB(plane);
-//       //std::cout << "crop from the whole image" << std::endl;
-//       try {
-// 	larcv::Image2D crop = wholeimg.crop( bbox );
-// 	splitimg_v.emplace_back( std::move(crop) );
-//       }
-//       catch( std::exception& e ) {
-// 	throw cet::exception("DLLEEInterface") << "error in cropping: " << e.what() << std::endl;
-//       }
-//       ncrops++;
-//     }
-//   }
-//   //std::cout << "cropped the regions: total " << ncrops << std::endl;
-
-//   // done
-//   return (int)ncrops;
-// }
-
-
-// /**
-//  * create ubdldata::pixeldata objects for art::Event
-//  *
-//  *
-//  */
-// void DLLEEInterface::saveArtProducts( art::Event& ev, 
-// 				   const std::vector<larcv::Image2D>& wholeimg_v,
-// 				   const std::vector<larcv::Image2D>& showermerged_v,
-// 				   const std::vector<larcv::Image2D>& trackmerged_v ) {
-
-//   std::unique_ptr< std::vector<ubdldata::pixeldata> > ppixdata_v(new std::vector<ubdldata::pixeldata>);
-
-//   for ( auto const& adc : wholeimg_v ) {
-//     int planeid           = (int)adc.meta().plane();
-//     float pix_threshold   = _pixelthresholds_forsavedscores.at(planeid);
-//     auto const& showerimg = showermerged_v.at(planeid);
-//     auto const& trackimg  = trackmerged_v.at(planeid);
-
-//     std::vector< std::vector<float> > pixdata_v;
-//     // we reserve enough space to fill the whole image, but we shouldn't use all of the space
-//     pixdata_v.reserve( adc.meta().rows()*adc.meta().cols() );
-
-//     size_t npixels = 0;
-//     for ( size_t r=0; r<adc.meta().rows(); r++ ) {
-//       float tick = adc.meta().pos_y(r);
-//       for ( size_t c=0; c<adc.meta().cols(); c++ ) {
-
-// 	// each pixel
-	
-// 	if ( adc.pixel(r,c)<pix_threshold ) continue;
-
-// 	float wire=adc.meta().pos_x(c);
-
-// 	std::vector<float> pixdata = { (float)wire, (float)tick, 
-// 				       (float)showerimg.pixel(r,c), (float)trackimg.pixel(r,c) };
-	
-// 	pixdata_v.push_back( pixdata );
-
-// 	npixels++;
-//       }
-//     }
-  
-//     ubdldata::pixeldata out( pixdata_v,
-// 			     adc.meta().min_x(), adc.meta().min_y(), 
-// 			     adc.meta().max_x(), adc.meta().max_y(),
-// 			     (int)adc.meta().cols(), (int)adc.meta().rows(),
-// 			     (int)adc.meta().plane(), 4, 0 );
-
-//     ppixdata_v->emplace_back( std::move(out) );
-//   }
-
-  
-//   ev.put( std::move(ppixdata_v) );
-// }
-
-/**
  * Fill ChStatus Image
  *
  * @param[in] e art::Event from which we get status data
  * @param[in] img_v vector of images to be used as template for output
+ *
  */
 std::vector< larcv::Image2D> DLLEEInterface::makeChStatusImage( const art::Event& e,
 								const std::vector< larcv::Image2D >& img_v ) {
   
-  larlite::event_chstatus       ev_badch;
   std::vector< larcv::Image2D > badch_v;
   auto const* geom = ::lar::providerFrom<geo::Geometry>();
   
@@ -885,6 +652,90 @@ std::vector< larcv::Image2D> DLLEEInterface::makeChStatusImage( const art::Event
   }
 
   return badch_v;
+}
+
+/**
+ * Run the tagger
+ *
+ * load the input class and run the tagger
+ *
+ */
+bool DLLEEInterface::runTagger( const art::Event& e,
+				std::vector<larcv::Image2D>& wholeview_v,
+				std::vector<larcv::Image2D>& badch_v, 
+				std::vector<larlite::event_opflash>& opflash_vv,
+				larlite::trigger& trigger, 
+				larlitecv::ThruMuPayload& thrumu_results,
+				larlitecv::StopMuPayload& stopmu_results,
+				larlitecv::CROIPayload& croi_results ) {				
+  
+  m_tagger_input.clear();
+  thrumu_results.clear();
+  stopmu_results.clear();
+  croi_results.clear();
+  
+  // fill tagger input: adc image
+  for ( auto const& img : wholeview_v )
+    m_tagger_input.img_v.push_back( img );
+
+  // fill tagger input: bad channels
+  for ( auto const& img : badch_v )
+    m_tagger_input.badch_v.push_back( img );
+
+  // fill tagger input: empty channels
+  try {
+    for ( auto const &img : wholeview_v ) {
+      int p = img.meta().plane();
+      larcv::Image2D emptyimg = m_emptych_algo.labelEmptyChannels( m_taggeralgo_cfg.emptych_thresh.at(p), img );
+      m_tagger_input.gapch_v.emplace_back( std::move(emptyimg) );
+    }
+  }
+  catch (std::exception& e) {
+    std::cerr << "DLLEEInterface:: Error making empty channels: " << e.what() << std::endl;
+    throw std::runtime_error("DLLEEInterface:  ERROR");
+  }
+
+  // fill tagger input: opflashes
+  for ( auto& opflash_v : opflash_vv )
+    m_tagger_input.opflashes_v.push_back( &opflash_v );
+
+  // fill tagger input: trigger data
+  m_tagger_input.p_ev_trigger = &trigger;
+  
+  // fill tagger input: run, subrun, event, entry
+  m_tagger_input.run    = e.id().run();
+  m_tagger_input.subrun = e.id().subRun();
+  m_tagger_input.event  = e.id().event();
+  m_tagger_input.entry  = _entries_processed;
+
+  // run tagger
+  
+  // output payloads
+  larlitecv::ThruMuPayload thrumu_out = m_taggeralgo->runBoundaryPointFinder( m_tagger_input );
+
+  int num_boundary_points = 0;
+  num_boundary_points += thrumu_out.side_filtered_v.size();
+  num_boundary_points += thrumu_out.anode_filtered_v.size();
+  num_boundary_points += thrumu_out.cathode_filtered_v.size();
+  num_boundary_points += thrumu_out.imgends_filtered_v.size();
+
+  if ( num_boundary_points>_tagger_endpoint_limit) {
+    // too many endpoints we stop the tagger
+    // likely noisy, so sometimes causes code to hang
+    std::swap( thrumu_out, thrumu_results );
+    return false;
+  }
+
+  m_taggeralgo->runThruMu( m_tagger_input, thrumu_out );
+
+  larlitecv::StopMuPayload stopmu_out = m_taggeralgo->runStopMu( m_tagger_input, thrumu_out );
+  //larlitecv::CROIPayload   croi_out   = m_taggeralgo->runCROISelection( m_tagger_input, thrumu_out, stopmu_out );
+
+  std::swap( thrumu_out, thrumu_results );
+  std::swap( stopmu_out, stopmu_results );
+  //std::swap( croi_out,   croi_results );
+
+  return true;
 }
 
 
