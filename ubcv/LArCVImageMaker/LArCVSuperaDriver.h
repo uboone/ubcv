@@ -34,7 +34,7 @@ namespace larcv {
   public:
     
     /// Default constructor
-    LArCVSuperaDriver();
+    LArCVSuperaDriver(std::string cfgname="ProcessDriver");
     
     /// Default destructor
     ~LArCVSuperaDriver(){}

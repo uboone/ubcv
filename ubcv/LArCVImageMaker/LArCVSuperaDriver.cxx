@@ -5,8 +5,8 @@
 
 namespace larcv {
 
-  LArCVSuperaDriver::LArCVSuperaDriver()
-    : _driver("ProcessDriver")
+  LArCVSuperaDriver::LArCVSuperaDriver(std::string cfgname)
+    : _driver(cfgname)
     , _supera_chstatus_ptr(nullptr)
   {}
 

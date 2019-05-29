@@ -16,6 +16,7 @@ DLLEEInterface: {
   TaggerConfigFile:     "cfg/tagger_overlay_v2_splity.cfg"
   TaggerEndpointLimit:  100
   ChStatusRawDigitProducer: ""
+  VertexerConfigFile:   "cfg/prod_fullchain_ssnet_combined_newtag_base_c10_union_server.cfg"
 }
 
 UBDLLEEInterface: @local::DLLEEInterface

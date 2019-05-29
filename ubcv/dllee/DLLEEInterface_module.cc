@@ -144,9 +144,11 @@ private:
   // =================
 
   // PMT Precuts
+  // -------------
   larlite::LEEPreCut m_precutalgo;
 
   // Tagger/CROI
+  // -------------
   int _tagger_endpoint_limit;
   larlitecv::TaggerCROIAlgoConfig  m_taggeralgo_cfg;
   larlitecv::InputPayload          m_tagger_input;
@@ -166,6 +168,11 @@ private:
 				larcv::EventPixel2D& ev_thrumu_pixels,
 				larcv::EventPixel2D& ev_stopmu_pixels);
 
+  // Vertexer
+  // ---------
+  std::string _vertexer_cfg;         //< vertexer config file
+  larcv::ProcessDriver* m_vertexer;
+
   
 };
 
@@ -177,6 +184,9 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   : larcv::larcv_base("DLLEEInterface_module")
     // Initialize member data here.
 {
+  
+  // file path utility
+  cet::search_path finder("FHICL_FILE_PATH");
 
   // verbosity
   // ----------
@@ -187,7 +197,6 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   // entries counter
   // ----------------
   _entries_processed = 0;
-
 
   // -----------------
   // litemaker config
@@ -208,36 +217,10 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   // name of supera configuration file
   _supera_config      = p.get<std::string>("SuperaConfigFile");
 
-  std::string supera_cfg;
-  cet::search_path finder("FHICL_FILE_PATH");
-  if( !finder.find_file(_supera_config, supera_cfg) )
-    throw cet::exception("DLLEEInterface") << "Unable to find supera cfg in "  << finder.to_string() << "\n";
-  std::cout << "LOADING supera config: " << supera_cfg << std::endl;
-
-  // configure supera (convert art::Event::CalMod -> Image2D)
-  _supera.configure(supera_cfg);
-
   // ---------------
   //  ssnet
   // ---------------
   _ssnet_producer = p.get<std::string>("SSNetProducerName");
-
-  // // check cfg content top level
-  // larcv::PSet main_cfg = larcv::CreatePSetFromFile(supera_cfg).get<larcv::PSet>("ProcessDriver");
-
-  // // get list of processors
-  // std::vector<std::string> process_names = main_cfg.get< std::vector<std::string> >("ProcessName");
-  // std::vector<std::string> process_types = main_cfg.get< std::vector<std::string> >("ProcessType");
-  // larcv::PSet              process_list  = main_cfg.get<larcv::PSet>("ProcessList");
-  // //larcv::PSet              split_cfg     = main_cfg.get<larcv::PSet>("UBSplitConfig"); 
-  
-  // if ( process_names.size()!=process_types.size() ) {
-  //   throw std::runtime_error( "Number of Supera ProcessName(s) and ProcessTypes(s) is not the same." );
-  // }
-
-
-  // configure image splitter (fullimage into detsplit image)
-  //_imagesplitter.configure( split_cfg );
 
   // ---------------
   //  LEEPreCuts
@@ -269,7 +252,13 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   // --------------  
   _chstatus_rawdigit_producer = p.get<std::string>("ChStatusRawDigitProducer" );
 
-  
+  // ---------------
+  //  Vertexer
+  // ---------------
+  _vertexer_cfg = p.get<std::string>("VertexerConfigFile");
+  m_vertexer = new larcv::ProcessDriver( "VertexDriver" );
+  m_vertexer->set_verbosity( (::larcv::msg::Level_t)_verbosity );
+
 }
 
 /** 
@@ -884,8 +873,37 @@ void DLLEEInterface::saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_v
 void DLLEEInterface::beginJob()
 {
 
+  // --------
+  // SUPERA
+  // --------
+  std::string supera_cfg;
+  cet::search_path finder("FHICL_FILE_PATH");
+  if( !finder.find_file(_supera_config, supera_cfg) )
+    throw cet::exception("DLLEEInterface") << "Unable to find supera cfg in "  << finder.to_string() << "\n";
+  std::cout << "LOADING supera config: " << supera_cfg << std::endl;
+
+  // configure supera (convert art::Event::CalMod -> Image2D)
+  _supera.configure(supera_cfg);
+
   LARCV_DEBUG() << "initialize Supera" << std::endl;
   _supera.initialize();
+
+  // --------
+  // VERTEX
+  // --------
+  std::string vertexer_cfg_path;
+  if( !finder.find_file( _vertexer_cfg, vertexer_cfg_path) )
+    throw cet::exception("DLLEEInterface") << "Unable to find vertexer cfg in "  << finder.to_string() << "\n";
+  LARCV_INFO() << "LOADING vertex config: " << vertexer_cfg_path << std::endl;
+  // pass the iomanager for supera
+  LARCV_DEBUG() << "VERTEXER: pass supera IOManager to vertexer" << std::endl;
+  m_vertexer->set_iomanager( &_supera.driver().io_mutable() );
+  LARCV_DEBUG() << "VERTEXER: configure" << std::endl;
+  m_vertexer->configure( vertexer_cfg_path );
+  LARCV_DEBUG() << "VERTEXER: initialize" << std::endl;
+  m_vertexer->initialize();
+  LARCV_INFO()  << "VERTEXER: Process Driver Loaded" << std::endl;
+
 
 }
 
