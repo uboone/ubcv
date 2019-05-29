@@ -48,6 +48,7 @@
 #include "Base/PSet.h"
 #include "Base/LArCVBaseUtilFunc.h"
 #include "DataFormat/EventImage2D.h"
+#include "DataFormat/EventPixel2D.h"
 // #include "larcv/core/DataFormat/Image2D.h"
 // #include "larcv/core/DataFormat/ImageMeta.h"
 // #include "larcv/core/DataFormat/ROI.h"
@@ -147,18 +148,24 @@ private:
 
   // Tagger/CROI
   int _tagger_endpoint_limit;
-  larlitecv::TaggerCROIAlgoConfig m_taggeralgo_cfg;
-  larlitecv::TaggerCROIAlgo*      m_taggeralgo;
-  larlitecv::InputPayload         m_tagger_input;
-  larlitecv::EmptyChannelAlgo     m_emptych_algo;
+  larlitecv::TaggerCROIAlgoConfig  m_taggeralgo_cfg;
+  larlitecv::InputPayload          m_tagger_input;
+  larlitecv::EmptyChannelAlgo      m_emptych_algo;
   bool runTagger( const art::Event& e,
 		  std::vector<larcv::Image2D>& wholeview_v,
 		  std::vector<larcv::Image2D>& badch_v, 
 		  std::vector<larlite::event_opflash>& opflash_vv,
 		  larlite::trigger& trigger, 
-		  larlitecv::ThruMuPayload& thrumu_results,
-		  larlitecv::StopMuPayload& stopmu_results,
-		  larlitecv::CROIPayload& croi_results );
+		  larcv::EventPixel2D& ev_thrumu_pixels,
+		  larcv::EventPixel2D& ev_stopmu_pixels);
+  
+  void makeTaggerPixelClusters( const larlitecv::InputPayload& input,
+				const larlitecv::TaggerCROIAlgoConfig& config,
+				larlitecv::ThruMuPayload& thrumuout,
+				larlitecv::StopMuPayload& stopmuout,
+				larcv::EventPixel2D& ev_thrumu_pixels,
+				larcv::EventPixel2D& ev_stopmu_pixels);
+
   
 };
 
@@ -252,9 +259,9 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   if( !finder.find_file( p.get<std::string>("TaggerConfigFile"), tagger_cfg) )
     throw cet::exception("DLLEEInterface") << "Unable to find tagger cfg in "  << finder.to_string() << "\n";
   LARCV_INFO() << "LOADING tagger config: " << tagger_cfg << std::endl;
+  //larlitecv::TaggerCROIAlgoConfig taggeralgocfg = larlitecv::TaggerCROIAlgoConfig::makeConfigFromFile( tagger_cfg );
   m_taggeralgo_cfg = larlitecv::TaggerCROIAlgoConfig::makeConfigFromFile( tagger_cfg );
   LARCV_INFO() << "LOADING TaggerCROIAlgo instance" << std::endl;
-  m_taggeralgo     = new larlitecv::TaggerCROIAlgo( m_taggeralgo_cfg );
   _tagger_endpoint_limit = p.get<int>("TaggerEndpointLimit");
 
   // --------------
@@ -262,6 +269,7 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   // --------------  
   _chstatus_rawdigit_producer = p.get<std::string>("ChStatusRawDigitProducer" );
 
+  
 }
 
 /** 
@@ -308,13 +316,26 @@ void DLLEEInterface::produce(art::Event & e)
   LARCV_INFO() << "PMT Precut Algo Result: " << eventpass << std::endl;
 
   // CROI/Tagger
-  // ------------
-  larlitecv::ThruMuPayload thrumu_results;
-  larlitecv::StopMuPayload stopmu_results;
-  larlitecv::CROIPayload   croi_results;
-  bool ranTagger = runTagger( e, wholeview_v, badch_v, opflash_vv, trigger,
-			      thrumu_results, stopmu_results, croi_results );
-  LARCV_INFO() << "Tagger run: " << ranTagger << std::endl;
+  // ------------  
+  larcv::EventPixel2D* ev_thrumu_pixels 
+    = (larcv::EventPixel2D*)_supera.driver().io_mutable().get_data( larcv::kProductPixel2D, "thrumupixels" );
+  larcv::EventPixel2D* ev_stopmu_pixels 
+    = (larcv::EventPixel2D*)_supera.driver().io_mutable().get_data( larcv::kProductPixel2D, "stopmupixels" );
+
+  ev_thrumu_pixels->clear();
+  ev_stopmu_pixels->clear();
+
+  auto it = ev_thrumu_pixels->Pixel2DClusterArray().find(0);
+  if ( it==ev_thrumu_pixels->Pixel2DClusterArray().end() ) {
+    LARCV_INFO() << "DERP"  << std::endl;
+  }
+  else {
+    LARCV_INFO() << "FUCK YOU" << std::endl;
+  }
+
+  bool was_tagger_run = runTagger( e, wholeview_v, badch_v, opflash_vv, trigger,
+				   *ev_thrumu_pixels, *ev_stopmu_pixels );
+  LARCV_INFO() << "RAN Tagger: " << was_tagger_run << std::endl;
 
   // Vertexer
 
@@ -523,6 +544,7 @@ void DLLEEInterface::runLiteMaker( art::Event const& e,
  * the _supera object will contain the larcv IOManager which will have images stored
  *
  * @param[in] e art::Event with wire data
+ * @param[inout] wholeview_imgs vector of Image2D to pass back images
  * @return int number of images to process by network
  *
  */
@@ -665,14 +687,8 @@ bool DLLEEInterface::runTagger( const art::Event& e,
 				std::vector<larcv::Image2D>& badch_v, 
 				std::vector<larlite::event_opflash>& opflash_vv,
 				larlite::trigger& trigger, 
-				larlitecv::ThruMuPayload& thrumu_results,
-				larlitecv::StopMuPayload& stopmu_results,
-				larlitecv::CROIPayload& croi_results ) {				
-  
-  m_tagger_input.clear();
-  thrumu_results.clear();
-  stopmu_results.clear();
-  croi_results.clear();
+				larcv::EventPixel2D& ev_thrumu_pixels,
+				larcv::EventPixel2D& ev_stopmu_pixels ) {
   
   // fill tagger input: adc image
   for ( auto const& img : wholeview_v )
@@ -708,34 +724,111 @@ bool DLLEEInterface::runTagger( const art::Event& e,
   m_tagger_input.event  = e.id().event();
   m_tagger_input.entry  = _entries_processed;
 
-  // run tagger
+  auto it = ev_thrumu_pixels.Pixel2DClusterArray().find(0);
+  LARCV_INFO() << "DERP1" << std::endl;
   
+  // run tagger
+  larlitecv::TaggerCROIAlgo taggeralgo(m_taggeralgo_cfg);
+
+
+  it = ev_thrumu_pixels.Pixel2DClusterArray().find(0);
+  LARCV_INFO() << "DERP2" << std::endl;
+    
   // output payloads
-  larlitecv::ThruMuPayload thrumu_out = m_taggeralgo->runBoundaryPointFinder( m_tagger_input );
+  larlitecv::ThruMuPayload thrumu_results = taggeralgo.runBoundaryPointFinder( m_tagger_input );
+
+  it = ev_thrumu_pixels.Pixel2DClusterArray().find(0);
+  LARCV_INFO() << "DERP3" << std::endl;
 
   int num_boundary_points = 0;
-  num_boundary_points += thrumu_out.side_filtered_v.size();
-  num_boundary_points += thrumu_out.anode_filtered_v.size();
-  num_boundary_points += thrumu_out.cathode_filtered_v.size();
-  num_boundary_points += thrumu_out.imgends_filtered_v.size();
+  num_boundary_points += thrumu_results.side_filtered_v.size();
+  num_boundary_points += thrumu_results.anode_filtered_v.size();
+  num_boundary_points += thrumu_results.cathode_filtered_v.size();
+  num_boundary_points += thrumu_results.imgends_filtered_v.size();
+
+  it = ev_thrumu_pixels.Pixel2DClusterArray().find(0);
+  LARCV_INFO() << "DERP4" << std::endl;
 
   if ( num_boundary_points>_tagger_endpoint_limit) {
     // too many endpoints we stop the tagger
     // likely noisy, so sometimes causes code to hang
-    std::swap( thrumu_out, thrumu_results );
     return false;
   }
 
-  m_taggeralgo->runThruMu( m_tagger_input, thrumu_out );
+  it = ev_thrumu_pixels.Pixel2DClusterArray().find(0);
 
-  larlitecv::StopMuPayload stopmu_out = m_taggeralgo->runStopMu( m_tagger_input, thrumu_out );
-  //larlitecv::CROIPayload   croi_out   = m_taggeralgo->runCROISelection( m_tagger_input, thrumu_out, stopmu_out );
+  LARCV_DEBUG() << "run the THRUMU tagger" << std::endl;
+  taggeralgo.runThruMu( m_tagger_input, thrumu_results );
+  it = ev_thrumu_pixels.Pixel2DClusterArray().find(0);
+  LARCV_DEBUG() << "RAN the THRUMU tagger" << std::endl;
+  
+  LARCV_DEBUG() << "run the STOPMU tagger" << std::endl;
+  it = ev_thrumu_pixels.Pixel2DClusterArray().find(0);
+  larlitecv::StopMuPayload stopmu_results = taggeralgo.runStopMu( m_tagger_input, thrumu_results );
+  LARCV_DEBUG() << "RAN the STOPMU tagger" << std::endl;
 
-  std::swap( thrumu_out, thrumu_results );
-  std::swap( stopmu_out, stopmu_results );
-  //std::swap( croi_out,   croi_results );
+  //larlitecv::CROIPayload   croi_out = taggeralgo.runCROISelection( m_tagger_input, thrumu_out, stopmu_out );
+
+  it = ev_thrumu_pixels.Pixel2DClusterArray().find(0);
+  makeTaggerPixelClusters( m_tagger_input, m_taggeralgo_cfg, 
+			   thrumu_results, stopmu_results,
+			   ev_thrumu_pixels, ev_stopmu_pixels );
+
+  LARCV_DEBUG() << "Tagger output converted successfully" << std::endl;
 
   return true;
+}
+
+/**
+ * convert 3D tracks from the thrumu reco into tagged images
+ *
+ * @param[in] input class containing thrumu inputs
+ * @param[in] config configuration for tagger
+ * @param[in] data output products from thrumu data
+ * @param[inout] ev_tracks2d resulting pixel clusters passed back
+ */
+void DLLEEInterface::makeTaggerPixelClusters( const larlitecv::InputPayload& input,
+					      const larlitecv::TaggerCROIAlgoConfig& config,
+					      larlitecv::ThruMuPayload& thrumuout,
+					      larlitecv::StopMuPayload& stopmuout,
+					      larcv::EventPixel2D& ev_thrumupix,
+					      larcv::EventPixel2D& ev_stopmupix ) {
+  
+  // save 2D track objects filtered by good 3d tracks
+  
+  // THRUMU
+  LARCV_INFO() << "Save THRUMU: number of tracks=" 
+	       << thrumuout.trackcluster3d_v.size()
+	       << std::endl;
+  for (int i3d=0; i3d<(int)thrumuout.trackcluster3d_v.size(); i3d++) {
+    const larlitecv::BMTrackCluster3D& track3d = thrumuout.trackcluster3d_v.at(i3d);
+    LARCV_DEBUG() << "  track[" << i3d << "]" << std::endl;
+    std::vector< larcv::Pixel2DCluster > trackcluster2d 
+      = track3d.getTrackPixelsFromImages( input.img_v, input.badch_v,
+					  config.thrumu_tracker_cfg.pixel_threshold, 
+					  config.thrumu_tracker_cfg.tag_neighborhood, 0.3 );
+    LARCV_DEBUG() << "  trackcluster2d[" << trackcluster2d.size() << "]" << std::endl;
+    for (int p=0; p<3; p++) {
+      LARCV_DEBUG() << " storing plane[" << p << "] cluster w/ " << trackcluster2d.at(p).size() << " pixels" << std::endl;
+      ev_thrumupix.Append( (larcv::PlaneID_t)p, trackcluster2d.at(p), input.img_v.at(p).meta() );
+    }
+  }
+
+  // STOPMU
+  LARCV_INFO() << "Save STOPMU: number of tracks=" 
+	       << stopmuout.stopmu_trackcluster_v.size()
+	       << std::endl;
+  for ( size_t itrack=0; itrack<stopmuout.stopmu_trackcluster_v.size(); itrack++ ) {
+    const larlitecv::BMTrackCluster3D& track3d = stopmuout.stopmu_trackcluster_v.at(itrack);
+    std::vector< larcv::Pixel2DCluster > trackpixs_v 
+      = track3d.getTrackPixelsFromImages( input.img_v, input.badch_v,
+					  config.thrumu_tracker_cfg.pixel_threshold,
+					  config.thrumu_tracker_cfg.tag_neighborhood, 0.3 );
+    for (size_t p=0; p<trackpixs_v.size(); p++) {
+      ev_stopmupix.Append( (larcv::PlaneID_t)p, trackpixs_v.at(p), stopmuout.stopmu_v.at(p).meta() );
+    }
+  }
+
 }
 
 
@@ -806,8 +899,6 @@ void DLLEEInterface::endJob()
 {
   LARCV_DEBUG() << "finalize IOmanager" << std::endl;
   _supera.finalize();
-  LARCV_DEBUG() << "destroy tagger algo" << std::endl;
-  //delete m_taggeralgo;
 }
 
 DEFINE_ART_MODULE(DLLEEInterface)

@@ -4,16 +4,17 @@
 BEGIN_PROLOG
 
 DLLEEInterface: {
-  module_type:         "DLLEEInterface"
-  Verbosity:           0
-  WireProducerName:    "butcher"
-  SSNetProducerName:   "ssnet"
-  TriggerProducer:     "triggersim"
+  module_type:          "DLLEEInterface"
+  Verbosity:            0
+  WireProducerName:     "butcher"
+  SSNetProducerName:    "ssnet"
+  TriggerProducer:      "triggersim"
   OpFlashBeamProducers: ["simpleFlashBeam","simpleFlashCosmic"]
   OpHitBeamProducer:    "ophitBeam"
   SuperaConfigFile:     "supera_dllee_interface.fcl"
   PrecutConfig:         "BNB"
   TaggerConfigFile:     "cfg/tagger_overlay_v2_splity.cfg"
+  TaggerEndpointLimit:  100
   ChStatusRawDigitProducer: ""
 }
 
