@@ -49,6 +49,7 @@
 #include "Base/LArCVBaseUtilFunc.h"
 #include "DataFormat/EventImage2D.h"
 #include "DataFormat/EventPixel2D.h"
+#include "ubdllee/FixedCROIFromFlashAlgo.h"
 // #include "larcv/core/DataFormat/Image2D.h"
 // #include "larcv/core/DataFormat/ImageMeta.h"
 // #include "larcv/core/DataFormat/ROI.h"
@@ -63,11 +64,6 @@
 #include "TaggerCROI/TaggerCROIAlgoConfig.h"
 #include "TaggerCROI/TaggerCROITypes.h"
 #include "GapChs/EmptyChannelAlgo.h"
-
-// ublarcvapp
-// #include "ublarcvapp/UBImageMod/UBSplitDetector.h"
-// #include "ublarcvapp/ubdllee/FixedCROIFromFlashAlgo.h"
-// #include "ublarcvapp/ubdllee/FixedCROIFromFlashConfig.h"
 
 // ROOT
 //#include "TMessage.h"
@@ -126,7 +122,8 @@ private:
 			const std::string ssnet_producer, 
 			const std::vector<larcv::Image2D>& wholeview_v,
 			std::vector< larcv::Image2D >& shower_v,
-			std::vector< larcv::Image2D >& track_v );
+			std::vector< larcv::Image2D >& track_v,
+			std::vector< larcv::ROI >& roi_v );
 
   // bad channel
   std::string _chstatus_rawdigit_producer;
@@ -147,7 +144,15 @@ private:
   // -------------
   larlite::LEEPreCut m_precutalgo;
 
-  // Tagger/CROI
+  // ROI
+  // ----
+  larcv::ubdllee::FixedCROIFromFlashAlgo _croifromflashalgo;
+  int runCROIfromFlash( const std::vector<larcv::Image2D>& wholeview_v, 
+			const larlite::event_opflash& beam_flash_v,
+			std::vector<larcv::ROI>& roi_v );
+
+
+  // Tagger
   // -------------
   int _tagger_endpoint_limit;
   larlitecv::TaggerCROIAlgoConfig  m_taggeralgo_cfg;
@@ -172,7 +177,12 @@ private:
   // ---------
   std::string _vertexer_cfg;         //< vertexer config file
   larcv::ProcessDriver* m_vertexer;
-
+  std::vector<float> _threshold_v;
+  void prepareVertexerData( const std::vector<larcv::Image2D>& wholeview_v, 
+			    const std::vector<larcv::Image2D>& shower_v,
+			    const std::vector<larcv::Image2D>& track_v,
+			    std::vector<larcv::Image2D>& shower_masked_v,
+			    std::vector<larcv::Image2D>& track_masked_v );
   
 };
 
@@ -258,6 +268,7 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   _vertexer_cfg = p.get<std::string>("VertexerConfigFile");
   m_vertexer = new larcv::ProcessDriver( "VertexDriver" );
   m_vertexer->set_verbosity( (::larcv::msg::Level_t)_verbosity );
+  _threshold_v = p.get< std::vector<float> >( "SSNetADCthreshold" );
 
 }
 
@@ -268,7 +279,8 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
 void DLLEEInterface::produce(art::Event & e)
 {
 
-  // get larlite products
+  // get larlite products with LiteMaker
+  //--------------------------------------
   LARCV_INFO() << "Run the LiteMaker" << std::endl;
   std::vector< larlite::event_opflash > opflash_vv;
   larlite::event_ophit ophit_beam_v;
@@ -276,17 +288,20 @@ void DLLEEInterface::produce(art::Event & e)
   runLiteMaker( e, opflash_vv, ophit_beam_v, trigger );
 
   // get larcv products
+  // ---------------------
   LARCV_INFO() << "Run SUPERA" << std::endl;
   std::vector<larcv::Image2D> wholeview_v;
   int nwholeview_imgs = runSupera( e, wholeview_v );
   LARCV_INFO() << "number of wholeview images: " << nwholeview_imgs << std::endl;
 
   // recover ssnet info
+  // --------------------
   LARCV_INFO() << "Get SSNet From Art Event" << std::endl;
   std::vector< larcv::Image2D > shower_v;
   std::vector< larcv::Image2D > track_v;
+  std::vector< larcv::ROI >     ssnet_roi_v;
   bool has_ssnet = getSSNetFromArt( e, _ssnet_producer, wholeview_v,
-				    shower_v, track_v );
+				    shower_v, track_v, ssnet_roi_v );
   LARCV_INFO() << "SSnet loaded: " << has_ssnet << std::endl;
   if ( has_ssnet )  {
     LARCV_INFO() << "  number of trackimgs=" << track_v.size() 
@@ -294,6 +309,7 @@ void DLLEEInterface::produce(art::Event & e)
   }
 
   // Badch Inputs
+  // --------------------
   LARCV_DEBUG() << "makeChStatusImage()" << std::endl;
   std::vector< larcv::Image2D > badch_v = makeChStatusImage( e, wholeview_v );
   LARCV_INFO() << "Number of BadCh images: " << badch_v.size() << std::endl;
@@ -301,10 +317,19 @@ void DLLEEInterface::produce(art::Event & e)
   bool eventpass = true;
 
   // PMT Precuts
+  // -------------
   eventpass = m_precutalgo.apply( ophit_beam_v );
   LARCV_INFO() << "PMT Precut Algo Result: " << eventpass << std::endl;
 
-  // CROI/Tagger
+  // CROI
+  // -----------
+  std::vector< larcv::ROI > roi_v;
+  int nrois = runCROIfromFlash( wholeview_v, 
+				opflash_vv.at(0),
+				roi_v );
+  LARCV_DEBUG() << "RAN CROI from flash finder. NROIS=" << nrois << std::endl;
+
+  // Tagger
   // ------------  
   larcv::EventPixel2D* ev_thrumu_pixels 
     = (larcv::EventPixel2D*)_supera.driver().io_mutable().get_data( larcv::kProductPixel2D, "thrumupixels" );
@@ -314,81 +339,67 @@ void DLLEEInterface::produce(art::Event & e)
   ev_thrumu_pixels->clear();
   ev_stopmu_pixels->clear();
 
-  auto it = ev_thrumu_pixels->Pixel2DClusterArray().find(0);
-  if ( it==ev_thrumu_pixels->Pixel2DClusterArray().end() ) {
-    LARCV_INFO() << "DERP"  << std::endl;
-  }
-  else {
-    LARCV_INFO() << "FUCK YOU" << std::endl;
-  }
-
   bool was_tagger_run = runTagger( e, wholeview_v, badch_v, opflash_vv, trigger,
 				   *ev_thrumu_pixels, *ev_stopmu_pixels );
   LARCV_INFO() << "RAN Tagger: " << was_tagger_run << std::endl;
 
   // Vertexer
+  // ----------
+  
+  // prep track and shower image inputs
+  std::vector<larcv::Image2D> shower_masked_v;
+  std::vector<larcv::Image2D> track_masked_v;
+  prepareVertexerData( wholeview_v, shower_v, track_v, shower_masked_v, track_masked_v );
+  
+  // add products to vertexer iomanager: track/shower images
+  larcv::EventImage2D* ev_shower_tpc 
+    = (larcv::EventImage2D*)_supera.driver().io_mutable().get_data( larcv::kProductImage2D, "shower_tpc" );
+  larcv::EventImage2D* ev_track_tpc 
+    = (larcv::EventImage2D*)_supera.driver().io_mutable().get_data( larcv::kProductImage2D, "track_tpc" );
+  ev_shower_tpc->Emplace( std::move(shower_masked_v) );
+  ev_track_tpc->Emplace(  std::move(track_masked_v)  );
+
+  // add products to vertexer iomanager: croi 
+  larcv::EventROI* ev_roi
+    = (larcv::EventROI*)_supera.driver().io_mutable().get_data( larcv::kProductROI, "croi" );
+  ev_roi->Emplace( std::move(roi_v) );
+
+  // badch image
+  larcv::EventImage2D* ev_badch 
+    = (larcv::EventImage2D*)_supera.driver().io_mutable().get_data( larcv::kProductImage2D, "dead_wire" );
+  ev_badch->Emplace( std::move(badch_v) );
+
+  // thrumu/stopmu pixel2dclusters
+  // (already stored from tagger call above)
+
+  // put back the wire image
+  auto ev_imgs  = (larcv::EventImage2D*) _supera.driver().io_mutable().get_data( larcv::kProductImage2D, "wire" );
+  ev_imgs->Emplace( std::move(wholeview_v) );
+
+  //run the vertexer
+  bool autosave_entry = false;
+  bool vertexer_ok = m_vertexer->process_entry(autosave_entry);
+  LARCV_DEBUG() << "RAN vertexer. ok=" << vertexer_ok << std::endl;
+
+  // Track Reco
+  // -----------
+  
+
+  // Shower Reco
+  // ------------
 
   // Likelihood
+  // -----------
 
-  // // we often have to pre-process the image, e.g. split it.
-  // // eventually have options here. But for now, wholeview splitter
-  // std::vector<larcv::Image2D> splitimg_v;
-  // std::vector<larcv::ROI>     splitroi_v;
+  // Make ANA tree
+  // ---------------
 
-  
-  // int nsplit_imgs = 0;
-
-  // switch (_cropping_method) {
-  // case kWholeImageSplitter:
-  //   nsplit_imgs = runWholeViewSplitter( wholeview_v, splitimg_v, splitroi_v );
-  //   break;
-  // case kFlashCROI:
-  //   nsplit_imgs = runCROIfromFlash( wholeview_v, e, splitimg_v, splitroi_v );
-  //   break;
-  // }
-
-  // LARCV_INFO() << "number of split images: " << nsplit_imgs << std::endl;
-
-  // // containers for outputs
-  // std::vector<larcv::Image2D> showerout_v;
-  // std::vector<larcv::Image2D> trackout_v;
-
-
-  // produce the art data product
-  //saveArtProducts( e, wholeview_v, showermerged_v, trackmerged_v );
-
-  // prepare the output
- 
-  
-  // // save the wholeview images back to the supera IO
-  // larcv::EventImage2D* ev_imgs  = (larcv::EventImage2D*) io.get_data( larcv::kProductImage2D, "wire" );
-  // //std::cout << "wire eventimage2d=" << ev_imgs << std::endl;
-  // ev_imgs->Emplace( std::move(wholeview_v) );
-
-  // // save detsplit input
-  // larcv::EventImage2D* ev_splitdet = nullptr;
-  // if ( _save_detsplit_input ) {
-  //   ev_splitdet = (larcv::EventImage2D*) io.get_data( larcv::kProductImage2D, "detsplit" );
-  //   ev_splitdet->Emplace( std::move(splitimg_v) );
-  // }
-
-  // // save detsplit output
-  // larcv::EventImage2D* ev_netout_split[2] = {nullptr,nullptr};
-  // if ( _save_detsplit_output ) {
-  //   ev_netout_split[0] = (larcv::EventImage2D*) io.get_data( larcv::kProductImage2D, "netoutsplit_shower" );
-  //   ev_netout_split[1] = (larcv::EventImage2D*) io.get_data( larcv::kProductImage2D, "netoutsplit_track" );
-  //   ev_netout_split[0]->Emplace( std::move(showerout_v) );
-  //   ev_netout_split[1]->Emplace( std::move(trackout_v) );
-  // }
-
-  // // save merged out
-  // larcv::EventImage2D* ev_merged[2] = {nullptr,nullptr};
-  // ev_merged[0] = (larcv::EventImage2D*)io.get_data( larcv::kProductImage2D, "ssnetshower" );
-  // ev_merged[1] = (larcv::EventImage2D*)io.get_data( larcv::kProductImage2D, "ssnettrack" );
-  // ev_merged[0]->Emplace( std::move(showermerged_v) );
-  // ev_merged[1]->Emplace( std::move(trackmerged_v) );
-
+  // Save LArCV Output
+  // --------------------
   saveLArCVProducts( wholeview_v, shower_v, track_v, badch_v );
+
+  // Save LArLite Output
+  // ---------------------
   
   LARCV_INFO() << "Event Passed: " << eventpass << std::endl;
 
@@ -402,7 +413,9 @@ void DLLEEInterface::produce(art::Event & e)
 bool DLLEEInterface::getSSNetFromArt( art::Event const& e, const std::string ssnet_producer, 
 				      const std::vector<larcv::Image2D>& wholeview_v,
 				      std::vector< larcv::Image2D >& shower_v,
-				      std::vector< larcv::Image2D >& track_v ) {
+				      std::vector< larcv::Image2D >& track_v,
+				      std::vector< larcv::ROI >& roi_v ) 
+{
   
   LARCV_DEBUG() << "Get SSNet data" << std::endl;
   art::Handle< std::vector<ubdldata::pixeldata> > ssnet_handle;
@@ -413,14 +426,16 @@ bool DLLEEInterface::getSSNetFromArt( art::Event const& e, const std::string ssn
   }
   LARCV_INFO() << "Successfully retreived art product" << std::endl;
   
+  larcv::ROI pixroi( larcv::kROIBNB ); // ROI for pixeldata
+
   for ( auto const& pixdata : *ssnet_handle ) {
     if ( pixdata.dim_per_point()!=4 ) {
       throw cet::exception("DLLEEInterface") << "Not the expected number of points! expected=4 vs found=" << pixdata.dim_per_point() << std::endl;
     }
     LARCV_DEBUG() << "pixdata has " << pixdata.len() << " points with " << pixdata.dim_per_point() << " values per point" << std::endl;
-    //std::vector<float> bbox = pixdata.as_vector_bbox(); // xmin, ymin, xmax, ymax
-    //float width  = bbox[2]-bbox[0];
-    //float height = bbox[3]-bbox[1]; 
+
+    // Make the shower image (fill whole view image)
+    // ---------------------------------------------
     const larcv::ImageMeta& meta = wholeview_v.at( pixdata.id() ).meta();
     LARCV_DEBUG() << "storing pixdata into " << meta.dump();
 
@@ -451,8 +466,23 @@ bool DLLEEInterface::getSSNetFromArt( art::Event const& e, const std::string ssn
     }
     shower_v.emplace_back( std::move(showerimg) );
     track_v.emplace_back( std::move(trackimg) );
+    
+    // Make CROI
+    // -----------
+    std::vector<float> bbox = pixdata.as_vector_bbox(); // xmin, ymin, xmax, ymax
+    float width  = bbox[2]-bbox[0];
+    float height = bbox[3]-bbox[1]; 
+    int num_rows = height/meta.pixel_height();
+    int num_cols = width/meta.pixel_width();
+    float origin_x = bbox[0];
+    float origin_y = bbox[3]; // tick-backwards
+    // float origin_y = bbox[1]; // tick-forwards
+    larcv::ImageMeta plane_roi( width, height, num_rows, num_cols, origin_x, origin_y, meta.plane() );
+    pixroi.AppendBB( meta );
+    LARCV_INFO() << " SSNET cropped ROI: " << meta.dump();
     LARCV_DEBUG() << "finished pixdata plane=" << pixdata.id() << std::endl;
   }
+  roi_v.emplace_back( std::move(pixroi) );
 
   return true;
 }
@@ -665,6 +695,35 @@ std::vector< larcv::Image2D> DLLEEInterface::makeChStatusImage( const art::Event
   return badch_v;
 }
 
+int DLLEEInterface::runCROIfromFlash( const std::vector<larcv::Image2D>& wholeview_v, 
+				      const larlite::event_opflash& beam_flash_v,
+				      std::vector<larcv::ROI>& roi_v ) {
+
+
+  const float usec_min = 190*0.015625;
+  const float usec_max = 320*0.015625;
+
+  std::vector<larlite::opflash> intime_flashes_v;
+  for ( auto const& flash : beam_flash_v ) {
+    if ( flash.Time()<usec_min || flash.Time()>usec_max ) continue;
+    intime_flashes_v.push_back( flash );
+  }
+  LARCV_INFO() << "Number of INTIME flashes: " << intime_flashes_v.size() << std::endl;
+
+  // pass them to the algo to get CROI    
+  int ncrops = 0;
+  for ( auto& llflash : intime_flashes_v ) {
+    std::vector<larcv::ROI> flashrois = _croifromflashalgo.findCROIfromFlash( llflash );
+    ncrops += flashrois.size();
+    for ( auto& roi : flashrois )
+      roi_v.emplace_back( std::move(roi) );
+  }
+  LARCV_INFO() << "Number of ROIs: " << ncrops << std::endl;
+
+  // done
+  return (int)ncrops;
+}
+
 /**
  * Run the tagger
  *
@@ -820,6 +879,64 @@ void DLLEEInterface::makeTaggerPixelClusters( const larlitecv::InputPayload& inp
 
 }
 
+/**
+ * prepare data objects for vertexer
+ * 
+ * @param[in]
+ * @param[inout] 
+ */
+void DLLEEInterface::prepareVertexerData( const std::vector<larcv::Image2D>& wholeview_v, 
+					  const std::vector<larcv::Image2D>& shower_v,
+					  const std::vector<larcv::Image2D>& track_v,
+					  std::vector<larcv::Image2D>& shower_masked_v,
+					  std::vector<larcv::Image2D>& track_masked_v )
+{
+  
+  if ( wholeview_v.size()!=shower_v.size() 
+       || wholeview_v.size()!=track_v.size() ) {
+    LARCV_CRITICAL() << "Number of shower or track images does not match wholeview images" << std::endl;
+  }
+
+  for ( size_t p=0; p<wholeview_v.size(); p++ ) {
+
+    const float thresh = _threshold_v[p];
+
+    const larcv::Image2D& adc_image  = wholeview_v.at(p);
+    const larcv::Image2D& ssn_shower = shower_v.at(p);
+    const larcv::Image2D& ssn_track  = track_v.at(p);
+
+    larcv::Image2D shower_adc( ssn_shower.meta() );
+    larcv::Image2D track_adc(  ssn_track.meta() );
+
+    // check the meta is the same
+    if ( adc_image.meta()!=ssn_shower.meta()
+	 || adc_image.meta()!=ssn_track.meta() ) {
+      LARCV_CRITICAL() << "track, shower, and adc image do not have matching meta" << std::endl;
+    }
+
+    const std::vector<float>& adc_pix = adc_image.as_vector();
+    const std::vector<float>& shr_pix = ssn_shower.as_vector();
+    const std::vector<float>& trk_pix = ssn_track.as_vector();
+    std::vector<float> shr_out( shr_pix.size(), 0.0 );
+    std::vector<float> trk_out( trk_pix.size(), 0.0 );
+
+    for ( size_t i=0; i<adc_pix.size(); i++ ) {
+      if ( adc_pix[i]>thresh && shr_out[i]>1.0e-4 && trk_out[i]>1.0e-4) {
+	if ( shr_pix[i]>trk_pix[i] )
+	  shr_out[i] = adc_pix[i];
+	else
+	  trk_out[i] = adc_pix[i];
+      }
+    }
+
+    shower_adc.move( std::move(shr_out) );
+    track_adc.move(  std::move(trk_out) );
+
+    shower_masked_v.emplace_back( std::move(shower_adc) );
+    track_masked_v.emplace_back(  std::move(track_adc) );
+  }
+}
+
 
 /**
  * save LArCV products to file
@@ -832,10 +949,10 @@ void DLLEEInterface::saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_v
   
   larcv::IOManager& io_larcv = _supera.driver().io_mutable();
 
-  // save wholeview ADC images
-  LARCV_DEBUG() << "Save ADC" << std::endl;
-  auto ev_imgs  = (larcv::EventImage2D*) io_larcv.get_data( larcv::kProductImage2D, "wire" );
-  ev_imgs->Emplace( std::move(wholeview_v) );
+  // save wholeview ADC images (done earlier)
+  //LARCV_DEBUG() << "Save ADC" << std::endl;
+  //auto ev_imgs  = (larcv::EventImage2D*) io_larcv.get_data( larcv::kProductImage2D, "wire" );
+  //ev_imgs->Emplace( std::move(wholeview_v) );
 
   // save shower score images
   LARCV_DEBUG() << "Save shower images" << std::endl;
@@ -847,11 +964,6 @@ void DLLEEInterface::saveLArCVProducts( std::vector<larcv::Image2D>& wholeview_v
   auto ev_trk  = (larcv::EventImage2D*) io_larcv.get_data( larcv::kProductImage2D, "ssnettrack" );
   ev_trk->Emplace( std::move(track_v) );
 
-
-  // save bad channel image
-  LARCV_DEBUG() << "Save BadCh images" << std::endl;
-  auto ev_bad  = (larcv::EventImage2D*) io_larcv.get_data( larcv::kProductImage2D, "badch" );
-  ev_bad->Emplace( std::move(badch_v) );
 
   // save entry
   LARCV_INFO() << "saving LARCV entry" << std::endl;
