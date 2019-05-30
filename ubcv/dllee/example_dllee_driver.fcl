@@ -18,6 +18,7 @@ DLLEEInterface: {
   ChStatusRawDigitProducer: ""
   VertexerConfigFile:   "cfg/prod_fullchain_ssnet_combined_ubcv_base_c10_union_server.cfg"
   SSNetADCthreshold:    [10.0,10.0,10.0]
+  TrackerConfigFile:    "cfg/tracker.cfg"
 }
 
 UBDLLEEInterface: @local::DLLEEInterface

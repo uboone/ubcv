@@ -176,13 +176,19 @@ private:
   // Vertexer
   // ---------
   std::string _vertexer_cfg;         //< vertexer config file
-  larcv::ProcessDriver* m_vertexer;
-  std::vector<float> _threshold_v;
+  larcv::ProcessDriver* m_vertexer;  //< driver for tracker
+  std::vector<float> _threshold_v;   //< thresholds for making shower and track image
   void prepareVertexerData( const std::vector<larcv::Image2D>& wholeview_v, 
 			    const std::vector<larcv::Image2D>& shower_v,
 			    const std::vector<larcv::Image2D>& track_v,
 			    std::vector<larcv::Image2D>& shower_masked_v,
 			    std::vector<larcv::Image2D>& track_masked_v );
+
+  // Tracker
+  // --------
+  std::string _tracker_cfg;         //< tracker config file
+  larcv::ProcessDriver* m_tracker;  //< driver for tracker
+  
   
 };
 
@@ -269,6 +275,14 @@ DLLEEInterface::DLLEEInterface(fhicl::ParameterSet const & p)
   m_vertexer = new larcv::ProcessDriver( "VertexDriver" );
   m_vertexer->set_verbosity( (::larcv::msg::Level_t)_verbosity );
   _threshold_v = p.get< std::vector<float> >( "SSNetADCthreshold" );
+
+  // ---------------
+  //  Tracker
+  // ---------------
+  _tracker_cfg = p.get<std::string>("TrackerConfigFile");
+  m_tracker = new larcv::ProcessDriver( "Tracker3DDriver" );
+  m_tracker->set_verbosity( (::larcv::msg::Level_t)_verbosity );
+
 
 }
 
@@ -378,11 +392,27 @@ void DLLEEInterface::produce(art::Event & e)
 
   //run the vertexer
   bool autosave_entry = false;
-  bool vertexer_ok = m_vertexer->process_entry(autosave_entry);
+  bool vertexer_ok = false;
+  try {
+    vertexer_ok = m_vertexer->process_entry(autosave_entry);
+  }
+  catch( std::exception& e ) {
+    LARCV_WARNING() << "failure in running vertexer: "  << e.what() << std::endl;
+    vertexer_ok = false;
+  }
   LARCV_DEBUG() << "RAN vertexer. ok=" << vertexer_ok << std::endl;
 
   // Track Reco
   // -----------
+  bool tracker_ok = false;
+  try {
+    tracker_ok = m_tracker->process_entry(autosave_entry);
+  }
+  catch( std::exception& e ) {
+    LARCV_WARNING() << "failure in running tracker: " << e.what() << std::endl;
+    tracker_ok = false;
+  }
+  LARCV_DEBUG() << "RAN tracker. ok=" << tracker_ok << std::endl;
   
 
   // Shower Reco
@@ -921,7 +951,7 @@ void DLLEEInterface::prepareVertexerData( const std::vector<larcv::Image2D>& who
     std::vector<float> trk_out( trk_pix.size(), 0.0 );
 
     for ( size_t i=0; i<adc_pix.size(); i++ ) {
-      if ( adc_pix[i]>thresh && shr_out[i]>1.0e-4 && trk_out[i]>1.0e-4) {
+      if ( adc_pix[i]>thresh && (shr_pix[i]>1.0e-4 || trk_pix[i]>1.0e-4) ) {
 	if ( shr_pix[i]>trk_pix[i] )
 	  shr_out[i] = adc_pix[i];
 	else
@@ -1015,6 +1045,22 @@ void DLLEEInterface::beginJob()
   LARCV_DEBUG() << "VERTEXER: initialize" << std::endl;
   m_vertexer->initialize();
   LARCV_INFO()  << "VERTEXER: Process Driver Loaded" << std::endl;
+
+  // --------
+  // TRACKER
+  // --------
+  std::string tracker_cfg_path;
+  if( !finder.find_file( _tracker_cfg, tracker_cfg_path) )
+    throw cet::exception("DLLEEInterface") << "Unable to find tracker cfg in "  << finder.to_string() << "\n";
+  LARCV_INFO() << "LOADING vertex config: " << tracker_cfg_path << std::endl;
+  // pass the iomanager for supera
+  LARCV_DEBUG() << "TRACKER: pass supera IOManager to tracker" << std::endl;
+  m_tracker->set_iomanager( &_supera.driver().io_mutable() );
+  LARCV_DEBUG() << "TRACKER: configure" << std::endl;
+  m_tracker->configure( tracker_cfg_path );
+  LARCV_DEBUG() << "TRACKER: initialize" << std::endl;
+  m_tracker->initialize();
+  LARCV_INFO()  << "TRACKER: Process Driver Loaded" << std::endl;
 
 
 }
