@@ -3,14 +3,14 @@ set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lL
 #set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
 
 # use with ubdl
-#include_directories ( $ENV{LARLITE_COREDIR} ${LARCV_INCLUDE_DIR} )
+include_directories ( $ENV{LARLITE_COREDIR} ${LARCV_INCLUDE_DIR} )
 # use with ups larcv
-include_directories ( $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} )
+#include_directories ( $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} )
 
 # use with ups larcv
-link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} -L$ENV{LARCV_LIBDIR} -llarcv ) # All execs need this
+#link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} -L$ENV{LARCV_LIBDIR} ) # All execs need this
 # use with ubdl
-#link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB}) # All execs need this
+link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB}) # All execs need this
 
 #add_subdirectory(job)
 

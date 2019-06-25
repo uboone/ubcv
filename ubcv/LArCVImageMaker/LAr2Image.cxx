@@ -2,7 +2,7 @@
 #define __SUPERA_LAR2IMAGE_CXX__
 
 #include "LAr2Image.h"
-#include "Base/larcv_logger.h"
+#include "larcv/core/Base/larcv_logger.h"
 
 namespace supera {
 
@@ -145,13 +145,13 @@ namespace supera {
 	  else {
 	    // forward copy: tick and image rows are in same orientation
 
-	    // LARCV_SDEBUG() << "Calling a forward_copy..." << std::endl
-	    // 		   << "      source wf : start index = " << range.begin_index() << " length = " << adcs.size() << std::endl
-	    // 		   << "      (row,col) : (" << (start_index - ymin) << "," << col << ")" << std::endl
-	    // 		   << "      nskip     : "  << nskip << std::endl
-	    // 		   << "      nsample   : "  << nsample << std::endl;
+	    LARCV_SDEBUG() << "Calling a forward_copy..." << std::endl
+	    		   << "      source wf : start index = " << range.begin_index() << " length = " << adcs.size() << std::endl
+	    		   << "      (row,col) : (" << (start_index - ymin) << "," << col << ")" << std::endl
+	    		   << "      nskip     : "  << nskip << std::endl
+	    		   << "      nsample   : "  << nsample << std::endl;
 	    // Turn the following back on when going to ubdl
-	    /*
+	    
 	    try {
 	      img.forward_copy(start_index-ymin,
 			       col,
@@ -171,7 +171,7 @@ namespace supera {
 				<< "Re-throwing an error:" << std::endl;
 	      throw err;
 	    }
-	    */
+	    
 	  }
 	}
       }
