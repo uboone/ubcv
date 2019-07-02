@@ -102,6 +102,9 @@ if ( USE_DL_INTEGRATION )
   set( cppzmq_DIR "$ENV{CPPZMQ_DIR}/share/cmake/cppzmq" )
   find_package(cppzmq REQUIRED CONFIG)
 
+  # --- OpenCV
+  find_package(OpenCV REQUIRED CONFIG)
+  
   # --- LArCV
   set( larcv_DIR "$ENV{LARCV_BUILDDIR}/installed/lib/cmake/larcv" )
   find_package(larcv REQUIRED CONFIG)
@@ -109,6 +112,10 @@ if ( USE_DL_INTEGRATION )
   # --- UB LArCV APP
   set( ublarcvapp_DIR "$ENV{UBLARCVAPP_BASEDIR}/build/lib/cmake/ublarcvapp" )
   find_package(ublarcvapp REQUIRED CONFIG)
+
+  # --- UB larflow
+  set( larflow_DIR "$ENV{LARFLOW_BASEDIR}/build/lib/cmake/larflow" )
+  find_package(larflow REQUIRED CONFIG)
 
   # --- Torch
   set( Torch_DIR "$ENV{LIBTORCH_DIR}/$ENV{LIBTORCH_FQ_DIR}/share/cmake/Torch" )
