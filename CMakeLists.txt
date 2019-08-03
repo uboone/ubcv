@@ -57,6 +57,7 @@ find_ups_product( art v1_00_00 )
 find_ups_product( larcore )
 find_ups_product( nutools )
 find_ups_product( ubobj )
+find_ups_product( libzmq v4_3_1 )
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
@@ -103,7 +104,7 @@ if ( USE_DL_INTEGRATION )
   find_package(cppzmq REQUIRED CONFIG)
 
   # --- OpenCV
-  find_package(OpenCV REQUIRED CONFIG)
+  find_package(OpenCV 3.1 REQUIRED CONFIG)
   
   # --- LArCV
   set( larcv_DIR "$ENV{LARCV_BUILDDIR}/installed/lib/cmake/larcv" )
@@ -118,8 +119,7 @@ if ( USE_DL_INTEGRATION )
   find_package(larflow REQUIRED CONFIG)
 
   # --- Torch
-  set( Torch_DIR "$ENV{LIBTORCH_DIR}/$ENV{LIBTORCH_FQ_DIR}/share/cmake/Torch" )
-  #set( Torch_DIR "${UPS_PRODUCT_DIR}/libtorch/v1_0_1/Linux64bit+3.10-2.17_e17_prof_openblas_nonnpack/share/cmake/Torch" )
+  set( Torch_DIR "$ENV{LIBTORCH_FQ_DIR}/lib/python2.7/site-packages/torch/share/cmake/Torch" )
   find_package( Torch CONFIG )
 
   # --- Python
