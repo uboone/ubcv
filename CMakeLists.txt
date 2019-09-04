@@ -86,11 +86,6 @@ if ( USE_DL_INTEGRATION )
     endif()
   endif()
 
-  #--- check ubdlintegration submodule
-  if(NOT EXISTS "${PROJECT_SOURCE_DIR}/ubcv/ubdlintegration/CMakeLists.txt")
-    message(FATAL_ERROR "The ubdlintegration submodule was not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
-  endif()
-
   # EXTERNAL non-UPS LIBS
   # below is for dev, but we expect these to be imported via UPS product in the near future
   set( EXTERN_LIBDIR $ENV{MRB_INSTALL} )
