@@ -1,0 +1,26 @@
+#include "services_microboone.fcl"
+
+process_name: DLmetadata
+
+services:
+{
+  TFileService:  { fileName: "larcv_hist.root" }
+  scheduler:     { defaultExceptions: false }    # Make all uncaught exceptions fatal.
+  TimeTracker:   {}
+  MemoryTracker: {} # default is one
+  message:       @local::microboone_message_services_prod_debug
+  FileCatalogMetadata:  @local::art_file_catalog_data
+  @table::microboone_services_reco
+}
+services.DetectorClocksService.InheritClockConfig:           false
+services.DetectorClocksService.TriggerOffsetTPC:             -0.400e3
+services.SpaceCharge.EnableSimSpatialSCE:                    true
+
+# Configuration for TFileMetadataMicroBooNE service
+microboone_tfile_metadata:
+{
+  JSONFileName: [ "merged_dlreco.root.json" ]
+  GenerateTFileMetadata: [ true ]
+  dataTier:              [ "merged_dlreco" ]
+  fileFormat:            [ "root" ]
+}

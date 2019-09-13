@@ -67,7 +67,6 @@
 // zmq-c++
 #include "zmq.hpp"
 
-#ifdef HAS_TORCH
 // TORCH
 #include <torch/script.h>
 #include <torch/torch.h>
@@ -84,8 +83,6 @@
 #include "PyNet_CosmicMRCNN.h"  // cpu python interface for cosmic mask-rcnn
 #include "PyNet_SparseInfill.h" // cpu python interface for infill
 #include "PyNet_SparseSSNet.h"  // cpu python interface for infill
-
-#endif
 
 class DLInterface;
 
@@ -322,6 +319,7 @@ private:
 				   const std::vector< std::vector<larcv::ClusterMask> >& ubmrcnn_result_vv );
 
   void saveSparseSSNetArtProducts( art::Event& ev, 
+				   const std::vector<larcv::Image2D>& wholeview_v,
 				   const std::vector<std::vector<larcv::SparseImage> >& sparse_ssnet_out_vv );
 
   void saveSparseSSNetLArCVProducts( larcv::IOManager& io, 
@@ -877,7 +875,7 @@ void DLInterface::produce(art::Event & e)
   }
   
   // clear infill crops: not needed unless for debug downstream
-  saveSparseSSNetArtProducts( e, sparse_ssnet_netout_vv );
+  saveSparseSSNetArtProducts( e, wholeview_v, sparse_ssnet_netout_vv );
 
 
   // ================================================================
@@ -1829,7 +1827,7 @@ void DLInterface::saveSSNetArtProducts( art::Event& ev,
 			     (int)adc.meta().plane(), 4, 0 );
 
     ppixdata_v->emplace_back( std::move(out) );
-  }
+  }//end of loop over planes
   
   ev.put( std::move(ppixdata_v), "ssnet" );
 }
@@ -2075,10 +2073,20 @@ void DLInterface::saveCosmicMRCNNArtProducts( art::Event& ev,
 /**
  * create ubdldata::pixeldata objects for art::Event for SparseSSNet
  *
+ * For the MCC9 sparse net, there are five classes. For each pixel, the scores are stored as:
+ *  hip, mip, shower, delta, michel
+ *
+ * For the two class track-shower score:
+ *   track = hip + mip
+ *   shower = shower + delta + michel
+ *
  * @param[inout] ev art Event container we will add results to
- * @param[in] sparse_ssnet_out_vv a vector of sparse images for each plane
+ * @param[in] wholeview_v A vector containing the wholeview ADC images.
+ * @param[in] sparse_ssnet_out_vv A vector of sparse images for each plane containing the SSNET class scores.
+ *
  */
 void DLInterface::saveSparseSSNetArtProducts( art::Event& ev, 
+					      const std::vector<larcv::Image2D>& wholeview_v,
 					      const std::vector<std::vector<larcv::SparseImage> >& sparse_ssnet_out_vv ) {
 
   std::unique_ptr< std::vector<ubdldata::pixeldata> > sparse_ssnet_v(new std::vector<ubdldata::pixeldata>);
@@ -2089,10 +2097,70 @@ void DLInterface::saveSparseSSNetArtProducts( art::Event& ev,
     ev.put( std::move(sparse_ssnet_v), "sparsessnet" );
     return;
   }
-
   
-  // fill empty
+  // we also the sparse data from the network to make shower and track score images
+  for ( size_t p=0; p<3; p++ ) {
+    
+    const larcv::ImageMeta& meta = wholeview_v.at(p).meta();
+    auto& sparse_v = sparse_ssnet_out_vv.at(p);
+
+    for ( auto& spimg : sparse_v ) {
+
+      // collect pixel information for this sparse image
+      std::vector< std::vector<float> > pixdata_v;
+      // we reserve enough space to fill the whole image, but we shouldn't use all of the space
+      pixdata_v.reserve( meta.rows()*meta.cols() );
+      
+      int nfeatures = spimg.nfeatures();
+
+      if ( nfeatures!=5 ) {
+	// unexpected number of features
+	throw cet::exception("DLInterface") << "number of features in sparse ssnet output (" << nfeatures << ") not the expected 5" << std::endl;
+      }
+      
+      int stride = nfeatures+2;
+      int npts = spimg.pixellist().size()/stride;
+
+      if ( spimg.pixellist().size()%stride!=0 ) {
+	throw cet::exception("DLInterface") << "stride does not divide evenly into pixellist() data vector" << std::endl;
+      }
+
+      auto const& spmeta = spimg.meta(0);
+
+      for (int ipt=0; ipt<npts; ipt++) {
+	int row = spimg.pixellist().at( ipt*stride+0 );
+	int col = spimg.pixellist().at( ipt*stride+1 );
+
+	float tick = spmeta.pos_y( row );
+	float wire = spmeta.pos_x( col );
+
+	float hip = spimg.pixellist().at( ipt*stride+2 );
+	float mip = spimg.pixellist().at( ipt*stride+3 );
+	float shr = spimg.pixellist().at( ipt*stride+4 );
+	float dlt = spimg.pixellist().at( ipt*stride+5 );
+	float mic = spimg.pixellist().at( ipt*stride+6 );
+
+	std::vector<float> pixdata = { (float)wire, (float)tick,
+				       hip, mip, shr, dlt, mic };
+
+	pixdata_v.push_back(pixdata);
+      }//end of loop over points
+      
+      
+      ubdldata::pixeldata out( pixdata_v, 
+			       meta.min_x(), meta.min_y(),
+			       meta.max_x(), meta.max_y(),
+			       (int)meta.cols(), (int)meta.rows(),
+			       (int)meta.plane(),7, 0 );
+
+      sparse_ssnet_v->emplace_back( std::move(out) );
+    }//end of loop over sparse images in the plane
+    
+  }//loop over planes
+  
+  // store into the art::Event
   ev.put( std::move(sparse_ssnet_v), "sparsessnet" );
+  
   return;
 
 }
