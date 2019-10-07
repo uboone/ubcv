@@ -440,14 +440,16 @@ DLInterface::DLInterface(fhicl::ParameterSet const & p)
   // network description and weights
   std::vector<std::string> mcc8_ssnet_script = p.get< std::vector<std::string> >("MCC8SSNetScript");
   _mcc8_ssnet_script.clear();
-  for ( auto const& ssnet_script : mcc8_ssnet_script ) {
-    cet::search_path script_finder("UBSSNET_WEIGHT_DIR");
-    std::string script_fullpath;
-    if( !script_finder.find_file(ssnet_script,script_fullpath)) {
-      throw cet::exception("DLInterface")
-	<< "Unable to find MCC8 dense SSNet torchscript file: " << ssnet_script << std::endl;
+  if ( *mode_v[kSSNET]==kPyTorchCPU ) {
+    for ( auto const& ssnet_script : mcc8_ssnet_script ) {
+      cet::search_path script_finder("UBSSNET_WEIGHT_DIR");
+      std::string script_fullpath;
+      if( !script_finder.find_file(ssnet_script,script_fullpath)) {
+	throw cet::exception("DLInterface")
+	  << "Unable to find MCC8 dense SSNet torchscript file: " << ssnet_script << std::endl;
+      }
+      _mcc8_ssnet_script.push_back( script_fullpath );
     }
-    _mcc8_ssnet_script.push_back( script_fullpath );
   }
 
   // -------------------------------

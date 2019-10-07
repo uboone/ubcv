@@ -19,7 +19,7 @@ DLInterface: {
 
   SSNetMode:           "DoNotRun"
   LArFlowMode:         "DoNotRun"
-  InfillMode:          "PyTorchCPU"
+  InfillMode:          "DoNotRun"
   CosmicMRCNNMode:     "PyTorchCPU"
   SparseSSNetMode:     "PyTorchCPU"
 
@@ -49,9 +49,9 @@ DLInterface: {
   SparseInfillOnlyCROI: true
   InfillCropConfig:     "infill_split.fcl"
 
-  SparseSSNet_WeightFiles: ["sparse_uresnet_plane0_16filter_6layers_22999.ckpt",
-                            "sparse_uresnet_plane1_16filter_6layers_31999.ckpt",
-                            "sparse_uresnet_plane2_16filter_6layers_36999.ckpt"]
+  SparseSSNet_WeightFiles: ["Plane0_32_5_weighting.ckpt",
+                            "Plane1_32_5_weighting.ckpt",
+                            "Plane2_32_5_weighting.ckpt"]
 
 
 }
