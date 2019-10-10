@@ -64,10 +64,17 @@ physics:
 }
 
 # configure larlite
+# -- trigger --
 # DATA
-#physics.analyzers.opreco.trigger: ["daq"]
+physics.analyzers.opreco.DataLookUpMap.trigger: ["daq"]
 # MC
-physics.analyzers.opreco.trigger: ["triggersim"]
+#physics.analyzers.opreco.DataLookUpMap.trigger: ["triggersim"]
+# -- CRT --
+physics.analyzers.opreco.DataLookUpMap.crthit:   ["crthitcorr"]
+physics.analyzers.opreco.DataLookUpMap.crttrack: ["crttrack"]
+physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
+physics.analyzers.opreco.DAQHeaderProducer: "daq"
+physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
 
 outputs:
 {
