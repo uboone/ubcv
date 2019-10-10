@@ -30,7 +30,7 @@ table_fragment_end
 
 product                 version
 ubevt                   v08_00_00_23
-ubdl                    latest
+ubdl                    v1_0_0
 libtorch                v1_0_1
 libzmq                  v4_3_1
 cppzmq                  v4_3_0
