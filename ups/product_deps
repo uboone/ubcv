@@ -29,7 +29,7 @@ table_fragment_end
 # Add the dependent product and version
 
 product                 version
-ubevt                   v08_00_00_20
+ubevt                   v08_00_00_23
 ubdl                    latest
 libtorch                v1_0_1
 libzmq                  v4_3_1
