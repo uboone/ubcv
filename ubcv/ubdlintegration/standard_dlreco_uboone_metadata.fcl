@@ -16,6 +16,23 @@ services.DetectorClocksService.InheritClockConfig:           false
 services.DetectorClocksService.TriggerOffsetTPC:             -0.400e3
 services.SpaceCharge.EnableSimSpatialSCE:                    true
 
+physics:
+{
+ stream: [out1]
+}
+
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "out_larsoft_copy.root" #default file name, can override from command line with -o or --output
+   dataTier:    "larcv"
+   compressionLevel: 1
+ }
+}
+
+
 # Configuration for TFileMetadataMicroBooNE service
 microboone_tfile_metadata:
 {
