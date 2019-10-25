@@ -26,7 +26,7 @@ outputs:
  out1:
  {
    module_type: RootOutput
-   fileName:    "out_larsoft_copy.root" #default file name, can override from command line with -o or --output
+   fileName:    "%ifb_ubdl.root" #default file name, can override from command line with -o or --output
    dataTier:    "larcv"
    compressionLevel: 1
  }

@@ -76,12 +76,15 @@ physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
 physics.analyzers.opreco.DAQHeaderProducer: "daq"
 physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
 
+# Turn on Mask-RCNN
+#physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
+
 outputs:
 {
  out1:
  {
    module_type: RootOutput
-   fileName:    "out_larsoft.root" #default file name, can override from command line with -o or --output
+   fileName:    "%ifb_%tc_ubdl1.root" #default file name, can override from command line with -o or --output
    dataTier:    "larcv"
    compressionLevel: 1
  }
