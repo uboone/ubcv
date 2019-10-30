@@ -3,10 +3,10 @@
 <!-- Production Project -->
 
 <!DOCTYPE project [
-<!ENTITY release      "v08_00_00_21" >
+<!ENTITY release      "v08_00_00_25" >
 <!ENTITY file_type    "data"      >
 <!ENTITY run_type     "physics"   >
-<!ENTITY name         "ssnet_test">
+<!ENTITY name         "ssnet_run3bnb">
 <!ENTITY dl_part      "p00"       >
 <!ENTITY username     "tmw"       >
 <!ENTITY projectout   "/pnfs/uboone/resilient/users/tmw/work">
@@ -27,8 +27,8 @@
   <!-- Larsoft information -->
   <!-- Remember to make/update your larsoft tarball and point to it here -->
   <larsoft>
-    <tag>v08_05_00_09</tag>
-    <local>/pnfs/uboone/resilient/users/tmw/tar/ubdlintegration_v08_00_00_21_dl_br.tar</local>
+    <tag>v08_05_00_10</tag>
+    <local>/pnfs/uboone/resilient/users/tmw/tar/ubcv_v08_00_00_26_dl.tar</local>
     <qual>e17:prof</qual>
   </larsoft>
 
@@ -41,16 +41,16 @@
     <fcl>dl_driver.fcl</fcl>
     <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
     <initsource>/pnfs/uboone/resilient/users/tmw/fcls/init.sh</initsource>
-    <endscript>/pnfs/uboone/resilient/users/tmw/fcls/rundlreco.sh</endscript>
-    <inputdef>prodgenie_bnb_intrinsic_nue_uboone_overlay_mcc9.1_run1_reco2</inputdef>
+    <endscript>/pnfs/uboone/resilient/users/tmw/fcls/rundlreco_ssnetvertexonly.sh</endscript>
+    <inputdef>data_bnb_run3_reco2_mcc9_v08_00_00_22_re_reco2_G1_1e19_reco2</inputdef>
     <outdir>&logout;/&name;_&dl_part;/out/&release;</outdir>
     <logdir>&logout;/&name;_&dl_part;/log/&release;</logdir>
     <workdir>&projectout;</workdir>
-    <numjobs>1</numjobs>
+    <numjobs>200</numjobs>
     <maxfilesperjob>1</maxfilesperjob>
     <datatier>larlite</datatier>
     <memory>4000</memory>
-    <disk>100GB</disk>
+    <disk>10GB</disk>
     <resource>DEDICATED,OPPORTUNISTIC</resource>
     <jobsub>--expected-lifetime=medium</jobsub>
   </stage>

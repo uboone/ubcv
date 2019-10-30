@@ -3,6 +3,12 @@
 export LD_LIBRARY_PATH=${LIBZMQ_FQ_DIR}/lib64:${LD_LIBRARY_PATH}
 #export PYTHONPATH=${PWD}:/pnfs/uboone/resilient/users/tmw/model_deploy_scripts:${PYTHONPATH}
 
+echo "<<< ENV VARS >>>"
+export
+echo "<<< SPARSE SSNET OSG STASH DIR >>>"
+ls -lh /cvmfs/uboone.osgstorage.org/stash/ubdlnetworks/ubSSNet/v0_0_2/NULL/weights
+
+
 #export PYTHONPATH=/cvmfs/uboone.opensciencegrid.org/products/ubdl/v1_0_0/Linux64bit+3.10-2.17_e17_prof/ublarcvserver/networks/mask-rcnn.pytorch/lib:$PYTHONPATH
 
 #ifdh cp /pnfs/uboone/resilient/users/tmw/model_deploy_scripts/inference_mrcnn.py inference_mrcnn.py

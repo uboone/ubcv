@@ -29,7 +29,7 @@ echo "<<< PRIMARY CHAIN >>>"
 echo "< RUN TAGGER >"
 TAGGER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tagger_configs/tagger_bnbdata_v2_splity_mcc9.cfg
 echo "TAGGER CONFIG: ${TAGGER_CONFIG}"
-ls *_ubdl1.root > input_larcv.txt
+ls out_larcv_test.root > input_larcv.txt
 ls larlite_opreco.root > input_larlite.txt
 run_tagger $TAGGER_CONFIG
 
