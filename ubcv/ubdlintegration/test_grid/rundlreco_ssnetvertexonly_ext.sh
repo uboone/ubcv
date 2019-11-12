@@ -1,23 +1,15 @@
 #!/bin/bash
 
 echo "<<<<<< RUN DL RECO SCRIPT >>>>>>"
-
 # OUTPUT FILES FROM PREVIOUS STAGE
 source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
 
 echo "<< FILES available >> "
 ls -lh
 
-SUPERAWHOLEVIEW=out_larcv_test.root  # has adc image, chstatus, ssnet output, mrcnn
-SUPERAMCTRUTH=larcv.root
-
-hadd -f supera.root $SUPERAWHOLEVIEW $SUPERAMCTRUTH
-
-SUPERA=supera.root
+SUPERA=out_larcv_test.root  # has adc image, chstatus, ssnet output, mrcnn
 OPRECO=larlite_opreco.root
-MCINFO=larlite_mcinfo.root
 RECO2D=larlite_reco2d.root
-BACKTRACKER=larlite_backtracker.root
 
 echo "<<< CHECKING TO SEE IF THE FILE IS EMPTY >>>"
 python emptycheck.py $SUPERA
@@ -46,9 +38,9 @@ export
 
 echo "<<< PRIMARY CHAIN >>>"
 echo "< RUN TAGGER >"
-TAGGER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tagger_configs/tagger_overlay_v2_splity_mcc9.cfg
+TAGGER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tagger_configs/tagger_extbnb_v2_splity_mcc9.cfg
 echo "TAGGER CONFIG: ${TAGGER_CONFIG}"
-ls supera.root > input_larcv.txt
+ls out_larcv_test.root > input_larcv.txt
 ls larlite_opreco.root > input_larlite.txt
 run_tagger $TAGGER_CONFIG
 
@@ -86,14 +78,14 @@ SHOWER_RECO_DQDS=$SHOWER_MAC_DIR/dqds_mc_xyz.txt
 python ${SHOWER_MAC_DIR}/reco_recluster_shower.py -c $SHOWER_RECO_CONFIG -mc -id 0 -od ./ --reco2d larlite_reco2d.root -dqds $SHOWER_RECO_DQDS nueid_lcv_out_0.root
 
 echo "<< combine larlite files >>"
-python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/combine_larlite.py -o larlite_dlmerged.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root larlite_backtracker.root tagger_anaout_larlite.root tracker_reco.root nueid_ll_out_0.root shower_reco_out_0.root
+python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/combine_larlite.py -o larlite_dlmerged.root larlite_opreco.root larlite_reco2d.root tagger_anaout_larlite.root tracker_reco.root nueid_ll_out_0.root shower_reco_out_0.root
 echo "<<< HADD ROOT FILES >>>"
-hadd -f merged_dlreco.root $VERTEXOUT $VERTEXANA $TRACKERANA $SUPERA nueid_lcv_out_0.root larlite_dlmerged.root
-#echo "<<< Append UBDL Products >>>"
-#python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/append_ubdlproducts.py merged_dlreco.root supera.root
+hadd -f merged_dlreco.root $VERTEXOUT $VERTEXANA $TRACKERANA nueid_lcv_out_0.root larlite_dlmerged.root
+echo "<<< Append UBDL Products >>>"
+python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/append_ubdlproducts.py merged_dlreco.root out_larcv_test.root
 
-echo "<<< cleanup excess root files >>>"
-rm -f larlite_dlmerged.root larlite_larflow.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root larlite_backtracker.root supera.root out_larcv_test.root larcv.root
-rm -f tagger_anaout_larcv.root tagger_anaout_larlite.root tracker_anaout.root tracker_reco.root vertexana.root vertexout.root
-rm -f shower_reco_out_0.root nueid_lcv_out_0.root nueid_ll_out_0.root lcv_trash.root nueid_ana_0.root
+#echo "<<< cleanup excess root files >>>"
+#rm -f larlite_dlmerged.root larlite_larflow.root larlite_opreco.root larlite_reco2d.root out_larcv_test.root 
+#rm -f tagger_anaout_larcv.root tagger_anaout_larlite.root tracker_anaout.root tracker_reco.root vertexana.root vertexout.root
+#rm -f shower_reco_out_0.root nueid_lcv_out_0.root nueid_ll_out_0.root lcv_trash.root nueid_ana_0.root
 
