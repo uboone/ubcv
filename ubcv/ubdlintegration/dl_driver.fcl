@@ -76,6 +76,12 @@ physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
 physics.analyzers.opreco.DAQHeaderProducer: "daq"
 physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
 
+physics.analyzers.opreco.DataLookUpMap.ophit: ["ophitBeam","ophitCosmic","ophitBeamCalib","ophitCosmicCalib"]
+physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::DataRecoStage1Test","simpleFlashCosmic::DataRecoStage1Test","wcopflash:beam","wcopflash:cosmic"]
+physics.analyzers.opreco.AssociationLookUpMap.ophit: ["ophitBeam","ophitCosmic","ophitBeamCalib","ophitCosmicCalib"]
+physics.analyzers.opreco.AssociationLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::DataRecoStage1Test","simpleFlashCosmic::DataRecoStage1Test"]
+
+
 # Turn on Mask-RCNN
 #physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
 

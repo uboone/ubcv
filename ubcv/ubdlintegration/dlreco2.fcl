@@ -1,0 +1,51 @@
+#########################################################
+## Based on reco_uboone_mcc9_8_driver_overlay_stage2.fcl
+########################################################
+#include "mchitmodules.fcl"
+#include "mctrutht0matching.fcl"
+#include "reco_uboone_data_mcc9_8_driver_common.fcl"
+
+##include "reco_uboone_mcc9_8_reducer_stage2.fcl"
+###stage2ReducedOutputCommands: [ "keep *_*_*_*"
+##                              ,"drop raw::RawDigit*_*_*_*"
+##                             ,"drop optdata::ChannelDataGroup_*_*_*"
+##                              ,"drop recob::Wires_*nfspl1_*_*"
+##                              ,"drop sim::SimChannels_*_*_*"
+##                               #,"drop sim::SimEnergyDeposits_largeant_*_*"
+##                              ,"drop sim::MCHitCollections_*_*_*"
+##                              ,"drop *_pandoraAllOutcomesTrack_*_*","drop *_pandoraAllOutcomesShower_*_*"
+##                              ,"drop *_pandoraPatRec__*"
+##                              ,"drop *_pmtrack*_*_*"
+##                              ,"drop recob::SpacePoints_*Kalman*_*_*","drop *recob::SpacePoint*_*pmtrack*_*_*"
+##                              ,"drop *_sps3d_noreg_*","drop *_sps3d_pre_*"
+##                              ,"drop *_*calo*_*_*"
+##                             ]
+##########################
+process_name: OverlayRecoStage2
+
+services.DetectorClocksService.InheritClockConfig:  false
+services.TFileService.fileName: "reco_stage_2_hist.root"
+services.DetectorClocksService.InheritClockConfig:  false
+
+physics.producers.wcopflash.OpDataProducerBeam:                                     "mixer"
+
+physics.reco:                   [ "rns", "wcopflash","crtt0Correction","crthitcorrFirstPass","crthitcorr","crttzero","crttrack" ]
+physics.ana:                    [ ]
+physics.trigger_paths:          [ reco]
+physics.end_paths:              [ stream1 ]
+outputs.out1.fileName:          "%ifb_%tc_reco2.root"
+outputs.out1.dataTier:          "reconstructed"
+outputs.out1.outputCommands:    ["keep *_*_*_*"]
+source.inputCommands:           ["keep *_*_*_*", "drop *_*_*_Data*RecoStage2", "drop *_*_*_MC*RecoStage2"]
+
+microboone_tfile_metadata:
+{
+  JSONFileName:          ["reco_stage_2_hist.root.json"]
+  GenerateTFileMetadata: [true]
+  dataTier:              ["root-tuple"]
+  fileFormat:            ["root"]
+}
+
+physics.filters.crtveto: @local::UBCRTCosmicFilterBNBOFF
+physics.producers.crthitcorrFirstPass.IsOverlay: true
+physics.producers.crthitcorr.CrtHitsIn_Label1: "crthitcorrFirstPass"
