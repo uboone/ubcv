@@ -1,0 +1,243 @@
+<?xml version="1.0"?>
+
+<!-- Production Project -->
+<!DOCTYPE project [
+<!ENTITY release      "v08_00_00_25" >
+<!ENTITY larrelease   "v08_05_00_10" >
+<!ENTITY run_type     "physics" >
+<!ENTITY name         "ssnet" >
+<!ENTITY year         "2019" >
+<!ENTITY month        "November" >
+<!ENTITY date         "Nov21" >
+<!ENTITY tardir       "/pnfs/uboone/resilient/users/sfehlber" >
+<!ENTITY fcl_dir      "/uboone/app/users/sfehlber/SSNET/srcs/ubcv/ubcv/ubdlintegration/" >
+<!ENTITY out_dir      "/pnfs/uboone/scratch/users/sfehlber" >
+<!ENTITY work_dir     "/pnfs/uboone/resilient/users/sfehlber/work" >
+<!ENTITY file_type    "mc" >
+
+]>
+
+<job>
+
+<project name="&name;">
+
+  <!-- Project size -->
+  <numevents>110000</numevents>
+
+  <!-- Operating System -->
+  <os>SL7</os>
+
+  <!-- Larsoft information -->
+  <larsoft>
+    <tag>&larrelease;</tag>
+    <local>&tardir;/Nov21.tar</local>
+    <qual>e17:prof</qual>
+  </larsoft>
+
+  <!-- Local FCL directory -->
+  <fcldir>&fcl_dir;</fcldir>
+
+  <!-- Project stages -->
+  <stage name="DLChain_mysample">
+    <fcl>wirecell_detsim_optical_overlay_uboone.fcl</fcl>
+    <fcl>standard_overlay_optical_uboone.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_optical.fcl</fcl>
+    <fcl>dl_driver_overlay.fcl</fcl>
+    <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
+    <initsource>init.sh</initsource>
+    <endscript>rundlreco_ssnetvertexonly.sh</endscript>
+    <inputlist>/pnfs/uboone/resilient/users/sfehlber/files.list</inputlist>
+    <outdir>&out_dir;/&year;/&month;/&date;/&name;/mysample</outdir>
+    <logdir>&out_dir;/&year;/&month;/&date;/&name;/mysample</logdir>
+    <workdir>&work_dir;/&year;/&month;/&date;/&name;/mysample</workdir>
+    <numjobs>100</numjobs>
+    <schema>root</schema>
+    <maxfilesperjob>1</maxfilesperjob>
+    <datatier>larlite</datatier>
+    <memory>4000</memory>
+    <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+    <jobsub>--expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+    </stage>
+
+  <stage name="DLChain_Overlay_Run1">
+    <fcl>wirecell_detsim_optical_overlay_uboone.fcl</fcl>
+    <fcl>standard_overlay_optical_uboone.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_optical.fcl</fcl>
+    <fcl>dlreco2.fcl</fcl>
+    <fcl>dl_driver_overlay.fcl</fcl>
+    <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
+    <initsource>init.sh</initsource>
+    <endscript>rundlreco_ssnetvertexonly.sh</endscript>
+    <inputdef>prodgenie_bnb_nu_uboone_overlay_mcc9.0_run1_reco1</inputdef>
+    <datafiletypes>root</datafiletypes>
+    <outdir>&out_dir;/&year;/&month;/&date;/&name;/Overlay_Run1</outdir>
+    <logdir>&out_dir;/&year;/&month;/&date;/&name;/Overlay_Run1</logdir>
+    <workdir>&work_dir;/&year;/&month;/&date;/&name;/Overlay_Run1</workdir>
+    <numjobs>100</numjobs>
+    <maxfilesperjob>1</maxfilesperjob>
+    <datatier>larlite</datatier>
+    <memory>4000</memory>
+    <resource>DEDICATED,OPPORTUNISTIC</resource>
+    <jobsub>--expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+  </stage>
+
+    <stage name="DLChain_Overlay_Run3">
+    <fcl>wirecell_detsim_optical_overlay_uboone.fcl</fcl>
+    <fcl>standard_overlay_optical_uboone.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_optical.fcl</fcl>
+    <fcl>dlreco2.fcl</fcl>
+    <fcl>dl_driver_overlay.fcl</fcl>
+    <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
+    <initsource>init.sh</initsource>
+    <endscript>rundlreco_ssnetvertexonly.sh</endscript>
+    <inputdef>prodgenie_bnb_nu_uboone_overlay_mcc9.0_run3_reco1</inputdef>
+    <!--inputdef>samanthasf_dltests_reco1_overlay_run3</inputdef-->
+    <datafiletypes>root</datafiletypes>
+    <outdir>&out_dir;/&year;/&month;/&date;/&name;/Overlay_Run3</outdir>
+    <logdir>&out_dir;/&year;/&month;/&date;/&name;/Overlay_Run3</logdir>
+    <workdir>&work_dir;/&year;/&month;/&date;/&name;/Overlay_Run3</workdir>
+    <numjobs>100</numjobs>
+    <maxfilesperjob>1</maxfilesperjob>
+    <datatier>larlite</datatier>
+    <memory>4000</memory>
+    <resource>DEDICATED,OPPORTUNISTIC</resource>
+    <jobsub>--expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+  </stage>
+
+  <stage name="DLChain_BNB_Run1">
+    <fcl>dl_driver.fcl</fcl>
+    <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
+    <initsource>init.sh</initsource>
+    <endscript>rundlreco_ssnetvertexonly_bnb.sh</endscript>
+    <inputdef>data_bnb_optfilter_C1_5e19_goodruns_mcc9.1_post_LY_reco2</inputdef>
+    <datafiletypes>root</datafiletypes>
+    <outdir>&out_dir;/&year;/&month;/&date;/&name;/BNB_Run1</outdir>
+    <logdir>&out_dir;/&year;/&month;/&date;/&name;/BNB_Run1</logdir>
+    <workdir>&work_dir;/&year;/&month;/&date;/&name;/BNB_Run1</workdir>
+    <numjobs>100</numjobs>
+    <maxfilesperjob>1</maxfilesperjob>
+    <datatier>larlite</datatier>
+    <memory>4000</memory>
+    <resource>DEDICATED,OPPORTUNISTIC</resource>
+    <jobsub>--expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+  </stage>
+
+    <stage name="DLChain_BNB_Run3">
+    <fcl>dl_driver.fcl</fcl>
+    <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
+    <initsource>init.sh</initsource>
+    <endscript>rundlreco_ssnetvertexonly_bnb.sh</endscript>
+    <!--inputdef>data_bnb_mcc9.1_v08_00_00_25_reco2_G1_beam_good_reco2_1e19</inputdef-->
+    <inputdef>samanthasf_dltests_reco2_bnb_run3</inputdef>
+    <datafiletypes>root</datafiletypes>
+    <outdir>&out_dir;/&year;/&month;/&date;/&name;/BNB_Run3</outdir>
+    <logdir>&out_dir;/&year;/&month;/&date;/&name;/BNB_Run3</logdir>
+    <workdir>&work_dir;/&year;/&month;/&date;/&name;/BNB_Run3</workdir>
+    <numjobs>100</numjobs>
+    <maxfilesperjob>1</maxfilesperjob>
+    <datatier>larlite</datatier>
+    <memory>4000</memory>
+    <resource>DEDICATED,OPPORTUNISTIC</resource>
+    <jobsub>--expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+    </stage>
+
+  <stage name="DLChain_EXT_Run1">
+    <fcl>dl_driver.fcl</fcl>
+    <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
+    <initsource>init.sh</initsource>
+    <endscript>rundlreco_ssnetvertexonly_ext.sh</endscript>
+    <inputdef>data_extbnb_mcc9.1_v08_00_00_20_reco2_C1_5e19_reco2</inputdef>
+    <datafiletypes>root</datafiletypes>
+    <outdir>&out_dir;/&year;/&month;/&date;/&name;/EXT_Run1</outdir>
+    <logdir>&out_dir;/&year;/&month;/&date;/&name;/EXT_Run1</logdir>
+    <workdir>&work_dir;/&year;/&month;/&date;/&name;/EXT_Run1</workdir>
+    <numjobs>100</numjobs>
+    <maxfilesperjob>1</maxfilesperjob>
+    <datatier>larlite</datatier>
+    <memory>4000</memory>
+    <resource>DEDICATED,OPPORTUNISTIC</resource>
+    <jobsub>--expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+  </stage>
+
+  <stage name="DLChain_EXT_Run3">
+    <fcl>dl_driver.fcl</fcl>
+    <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
+    <initsource>init.sh</initsource>
+    <endscript>rundlreco_ssnetvertexonly_ext.sh</endscript>
+    <!--inputdef>data_extbnb_mcc9.1_v08_00_00_25_reco2_G1_all_reco2</inputdef-->
+    <inputdef>samanthasf_dltests_reco2_ext_run3</inputdef>
+    <datafiletypes>root</datafiletypes>
+    <outdir>&out_dir;/&year;/&month;/&date;/&name;/EXT_Run3</outdir>
+    <logdir>&out_dir;/&year;/&month;/&date;/&name;/EXT_Run3</logdir>
+    <workdir>&work_dir;/&year;/&month;/&date;/&name;/EXT_Run3</workdir>
+    <numjobs>100</numjobs>
+    <maxfilesperjob>1</maxfilesperjob>
+    <datatier>larlite</datatier>
+    <memory>4000</memory>
+    <resource>DEDICATED,OPPORTUNISTIC</resource>
+    <jobsub>--expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+  </stage>
+
+  <stage name="DLChain_Dirt_Run1">
+    <fcl>wirecell_detsim_optical_overlay_uboone.fcl</fcl>
+    <fcl>standard_overlay_optical_uboone.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_optical.fcl</fcl>
+    <fcl>dlreco2.fcl</fcl>
+    <fcl>dl_driver_overlay.fcl</fcl>
+    <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
+    <initsource>init.sh</initsource>
+    <endscript>rundlreco_ssnetvertexonly.sh</endscript>
+    <inputdef>overlay_dirt_Run1_mcc9_v08_00_00_13d_reco1</inputdef>
+    <datafiletypes>root</datafiletypes>
+    <outdir>&out_dir;/&year;/&month;/&date;/&name;/Dirt_Run1</outdir>
+    <logdir>&out_dir;/&year;/&month;/&date;/&name;/Dirt_Run1</logdir>
+    <workdir>&work_dir;/&year;/&month;/&date;/&name;/Dirt_Run1</workdir>
+    <numjobs>100</numjobs>
+    <maxfilesperjob>1</maxfilesperjob>
+    <datatier>larlite</datatier>
+    <memory>4000</memory>
+    <resource>DEDICATED,OPPORTUNISTIC</resource>
+    <jobsub>--expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+  </stage>
+
+  <stage name="DLChain_Dirt_Run3">
+    <fcl>wirecell_detsim_optical_overlay_uboone.fcl</fcl>
+    <fcl>standard_overlay_optical_uboone.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_optical.fcl</fcl>
+    <fcl>dlreco2.fcl</fcl>
+    <fcl>dl_driver_overlay.fcl</fcl>
+    <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
+    <initsource>init.sh</initsource>
+    <endscript>rundlreco_ssnetvertexonly.sh</endscript>
+    <inputdef>overlay_dirt_Run3_mcc9_v08_00_00_13d_reco1</inputdef>
+    <!--inputdef>samanthasf_dltests_reco1_dirt_run3</inputdef-->
+    <datafiletypes>root</datafiletypes>
+    <outdir>&out_dir;/&year;/&month;/&date;/&name;/Dirt_Run3</outdir>
+    <logdir>&out_dir;/&year;/&month;/&date;/&name;/Dirt_Run3</logdir>
+    <workdir>&work_dir;/&year;/&month;/&date;/&name;/Dirt_Run3</workdir>
+    <numjobs>100</numjobs>
+    <maxfilesperjob>1</maxfilesperjob>
+    <datatier>larlite</datatier>
+    <memory>4000</memory>
+    <resource>DEDICATED,OPPORTUNISTIC</resource>
+    <jobsub>--expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+  </stage>
+
+  <!-- file type -->
+  <filetype>&file_type;</filetype>
+
+  <!-- run type -->
+  <runtype>&run_type;</runtype>
+
+</project>
+
+</job>
