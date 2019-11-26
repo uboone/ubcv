@@ -77,7 +77,7 @@ physics.analyzers.opreco.DAQHeaderProducer: "daq"
 physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
 
 physics.analyzers.opreco.DataLookUpMap.ophit: ["ophitBeam","ophitCosmic","ophitBeamCalib","ophitCosmicCalib"]
-physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::OverlayStage1a","simpleFlashCosmic::OverlayStage1a","wcopflash:beam, opflash:cosmic"]
+physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::OverlayStage1a","simpleFlashCosmic::OverlayStage1a","wcopflash:beam", "wcopflash:cosmic"]
 physics.analyzers.opreco.AssociationLookUpMap.ophit: ["ophitBeam","ophitCosmic","ophitBeamCalib","ophitCosmicCalib"]
 physics.analyzers.opreco.AssociationLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::OverlayStage1a","simpleFlashCosmic::OverlayStage1a"]
 
