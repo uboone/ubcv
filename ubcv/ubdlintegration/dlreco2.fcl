@@ -33,7 +33,7 @@ physics.reco:                   [ "rns", "wcopflash","crtt0Correction","crthitco
 physics.ana:                    [ ]
 physics.trigger_paths:          [ reco]
 physics.end_paths:              [ stream1 ]
-outputs.out1.fileName:          "%ifb_%tc_reco2.root"
+outputs.out1.fileName:          "%ifb_reco2.root"
 outputs.out1.dataTier:          "reconstructed"
 outputs.out1.outputCommands:    ["keep *_*_*_*"]
 source.inputCommands:           ["keep *_*_*_*", "drop *_*_*_Data*RecoStage2", "drop *_*_*_MC*RecoStage2"]

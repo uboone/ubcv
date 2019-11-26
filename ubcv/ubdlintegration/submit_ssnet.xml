@@ -8,7 +8,7 @@
 <!ENTITY name         "ssnet" >
 <!ENTITY year         "2019" >
 <!ENTITY month        "November" >
-<!ENTITY date         "Nov21" >
+<!ENTITY date         "Nov25" >
 <!ENTITY tardir       "/pnfs/uboone/resilient/users/sfehlber" >
 <!ENTITY fcl_dir      "/uboone/app/users/sfehlber/SSNET/srcs/ubcv/ubcv/ubdlintegration/" >
 <!ENTITY out_dir      "/pnfs/uboone/scratch/users/sfehlber" >
@@ -30,7 +30,7 @@
   <!-- Larsoft information -->
   <larsoft>
     <tag>&larrelease;</tag>
-    <local>&tardir;/Nov21.tar</local>
+    <local>&tardir;/Nov25.tar</local>
     <qual>e17:prof</qual>
   </larsoft>
 
@@ -61,6 +61,7 @@
     </stage>
 
   <stage name="DLChain_Overlay_Run1">
+    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>wirecell_detsim_optical_overlay_uboone.fcl</fcl>
     <fcl>standard_overlay_optical_uboone.fcl</fcl>
     <fcl>reco_uboone_mcc9_8_driver_overlay_optical.fcl</fcl>
@@ -74,7 +75,7 @@
     <outdir>&out_dir;/&year;/&month;/&date;/&name;/Overlay_Run1</outdir>
     <logdir>&out_dir;/&year;/&month;/&date;/&name;/Overlay_Run1</logdir>
     <workdir>&work_dir;/&year;/&month;/&date;/&name;/Overlay_Run1</workdir>
-    <numjobs>100</numjobs>
+    <numjobs>10</numjobs>
     <maxfilesperjob>1</maxfilesperjob>
     <datatier>larlite</datatier>
     <memory>4000</memory>
@@ -84,6 +85,7 @@
   </stage>
 
     <stage name="DLChain_Overlay_Run3">
+    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>wirecell_detsim_optical_overlay_uboone.fcl</fcl>
     <fcl>standard_overlay_optical_uboone.fcl</fcl>
     <fcl>reco_uboone_mcc9_8_driver_overlay_optical.fcl</fcl>
@@ -98,7 +100,7 @@
     <outdir>&out_dir;/&year;/&month;/&date;/&name;/Overlay_Run3</outdir>
     <logdir>&out_dir;/&year;/&month;/&date;/&name;/Overlay_Run3</logdir>
     <workdir>&work_dir;/&year;/&month;/&date;/&name;/Overlay_Run3</workdir>
-    <numjobs>100</numjobs>
+    <numjobs>10</numjobs>
     <maxfilesperjob>1</maxfilesperjob>
     <datatier>larlite</datatier>
     <memory>4000</memory>
@@ -186,6 +188,7 @@
   </stage>
 
   <stage name="DLChain_Dirt_Run1">
+    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>wirecell_detsim_optical_overlay_uboone.fcl</fcl>
     <fcl>standard_overlay_optical_uboone.fcl</fcl>
     <fcl>reco_uboone_mcc9_8_driver_overlay_optical.fcl</fcl>
@@ -199,7 +202,7 @@
     <outdir>&out_dir;/&year;/&month;/&date;/&name;/Dirt_Run1</outdir>
     <logdir>&out_dir;/&year;/&month;/&date;/&name;/Dirt_Run1</logdir>
     <workdir>&work_dir;/&year;/&month;/&date;/&name;/Dirt_Run1</workdir>
-    <numjobs>100</numjobs>
+    <numjobs>10</numjobs>
     <maxfilesperjob>1</maxfilesperjob>
     <datatier>larlite</datatier>
     <memory>4000</memory>
@@ -209,6 +212,7 @@
   </stage>
 
   <stage name="DLChain_Dirt_Run3">
+    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>wirecell_detsim_optical_overlay_uboone.fcl</fcl>
     <fcl>standard_overlay_optical_uboone.fcl</fcl>
     <fcl>reco_uboone_mcc9_8_driver_overlay_optical.fcl</fcl>
@@ -223,7 +227,7 @@
     <outdir>&out_dir;/&year;/&month;/&date;/&name;/Dirt_Run3</outdir>
     <logdir>&out_dir;/&year;/&month;/&date;/&name;/Dirt_Run3</logdir>
     <workdir>&work_dir;/&year;/&month;/&date;/&name;/Dirt_Run3</workdir>
-    <numjobs>100</numjobs>
+    <numjobs>10</numjobs>
     <maxfilesperjob>1</maxfilesperjob>
     <datatier>larlite</datatier>
     <memory>4000</memory>
