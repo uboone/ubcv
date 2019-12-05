@@ -96,7 +96,7 @@ physics.analyzers.opreco.AssociationLookUpMap.ophit: ["ophitBeam","ophitCosmic",
 physics.analyzers.opreco.AssociationLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::DataRecoStage1Test","simpleFlashCosmic::DataRecoStage1Test"]
 
 # configure truth supera
-physics.analyzers.superaMCTruthOnly.supera_params: "supera_mctruth_test.fcl"
+#physics.analyzers.superaMCTruthOnly.supera_params: "supera_mctruth_test.fcl"
 
 # Turn on Mask-RCNN
 #physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
