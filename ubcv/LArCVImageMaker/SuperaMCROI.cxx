@@ -60,6 +60,8 @@ namespace larcv {
 
     _filter_min_cols = cfg.get<size_t>("FilterROIMinCols");
     _filter_min_rows = cfg.get<size_t>("FilterROIMinRows");
+
+    _tick_backward   = cfg.get<bool>("TickBackward",false);
     
   }
 
@@ -412,6 +414,7 @@ namespace larcv {
       throw larbys();
     }
     double min_x  = (part_image.min_x() < event_image.min_x() ? event_image.min_x() : part_image.min_x() );
+    double min_y  = (part_image.min_y() < event_image.min_y() ? event_image.min_y() : part_image.min_y() );
     double max_y  = (part_image.max_y() > event_image.max_y() ? event_image.max_y() : part_image.max_y() );
     double width  = (part_image.width() + min_x > event_image.max_x() ? event_image.max_x() - min_x : part_image.width());
     double height = (max_y - part_image.height() < event_image.min_y() ? max_y - event_image.min_y() : part_image.height());
@@ -455,25 +458,30 @@ namespace larcv {
 	}
       }
     }
+    double origin_y = (_tick_backward) ? max_y : min_y;
+
     LARCV_INFO() << "Creating ImageMeta Width=" << width
 		 << " Height=" << height
 		 << " NRows=" << rows / modular_row
 		 << " NCols=" << cols / modular_col
-		 << " Origin @ (" << min_x << "," << max_y << ")" << std::endl;
+		 << " Origin @ (" << min_x << "," << origin_y << ")" << std::endl;
+    
+
     larcv::ImageMeta res(width, height,
 			 rows / modular_row, cols / modular_col,
-			 min_x, max_y,
+			 min_x, origin_y,
 			 part_image.plane());
-
+    
     LARCV_DEBUG() << "Event image   " << event_image.dump();
-
+    
     LARCV_DEBUG() << "After format  " << res.dump();
     /*
-    res = event_image.overlap(res);
-
-    LARCV_DEBUG() << "After overlap " << res.dump();
+      res = event_image.overlap(res);
+      
+      LARCV_DEBUG() << "After overlap " << res.dump();
     */
     return res;
+    
   }
     
   void SuperaMCROI::finalize()

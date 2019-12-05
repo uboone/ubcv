@@ -51,6 +51,7 @@ namespace larcv {
 
     unsigned short _origin;
     std::string m_ancestor_label;
+    bool _tick_backward;
   };
 
   /**

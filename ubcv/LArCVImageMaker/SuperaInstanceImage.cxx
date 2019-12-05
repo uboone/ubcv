@@ -22,6 +22,7 @@ namespace larcv {
     supera::ImageMetaMaker::configure(cfg);
     _origin = cfg.get<unsigned short>("Origin",0);
     m_ancestor_label = cfg.get<std::string>("AncestorImageLabel");
+    _tick_backward     = cfg.get<bool>("TickBackward",false);
   }
 
   void SuperaInstanceImage::initialize()
@@ -117,7 +118,7 @@ namespace larcv {
     std::vector<larcv::Image2D> ancestor_v;
     supera::Instance2Image(meta_v, trackid2ancestorid, LArData<supera::LArSimCh_t>(),
 			   row_compression_factor, col_compression_factor, TimeOffset(),
-			   idimg_v, ancestor_v );
+			   idimg_v, ancestor_v, _tick_backward );
 
           
     ev_image->Emplace(std::move(idimg_v));

@@ -18,7 +18,8 @@ namespace supera {
 		       const std::vector<float>& col_compression_factor,			 
 		       const int time_offset,
 		       std::vector<larcv::Image2D>& img_out_v,
-		       std::vector<larcv::Image2D>& ancestor_out_v ) {
+		       std::vector<larcv::Image2D>& ancestor_out_v,
+		       bool tick_backward ) {
     
     LARCV_SINFO() << "Instance ID Image ..." << std::endl;
 
@@ -125,9 +126,12 @@ namespace supera {
     ancestor_out_v.clear();
     for ( auto const& img : img_v ) {
       const larcv::ImageMeta& meta = img.meta();
+      float origin_y = meta.min_y();
+      if ( tick_backward )
+	origin_y = meta.max_y();
       larcv::ImageMeta meta_out(meta.width(), meta.height(), 
 				int( meta.rows()/row_compression_factor.at(meta.plane()) ), int( meta.cols()/col_compression_factor.at(meta.plane()) ),
-				meta.min_x(), meta.max_y(), 
+				meta.min_x(), origin_y, 
 				meta.plane() );
       larcv::Image2D img_out( meta_out );
       img_out.paint(-1.0);

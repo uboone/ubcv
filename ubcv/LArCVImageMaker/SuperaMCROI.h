@@ -83,6 +83,8 @@ namespace larcv {
 
     size_t _filter_min_cols;
     size_t _filter_min_rows;
+    
+    bool   _tick_backward;
 
     bool FilterNode(const supera::MCNode& node) const;
     larcv::ImageMeta FormatMeta(const larcv::ImageMeta& part_image,

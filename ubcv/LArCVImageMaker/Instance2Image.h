@@ -19,7 +19,8 @@ namespace supera {
 		       const std::vector<float>& col_compression_factor,
 		       const int time_offset,
 		       std::vector<larcv::Image2D>& img_out_v,
-		       std::vector<larcv::Image2D>& ancestor_out_v );
+		       std::vector<larcv::Image2D>& ancestor_out_v,
+		       bool tick_backward );
 
   
 }
