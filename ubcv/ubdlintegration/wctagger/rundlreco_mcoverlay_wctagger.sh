@@ -1,13 +1,22 @@
-#!/bin/bash -e
-
+#!/bin/bash
 
 echo "<<<<<< RUN DL RECO SCRIPT >>>>>>"
 
-# OUTPUT FILES FROM PREVIOUS STAGE
-source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
-
 echo "<< FILES available >> "
 ls -lh
+
+echo "<< Dump lar out >>"
+cat larStage0.out
+echo "<< Dump lar err >>"
+cat larStage0.err
+
+echo "<< Dump lar out >>"
+cat larStage1.out
+echo "<< Dump lar err >>"
+cat larStage1.err
+
+# OUTPUT FILES FROM PREVIOUS STAGE
+source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
 
 SUPERA=out_larcv_test.root  # has adc image, chstatus, ssnet output, mrcnn
 LARCV_TRUTH=larcv.root
