@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/bin/bash -e
+
 
 echo "<<<<<< RUN DL RECO SCRIPT >>>>>>"
+
 # OUTPUT FILES FROM PREVIOUS STAGE
 source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
 
@@ -8,8 +10,11 @@ echo "<< FILES available >> "
 ls -lh
 
 SUPERA=out_larcv_test.root  # has adc image, chstatus, ssnet output, mrcnn
+LARCV_TRUTH=larcv.root
 OPRECO=larlite_opreco.root
 RECO2D=larlite_reco2d.root
+MCINFO=larlite_mcinfo.root
+#WCHITS=larlite_wctagger.root
 
 echo "<<< CHECKING TO SEE IF THE FILE IS EMPTY >>>"
 py_script="
@@ -36,9 +41,10 @@ if [ $ret -eq 0 ];then
     echo "File Contains Events. Continuing with Reco Script."
 else
     echo "File Contains No Events. Creating Empty File and Killing Job."
-    hadd -f merged_dlreco.root $SUPERA $OPRECO $RECO2D
+    hadd -f merged_dlreco.root $SUPERA $OPRECO $RECO2D $MCINFO
     exit 0
 fi
+echo "<<<< END OF EMPTY FILE CHECK>>>>"
 
 # HERE's OUR HACK: bring down ubdl, bring up dllee_unified
 unsetup ubdl
@@ -57,11 +63,11 @@ SHOWER_MAC_DIR=${LARLITECV_BASEDIR}/app/LLCVProcessor/DLHandshake/mac/ # using u
 
 # CONFIGS
 # -------
-TAGGER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tagger_configs/tagger_extbnb_v2_splity_mcc9.cfg
-VERTEX_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/vertex_configs/prod_fullchain_mcc9ssnet_combined_newtag_extbnb_c10_union.cfg
+TAGGER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tagger_configs/tagger_mcv2_splity_mcc9.cfg
+VERTEX_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/vertex_configs/prod_fullchain_mcc9ssnet_combined_newtag_mc_c10_union.cfg
 #VERTEX_CONFIG=prod_fullchain_mcc9ssnet_combined_newtag_extbnb_c10_union.cfg # for debug
 TRACKER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tracker_configs/tracker_read_cosmo.cfg
-NUEID_INTER_CONFIG=${NUEID_INTER_DIR}/inter_nue_data_mcc9.cfg
+NUEID_INTER_CONFIG=${NUEID_INTER_DIR}/inter_nue_mc_mcc9.cfg
 SHOWER_RECO_CONFIG=$SHOWER_MAC_DIR/config_nueid.cfg
 SHOWER_RECO_DQDS=$SHOWER_MAC_DIR/dqds_mc_xyz.txt
 
@@ -72,7 +78,8 @@ SHOWER_RECO_DQDS=$SHOWER_MAC_DIR/dqds_mc_xyz.txt
 
 # LARLITE FILES TO MERGE
 # -----------------------
-LARLITE_FILE_LIST="larlite_dlmerged.root larlite_opreco.root larlite_reco2d.root tagger_anaout_larlite.root tracker_reco.root nueid_ll_out_0.root shower_reco_out_0.root"
+LARLITE_FILE_LIST="larlite_dlmerged.root larlite_opreco.root larlite_mcinfo.root larlite_reco2d.root tagger_anaout_larlite.root tracker_reco.root nueid_ll_out_0.root shower_reco_out_0.root"
+#LARLITE_FILE_LIST+=" larlite_wctagger.root"
 
 echo "<<< CONFIGS >>>"
 echo "TAGGER:  ${TAGGER_CONFIG}"
@@ -90,7 +97,7 @@ echo "<<< CHECK ENV AFTER DLLEE_UNIFIED >>>"
 export 
 
 echo "<<< PRIMARY CHAIN >>>"
-echo "< RUN TAGGER >"
+echo "<<< RUN TAGGER >>>"
 ls out_larcv_test.root > input_larcv.txt
 ls larlite_opreco.root > input_larlite.txt
 run_tagger $TAGGER_CONFIG
@@ -99,7 +106,7 @@ TAGGER_LARCV=tagger_anaout_larcv.root
 TAGGER_LARLITE=tagger_anaout_larlite.root
 
 echo "<<< RUN VERTEXER >>>"
-python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_vertexer.py -c $VERTEX_CONFIG -a vertexana.root -o vertexout.root -d ./ $SUPERA $TAGGER_LARCV
+python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_vertexer.py -c $VERTEX_CONFIG -a vertexana.root -o vertexout.root -d ./ $SUPERA $TAGGER_LARCV $LARCV_TRUTH
 VERTEXOUT=vertexout.root
 VERTEXANA=vertexana.root
 
@@ -162,6 +169,7 @@ echo "<<< cleanup excess root files >>>"
 #-rw-r--r-- 1 tmw microboone  14M Oct 24 14:33 out_larsoft.root
 #-rw-r--r-- 1 tmw microboone 173K Oct 24 14:37 shower_reco_out_0.root
 
-rm -f larlite_dlmerged.root larlite_larflow.root larlite_opreco.root larlite_reco2d.root out_larcv_test.root 
+rm -f larlite_dlmerged.root larlite_larflow.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root out_larcv_test.root
+#rm -f larlite_wctagger.root
 rm -f tagger_anaout_larcv.root tagger_anaout_larlite.root tracker_anaout.root tracker_reco.root vertexana.root vertexout.root
 rm -f shower_reco_out_0.root nueid_lcv_out_0.root nueid_ll_out_0.root lcv_trash.root nueid_ana_0.root
