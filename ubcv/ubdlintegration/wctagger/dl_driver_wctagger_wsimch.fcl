@@ -10,7 +10,7 @@ litedata_wctagger.out_filename: "larlite_wctagger.root"
 litedata_wctagger.DataLookUpMap:
 {
   sps : [ "portedSpacePointsThreshold" ]
-  hit : [ "portedThresholdHit" ]
+  hit : [ "portedThresholdhit" ]
 }
 
 END_PROLOG
@@ -72,7 +72,7 @@ physics:
  }
 
  dlnetpath: [ubdl]
- stream: [opreco, reco2d, wctagger, superaMCTruthOnly, out1]
+ stream: [opreco, reco2d, mcinfo, gaushitMCinfoBacktracker, wctagger, superaMCTruthOnly, out1]
  end_paths: [stream]
  trigger_paths: [ dlnetpath ]
 }

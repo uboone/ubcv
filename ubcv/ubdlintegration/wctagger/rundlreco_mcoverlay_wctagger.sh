@@ -1,28 +1,50 @@
-#!/bin/bash
+#!/bin/bash -e
+
 
 echo "<<<<<< RUN DL RECO SCRIPT >>>>>>"
 
-echo "<< FILES available >> "
-ls -lh
-
-echo "<< Dump lar out >>"
-cat larStage0.out
-echo "<< Dump lar err >>"
-cat larStage0.err
-
-echo "<< Dump lar out >>"
-cat larStage1.out
-echo "<< Dump lar err >>"
-cat larStage1.err
-
 # OUTPUT FILES FROM PREVIOUS STAGE
 source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
+
+echo "<< FILES available >> "
+ls -lh
 
 SUPERA=out_larcv_test.root  # has adc image, chstatus, ssnet output, mrcnn
 LARCV_TRUTH=larcv.root
 OPRECO=larlite_opreco.root
 RECO2D=larlite_reco2d.root
+MCINFO=larlite_mcinfo.root
 WCHITS=larlite_wctagger.root
+
+echo "<<< CHECKING TO SEE IF THE FILE IS EMPTY >>>"
+py_script="
+import sys,os
+import larcv
+from larcv import larcv
+
+io = larcv.IOManager(larcv.IOManager.kREAD)
+io.add_in_file('%s'%sys.argv[1])
+io.initialize()
+
+nentries = io.get_n_entries()
+
+if nentries==0: 
+     sys.exit(1)
+else:
+     sys.exit(0)
+"
+python -c "$py_script" $SUPERA
+ret=$?
+echo $?
+
+if [ $ret -eq 0 ];then
+    echo "File Contains Events. Continuing with Reco Script."
+else
+    echo "File Contains No Events. Creating Empty File and Killing Job."
+    hadd -f merged_dlreco.root $SUPERA $OPRECO $RECO2D $MCINFO
+    exit 0
+fi
+echo "<<<< END OF EMPTY FILE CHECK>>>>"
 
 # HERE's OUR HACK: bring down ubdl, bring up dllee_unified
 unsetup ubdl
@@ -56,7 +78,7 @@ SHOWER_RECO_DQDS=$SHOWER_MAC_DIR/dqds_mc_xyz.txt
 
 # LARLITE FILES TO MERGE
 # -----------------------
-LARLITE_FILE_LIST="larlite_dlmerged.root larlite_opreco.root larlite_reco2d.root larlite_wctagger.root tagger_anaout_larlite.root tracker_reco.root nueid_ll_out_0.root shower_reco_out_0.root"
+LARLITE_FILE_LIST="larlite_dlmerged.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root tagger_anaout_larlite.root tracker_reco.root nueid_ll_out_0.root shower_reco_out_0.root larlite_wctagger.root"
 
 echo "<<< CONFIGS >>>"
 echo "TAGGER:  ${TAGGER_CONFIG}"
@@ -146,6 +168,7 @@ echo "<<< cleanup excess root files >>>"
 #-rw-r--r-- 1 tmw microboone  14M Oct 24 14:33 out_larsoft.root
 #-rw-r--r-- 1 tmw microboone 173K Oct 24 14:37 shower_reco_out_0.root
 
-rm -f larlite_dlmerged.root larlite_larflow.root larlite_opreco.root larlite_reco2d.root out_larcv_test.root larlite_wctagger.root
-rm -f tagger_anaout_larcv.root tagger_anaout_larlite.root tracker_anaout.root tracker_reco.root vertexana.root vertexout.root
-rm -f shower_reco_out_0.root nueid_lcv_out_0.root nueid_ll_out_0.root lcv_trash.root nueid_ana_0.root
+#rm -f larlite_dlmerged.root larlite_larflow.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root out_larcv_test.root
+#rm -f larlite_wctagger.root
+#rm -f tagger_anaout_larcv.root tagger_anaout_larlite.root tracker_anaout.root tracker_reco.root vertexana.root vertexout.root
+#rm -f shower_reco_out_0.root nueid_lcv_out_0.root nueid_ll_out_0.root lcv_trash.root nueid_ana_0.root
