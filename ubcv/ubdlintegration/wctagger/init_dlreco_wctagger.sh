@@ -95,7 +95,7 @@ python -c "import inference_sparse_ssnet"
 #python -c "from larcv import larcv; larcv.json.load_jsonutils(); print \"larcv.json.load_jsonutils()\""
 
 echo "<<<< cpu INFO >>>>>"
-#cat /proc/cpuinfo
+cat /proc/cpuinfo
 
 #echo "<<<<< copy inference test data >>>>>"
 #ifdh cp /pnfs/uboone/resilient/users/tmw/model_deploy_scripts/supera-Run005121-SubRun000004.root supera-Run005121-SubRun000004.root

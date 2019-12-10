@@ -58,7 +58,7 @@ physics:
  }
 
  dlnetpath: [ubdl]
- stream: [ reco2d,mcinfo, opreco,gaushitMCinfoBacktracker,superaMCTruthOnly, out1]
+ stream: [ reco2d, mcinfo, opreco, gaushitMCinfoBacktracker, superaMCTruthOnly, out1]
  end_paths: [stream]
  trigger_paths: [ dlnetpath ]
 }
