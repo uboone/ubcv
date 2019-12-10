@@ -73,7 +73,8 @@ physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
 physics.producers.ubdl.SSNetMode:   "DoNotRun"
 physics.producers.ubdl.LArFlowMode: "DoNotRun"
 physics.producers.ubdl.InfillMode:  "DoNotRun"
-physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
+physics.producers.ubdl.CosmicMRCNNMode: "DoNotRun"
+#physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
 physics.producers.ubdl.SparseSSNetMode: "PyTorchCPU"
 
 outputs:
