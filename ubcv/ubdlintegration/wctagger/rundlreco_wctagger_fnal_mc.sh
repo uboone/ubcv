@@ -20,12 +20,6 @@ cat larStage1.err
 # OUTPUT FILES FROM PREVIOUS STAGE
 source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
 
-# HERE's OUR HACK: bring down ubdl, bring up dllee_unified
-unsetup ubdl
-
-echo "<<< SETUP DLLEE_UNIFIED >>>"
-setup dllee_unified v1_0_2 -q e17:prof
-
 SUPERA=out_larcv_test.root  # has adc image, chstatus, ssnet output, mrcnn
 LARCV_TRUTH=larcv.root
 OPRECO=larlite_opreco.root
@@ -33,6 +27,14 @@ RECO2D=larlite_reco2d.root
 MCINFO=larlite_mcinfo.root
 WCHITS=larlite_wctagger.root
 
+unsetup ubdl
+
+echo "<<< SETUP DLLEE_UNIFIED >>>"
+# setup dllee_unified v1_0_3 -q e17:prof
+export PRODUCTS=/uboone/app/users/tmw/ups_dev/products:${PRODUCTS}
+setup dllee_unified develop -q e17:prof
+# SETUP ENV FOR TAGGER BIN
+export PATH=$LARLITECV_BASEDIR/app/TaggerCROI/bin:$PATH
 echo "<<< CHECKING TO SEE IF THE FILE IS EMPTY >>>"
 py_script="
 import sys,os
@@ -45,7 +47,7 @@ io.initialize()
 
 nentries = io.get_n_entries()
 
-if nentries==0: 
+if nentries==0:
      sys.exit(1)
 else:
      sys.exit(0)
@@ -63,8 +65,8 @@ else
 fi
 echo "<<<< END OF EMPTY FILE CHECK>>>>"
 
-# SETUP ENV FOR TAGGER BIN
-export PATH=$LARLITECV_BASEDIR/app/TaggerCROI/bin:$PATH
+# HERE's OUR HACK: bring down ubdl, bring up dllee_unified
+
 
 # DIRS
 NUEID_INTER_DIR=${LARLITECV_BASEDIR}/app/LLCVProcessor/InterTool/Sel/NueID/mac/ # using ups
@@ -74,10 +76,9 @@ SHOWER_MAC_DIR=${LARLITECV_BASEDIR}/app/LLCVProcessor/DLHandshake/mac/ # using u
 
 # CONFIGS
 # -------
-TAGGER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tagger_configs/tagger_overlay_v2_splity_mcc9.cfg
-VERTEX_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/vertex_configs/prod_fullchain_mcc9ssnet_combined_newtag_mc_c10_union.cfg
-#VERTEX_CONFIG=prod_fullchain_mcc9ssnet_combined_newtag_extbnb_c10_union.cfg # for debug
-TRACKER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tracker_configs/tracker_read_cosmo.cfg
+VERTEX_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/vertex_configs/prod_fullchain_mcc9ssnet_wctagger_mc.cfg
+TRACKER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tracker_configs/tracker_read_cosmo_tickbackwards.cfg
+# TRACKER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tracker_configs/tracker_read_cosmo.cfg
 NUEID_INTER_CONFIG=${NUEID_INTER_DIR}/inter_nue_mc_mcc9.cfg
 SHOWER_RECO_CONFIG=$SHOWER_MAC_DIR/config_nueid.cfg
 SHOWER_RECO_DQDS=$SHOWER_MAC_DIR/dqds_mc_xyz.txt
@@ -89,10 +90,10 @@ SHOWER_RECO_DQDS=$SHOWER_MAC_DIR/dqds_mc_xyz.txt
 
 # LARLITE FILES TO MERGE
 # -----------------------
-LARLITE_FILE_LIST="larlite_dlmerged.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root tagger_anaout_larlite.root tracker_reco.root nueid_ll_out_0.root shower_reco_out_0.root larlite_wctagger.root"
+LARLITE_FILE_LIST="larlite_dlmerged.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root tracker_reco.root nueid_ll_out_0.root shower_reco_out_0.root larlite_wctagger.root"
+# LARLITE_FILE_LIST="larlite_dlmerged.root larlite_opreco.root larlite_reco2d.root  tracker_reco.root nueid_ll_out_0.root shower_reco_out_0.root larlite_wctagger.root"
 
 echo "<<< CONFIGS >>>"
-echo "TAGGER:  ${TAGGER_CONFIG}"
 echo "VERTEX:  ${VERTEX_CONFIG}"
 echo "TRACKER: ${TRACKER_CONFIG}"
 echo "NUEID:   ${NUEID_INTER_CONFIG}"
@@ -104,24 +105,28 @@ echo "LARLITE FILES: ${LARLITE_FILE_LIST}"
 echo ""
 
 echo "<<< CHECK ENV AFTER DLLEE_UNIFIED >>>"
-export 
+export
 
 echo "<<< PRIMARY CHAIN >>>"
-echo "<<< RUN TAGGER >>>"
-ls out_larcv_test.root > input_larcv.txt
-ls larlite_opreco.root > input_larlite.txt
-run_tagger $TAGGER_CONFIG
+echo "< RUN WC TAGGER >"
+# Cheat and Hadd supera and tagger:
+hadd supera_tagger_combine.root $SUPERA $WCHITS
+ls supera_tagger_combine.root > input_larcv.txt
+echo $LARCV_BASEDIR
+$LARCV_BASEDIR/app/WC_Tagger/./thrumu_maker_tickforward input_larcv.txt
+# don't need the cheat file sticking around
+rm supera_tagger_combine.root
+TAGGER_LARCV=thrumu_outfile.root
 
-TAGGER_LARCV=tagger_anaout_larcv.root
-TAGGER_LARLITE=tagger_anaout_larlite.root
 
 echo "<<< RUN VERTEXER >>>"
 python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_vertexer.py -c $VERTEX_CONFIG -a vertexana.root -o vertexout.root -d ./ $SUPERA $TAGGER_LARCV $LARCV_TRUTH
+# python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_vertexer.py -c $VERTEX_CONFIG -a vertexana.root -o vertexout.root -d ./ $SUPERA $TAGGER_LARCV
 VERTEXOUT=vertexout.root
 VERTEXANA=vertexana.root
 
 echo "<<< RUN TRACKER >>>"
-python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_tracker_reco3d.py -c $TRACKER_CONFIG -i $SUPERA -t $TAGGER_LARCV -p $VERTEXOUT -d ./ 
+python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_tracker_reco3d.py -c $TRACKER_CONFIG -i $VERTEXOUT -t $TAGGER_LARCV -p $VERTEXOUT -d ./
 TRACKEROUT=tracker_reco.root
 TRACKERANA=tracker_anaout.root
 mv -f tracker_reco_0.root $TRACKEROUT
@@ -135,7 +140,7 @@ mv -f tracker_anaout_0.root  $TRACKERANA
 ##python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/rename_vertexana.py vertexana_trackonly_temp.root $TRKONLY_VERTEXANA
 
 #echo "<<< RUN TRACKONLY TRACKER >>>"
-##python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_tracker_reco3d.py -c $TRKONLY_TRACKER_CONFIG -i $SUPERA -t $TAGGER_LARCV -p $TRKONLY_VERTEXOUT -d ./ 
+##python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_tracker_reco3d.py -c $TRKONLY_TRACKER_CONFIG -i $SUPERA -t $TAGGER_LARCV -p $TRKONLY_VERTEXOUT -d ./
 #TRKONLY_TRACKEROUT=tracker_reco_trackonly.root
 #TRKONLY_TRACKERANA=tracker_anaout_trackonly.root
 ##mv -f tracker_reco_0.root    $TRKONLY_TRACKEROUT

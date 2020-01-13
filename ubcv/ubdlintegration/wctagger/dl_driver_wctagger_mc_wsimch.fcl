@@ -79,8 +79,6 @@ physics:
 
 # configure larlite
 # -- trigger --
-# DATA
-#physics.analyzers.opreco.DataLookUpMap.trigger: ["daq"]
 # MC
 physics.analyzers.opreco.DataLookUpMap.trigger: ["triggersim"]
 # -- CRT --
