@@ -6,7 +6,7 @@
 <!ENTITY release      "v08_00_00_29" >
 <!ENTITY file_type    "data"      >
 <!ENTITY run_type     "physics"   >
-<!ENTITY name         "nueintrinsics">
+<!ENTITY name         "extbnb">
 <!ENTITY dl_part      "ptest"       >
 <!ENTITY username     "tmw"       >
 <!ENTITY projectout   "/pnfs/uboone/resilient/users/tmw/work">
@@ -38,23 +38,23 @@
 
   <!-- Project stages -->
   <stage name="ssnet">
-    <fcl>dl_driver_wctagger_mc_wsimch.fcl</fcl>
+    <fcl>dl_driver_wctagger_data.fcl</fcl>
     <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
     <initsource>/pnfs/uboone/resilient/users/tmw/fcls/init_dlreco_wctagger.sh</initsource>
-    <endscript>/pnfs/uboone/resilient/users/tmw/dlreco_scripts/rundlreco_wctagger_fnal_mc.sh</endscript>
-    <inputdef>prodgenie_bnb_intrinsic_nue_uboone_overlay_mcc9.0_run1_wcp_reco1.5_v08_00_00_29_reco1.5_reco1.5</inputdef>
+    <endscript>/pnfs/uboone/resilient/users/tmw/dlreco_scripts/rundlreco_wctagger_fnal_data.sh</endscript>
+    <inputdef>data_extbnb_mcc9.1_wcp_port_TEST_v08_00_00_28_reco1.5_C1_reco1.5</inputdef>
     <outdir>&logout;/&name;_&dl_part;/out/&release;</outdir>
     <logdir>&logout;/&name;_&dl_part;/log/&release;</logdir>
     <workdir>&projectout;</workdir>
-    <numjobs>1000</numjobs>
+    <numjobs>5</numjobs>
     <maxfilesperjob>1</maxfilesperjob>
     <datatier>larlite</datatier>
     <memory>4000</memory>
     <disk>10GB</disk>
     <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
-
-    <jobsub>--expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
-    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+    <!-- subgroup=test for testing job, remove for big, real jobs -->
+    <jobsub>--subgroup=test --expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--subgroup=test --expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
 
   </stage>
 

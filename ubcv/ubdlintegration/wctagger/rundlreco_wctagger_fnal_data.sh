@@ -29,9 +29,9 @@ WCHITS=larlite_wctagger.root
 unsetup ubdl
 
 echo "<<< SETUP DLLEE_UNIFIED >>>"
-# setup dllee_unified v1_0_3 -q e17:prof
-export PRODUCTS=/uboone/app/users/tmw/ups_dev/products:${PRODUCTS}
-setup dllee_unified develop -q e17:prof
+setup dllee_unified v1_0_3 -q e17:prof
+#export PRODUCTS=/uboone/app/users/tmw/ups_dev/products:${PRODUCTS}
+#setup dllee_unified develop -q e17:prof
 
 # SETUP ENV FOR TAGGER BIN
 export PATH=$LARLITECV_BASEDIR/app/TaggerCROI/bin:$PATH
@@ -60,7 +60,7 @@ if [ $ret -eq 0 ];then
     echo "File Contains Events. Continuing with Reco Script."
 else
     echo "File Contains No Events. Creating Empty File and Killing Job."
-    hadd -f merged_dlreco.root $SUPERA $OPRECO $RECO2D #$MCINFO
+    hadd -f merged_dlreco.root $SUPERA $OPRECO $RECO2D
     exit 0
 fi
 echo "<<<< END OF EMPTY FILE CHECK>>>>"
@@ -74,8 +74,7 @@ SHOWER_MAC_DIR=${LARLITECV_BASEDIR}/app/LLCVProcessor/DLHandshake/mac/ # using u
 # -------
 VERTEX_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/vertex_configs/prod_fullchain_mcc9ssnet_wctagger_data.cfg
 TRACKER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tracker_configs/tracker_read_cosmo_tickbackwards.cfg
-# TRACKER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tracker_configs/tracker_read_cosmo.cfg
-NUEID_INTER_CONFIG=${NUEID_INTER_DIR}/inter_nue_mc_mcc9.cfg
+NUEID_INTER_CONFIG=${NUEID_INTER_DIR}/inter_nue_data_mcc9.cfg
 SHOWER_RECO_CONFIG=$SHOWER_MAC_DIR/config_nueid.cfg
 SHOWER_RECO_DQDS=$SHOWER_MAC_DIR/dqds_mc_xyz.txt
 
@@ -132,7 +131,7 @@ python ${SHOWER_MAC_DIR}/reco_recluster_shower.py -c $SHOWER_RECO_CONFIG -id 0 -
 echo "<< combine larlite files >>"
 python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/combine_larlite.py -o $LARLITE_FILE_LIST
 echo "<<< HADD ROOT FILES >>>"
-hadd -f merged_dlreco.root $VERTEXOUT $VERTEXANA $TRACKERANA nueid_lcv_out_0.root larlite_dlmerged.root
+hadd -f merged_dlreco.root $VERTEXOUT $VERTEXANA $TRACKERANA nueid_lcv_out_0.root nueid_ana_0.root larlite_dlmerged.root
 echo "<<< Append UBDL Products >>>"
 python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/append_ubdlproducts.py merged_dlreco.root out_larcv_test.root
 
@@ -159,7 +158,7 @@ echo "<<< cleanup excess root files >>>"
 #-rw-r--r-- 1 tmw microboone  14M Oct 24 14:33 out_larsoft.root
 #-rw-r--r-- 1 tmw microboone 173K Oct 24 14:37 shower_reco_out_0.root
 
-#rm -f larlite_dlmerged.root larlite_larflow.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root out_larcv_test.root
-#rm -f larlite_wctagger.root
-#rm -f tagger_anaout_larcv.root tagger_anaout_larlite.root tracker_anaout.root tracker_reco.root vertexana.root vertexout.root
-#rm -f shower_reco_out_0.root nueid_lcv_out_0.root nueid_ll_out_0.root lcv_trash.root nueid_ana_0.root
+rm -f larlite_dlmerged.root larlite_larflow.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root out_larcv_test.root
+rm -f larlite_wctagger.root
+rm -f tagger_anaout_larcv.root tagger_anaout_larlite.root tracker_anaout.root tracker_reco.root vertexana.root vertexout.root
+rm -f shower_reco_out_0.root nueid_lcv_out_0.root nueid_ll_out_0.root lcv_trash.root nueid_ana_0.root

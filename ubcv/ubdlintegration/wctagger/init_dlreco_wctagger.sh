@@ -5,18 +5,18 @@ export LD_LIBRARY_PATH=${LIBZMQ_FQ_DIR}/lib64:${LD_LIBRARY_PATH}
 
 echo "<<< ENV VARS >>>"
 export
-echo "<<< SPARSE SSNET OSG STASH DIR >>>"
-ls -lh /cvmfs/uboone.osgstorage.org/stash/ubdlnetworks/ubSSNet/v0_0_2/NULL/weights
-echo "<<< SWITCH SPARSE SSNET WEIGHTS TO CVMFS DIR >>>"
-export UBSSNET_WEIGHT_DIR=$UBSSNET_DIR/weights
+#echo "<<< SPARSE SSNET OSG STASH DIR >>>"
+#ls -lh /cvmfs/uboone.osgstorage.org/stash/ubdlnetworks/ubSSNet/v0_0_2/NULL/weights
+#echo "<<< SWITCH SPARSE SSNET WEIGHTS TO CVMFS DIR >>>"
+#export UBSSNET_WEIGHT_DIR=$UBSSNET_DIR/weights
 
-echo "<<< Copy weights locally >>>"
-cp $UBSSNET_DIR/weights/* ${PWD}/
-export UBSSNET_WEIGHT_DIR=${PWD}
+#echo "<<< Copy weights locally >>>"
+#cp $UBSSNET_DIR/weights/* ${PWD}/
+#export UBSSNET_WEIGHT_DIR=${PWD}
 
-echo "<<< SPARSE SSNET WEIGHT DIR >>>"
-echo "dir: ${UBSSNET_WEIGHT_DIR}"
-ls -lh $UBSSNET_WEIGHT_DIR
+#echo "<<< SPARSE SSNET WEIGHT DIR >>>"
+#echo "dir: ${UBSSNET_WEIGHT_DIR}"
+#ls -lh $UBSSNET_WEIGHT_DIR
 
 
 #export PYTHONPATH=/cvmfs/uboone.opensciencegrid.org/products/ubdl/v1_0_0/Linux64bit+3.10-2.17_e17_prof/ublarcvserver/networks/mask-rcnn.pytorch/lib:$PYTHONPATH
@@ -77,19 +77,19 @@ ls -lh $UBSSNET_WEIGHT_DIR
 #ldd $UBCV_LIB/*.so
 #ldd $LARCV_LIBDIR/*.so
 
-echo "<<PYTHONPATH>>"
-echo $PYTHONPATH | sed 's|:|\n|g'
+#echo "<<PYTHONPATH>>"
+#echo $PYTHONPATH | sed 's|:|\n|g'
 #echo "<<LD_LIBRARY_PATH>>"
 #echo $LD_LIBRARY_PATH | sed 's|:|\n|g'
 
-echo "<< INFERENCE_MRCNN test >>"
-python -c "import inference_mrcnn"
+#echo "<< INFERENCE_MRCNN test >>"
+#python -c "import inference_mrcnn"
 
-echo "<< INFILL test >>"
-python -c "import Infill_ForwardPass"
+#echo "<< INFILL test >>"
+#python -c "import Infill_ForwardPass"
 
-echo "<< SPARSE SSNET test >>"
-python -c "import inference_sparse_ssnet"
+#echo "<< SPARSE SSNET test >>"
+#python -c "import inference_sparse_ssnet"
 
 #echo "<< larcv.json test >>"
 #python -c "from larcv import larcv; larcv.json.load_jsonutils(); print \"larcv.json.load_jsonutils()\""
