@@ -77,7 +77,7 @@ SHOWER_MAC_DIR=${LARLITECV_BASEDIR}/app/LLCVProcessor/DLHandshake/mac/ # using u
 TAGGER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tagger_configs/tagger_overlay_v2_splity_mcc9.cfg
 VERTEX_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/vertex_configs/prod_fullchain_mcc9ssnet_combined_newtag_mc_c10_union.cfg
 #VERTEX_CONFIG=prod_fullchain_mcc9ssnet_combined_newtag_extbnb_c10_union.cfg # for debug
-TRACKER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tracker_configs/tracker_read_cosmo.cfg
+TRACKER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tracker_configs/tracker_read_cosmo_tickbackwards.cfg
 NUEID_INTER_CONFIG=${NUEID_INTER_DIR}/inter_nue_mc_mcc9.cfg
 #SHOWER_RECO_CONFIG=$SHOWER_MAC_DIR/config_nueid.cfg
 #SHOWER_RECO_DQDS=$SHOWER_MAC_DIR/dqds_mc_xyz.txt
@@ -122,7 +122,7 @@ VERTEXOUT=vertexout.root
 VERTEXANA=vertexana.root
 
 echo "<<< RUN TRACKER >>>"
-python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_tracker_reco3d.py -c $TRACKER_CONFIG -i $SUPERA -t $TAGGER_LARCV -p $VERTEXOUT -d ./ 
+python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_tracker_reco3d.py -c $TRACKER_CONFIG -t $TAGGER_LARCV -p $VERTEXOUT -d ./ 
 TRACKEROUT=tracker_reco.root
 TRACKERANA=tracker_anaout.root
 mv -f tracker_reco_0.root $TRACKEROUT
