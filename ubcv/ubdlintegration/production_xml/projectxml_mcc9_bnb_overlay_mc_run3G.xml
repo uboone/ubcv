@@ -42,7 +42,7 @@
     <startscript>condor_start_project_crt_merge_v06_26_01_13.sh</startscript>
     <filelistdef>1</filelistdef>
     <initsource>/pnfs/uboone/resilient/users/tmw/fcls/init_dlreco.sh</initsource>
-    <fcl>crt_merge_extra_v06_26_01_13.fcl</fcl>
+    <fcl>crt_merge_extra_v06_26_01_13_dlrename.fcl</fcl>
     <fcl>standard_overlay_notpc_uboone.fcl</fcl>
     <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>wirecell_detsim_optical_overlay_uboone.fcl</fcl>
