@@ -86,7 +86,7 @@ outputs:
  out1:
  {
    module_type: RootOutput
-   fileName:    "%ifb_%tc_ubdl1.root" #default file name, can override from command line with -o or --output
+   fileName:    "DLReco_%r_%s_%tc_ubdl1.root" #default file name, can override from command line with -o or --output
    dataTier:    "larcv"
    compressionLevel: 1
  }
