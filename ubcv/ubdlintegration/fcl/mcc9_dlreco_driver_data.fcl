@@ -16,26 +16,22 @@ services:
   @table::microboone_services_reco
 }
 
-#services.TimeTracker.printSummary: false
-#services.TimeTracker.dbOutput: {}
-#services.MemoryTracker.printSummaries: []
-#services.MemoryTracker.includeMallocInfo: false
 services.DetectorPropertiesService.NumberTimeSamples: 6400
 services.DetectorPropertiesService.ReadOutWindowSize: 6400
 services.DetectorClocksService.InheritClockConfig:    false
 services.DetectorClocksService.TriggerOffsetTPC:      -0.400e3
 services.SpaceCharge.EnableSimSpatialSCE: true
 services.SpaceCharge.EnableSimEfieldSCE:  true
-services.LLMetaMaker: {Enable: false}
+services.LLMetaMaker:    {Enable: false}
 services.LArCVMetaMaker: {Enable: false}
 
 source_gen:
 {
   module_type: EmptyEvent
   timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
-  maxEvents:   10          # Number of events to create
+  maxEvents:   10       # Number of events to create
   firstRun:    1        # Run number to use for this file
-  firstEvent:  1           # number of first event in the file
+  firstEvent:  1        # number of first event in the file
 }
 
 source_reprocess:
@@ -58,17 +54,14 @@ physics:
  }
 
  dlnetpath: [ubdl]
- stream: [opreco, reco2d, out1]
- end_paths: [stream]
+ stream:    [ opreco, reco2d, out1 ]
+ end_paths: [ stream ]
  trigger_paths: [ dlnetpath ]
 }
 
 # configure larlite
 # -- trigger --
-# DATA
 physics.analyzers.opreco.DataLookUpMap.trigger: ["daq"]
-# MC
-#physics.analyzers.opreco.DataLookUpMap.trigger: ["triggersim"]
 # -- CRT --
 physics.analyzers.opreco.DataLookUpMap.crthit:   ["crthitcorr"]
 physics.analyzers.opreco.DataLookUpMap.crttrack: ["crttrack"]
@@ -76,22 +69,22 @@ physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
 physics.analyzers.opreco.DAQHeaderProducer: "daq"
 physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
 
-physics.analyzers.opreco.DataLookUpMap.ophit: ["ophitBeam","ophitCosmic","ophitBeamCalib","ophitCosmicCalib"]
-physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::DataRecoStage1Test","simpleFlashCosmic::DataRecoStage1Test","wcopflash:beam","wcopflash:cosmic"]
-physics.analyzers.opreco.AssociationLookUpMap.ophit: ["ophitBeam","ophitCosmic","ophitBeamCalib","ophitCosmicCalib"]
-physics.analyzers.opreco.AssociationLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::DataRecoStage1Test","simpleFlashCosmic::DataRecoStage1Test"]
-
-
-# Turn on Mask-RCNN
+# Networks to execute
+physics.producers.ubdl.SSNetMode:   "DoNotRun"
+physics.producers.ubdl.LArFlowMode: "DoNotRun"
+physics.producers.ubdl.InfillMode:  "DoNotRun"
+physics.producers.ubdl.CosmicMRCNNMode: "DoNotRun"
 #physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
+physics.producers.ubdl.SparseSSNetMode: "PyTorchCPU"
 
 outputs:
 {
  out1:
  {
    module_type: RootOutput
-   fileName:    "%ifb_%tc_ubdl1.root" #default file name, can override from command line with -o or --output
-   dataTier:    "larcv"
+   #fileName:    "%ifb_%tc_ubdl1.root" #default file name, can override from command line with -o or --output
+   fileName:    "DLReco_%r_%s_%tc_ubdl1.root" #default file name, can override from command line with -o or --output
+   dataTier:    "dlreco"
    compressionLevel: 1
  }
 }

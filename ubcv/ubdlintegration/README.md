@@ -86,7 +86,7 @@ The fcl chain for `OVERLAY` and `PURE-MC` samples are:
 
 One needs to select a driver fcl file and endscript using the table above.  
 One also needs to include `standard_dlreco_uboone_metadata.fcl`. 
-Note, this (and `dlreco2.fcl`) lives in `ubcv/ubcv/ubdlintegration/`.
+Note, this (and `dlreco2.fcl`) lives in `ubcv/ubcv/ubdlintegration/fcl`.
 
 ## Special Jobsub commands
 
@@ -100,4 +100,4 @@ Also ensures that the CPUs have access to AVX instruction sets, which `pytorch` 
 
 ## An Example XML
 
-You can find an example xml file in `example_project.xml`.
+See the `production_xml` folder for examples on the chain of fcl files needed to be run for production.
