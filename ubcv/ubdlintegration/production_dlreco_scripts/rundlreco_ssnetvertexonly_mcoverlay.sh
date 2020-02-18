@@ -26,6 +26,13 @@ RECO2D=larlite_reco2d.root
 MCINFO=larlite_mcinfo.root
 #WCHITS=larlite_wctagger.root
 
+# HERE's OUR HACK: bring down ubdl, bring up dllee_unified
+unsetup ubdl
+
+echo "<<< SETUP DLLEE_UNIFIED >>>"
+#setup dllee_unified develop -q e17:prof
+setup dllee_unified v1_0_4 -q e17:prof
+
 echo "<<< CHECKING TO SEE IF THE FILE IS EMPTY >>>"
 py_script="
 import sys,os
@@ -55,13 +62,6 @@ else
     exit 0
 fi
 echo "<<<< END OF EMPTY FILE CHECK>>>>"
-
-# HERE's OUR HACK: bring down ubdl, bring up dllee_unified
-unsetup ubdl
-
-echo "<<< SETUP DLLEE_UNIFIED >>>"
-#setup dllee_unified develop -q e17:prof
-setup dllee_unified v1_0_4 -q e17:prof
 
 # SETUP ENV FOR TAGGER BIN
 export PATH=$LARLITECV_BASEDIR/app/TaggerCROI/bin:$PATH

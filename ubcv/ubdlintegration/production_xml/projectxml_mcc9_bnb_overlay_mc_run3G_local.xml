@@ -3,14 +3,14 @@
 <!-- Production Project -->
 
 <!DOCTYPE project [
-<!ENTITY release      "v08_00_00_29d_dl" >
+<!ENTITY release      "v08_00_00_29" >
 <!ENTITY file_type    "data"      >
 <!ENTITY run_type     "physics"   >
 <!ENTITY name         "dlreco">
-<!ENTITY dl_part      "run3G_bnboverlay_test"       >
+<!ENTITY dl_part      "run3G_test"       >
 <!ENTITY username     "tmw"       >
 <!ENTITY projectout   "/pnfs/uboone/resilient/users/tmw/work">
-<!ENTITY logout       "/pnfs/uboone/persistent/users/tmw/dlreco_v08_00_00_29d_dl">
+<!ENTITY logout       "/pnfs/uboone/persistent/users/tmw/dlreco_v08_00_00_29c_dl">
 <!ENTITY test         "test" >
 ]>
 
@@ -27,15 +27,21 @@
   <!-- Larsoft information -->
   <!-- Remember to make/update your larsoft tarball and point to it here -->
   <larsoft>
-    <tag>&release;</tag>
+    <tag>v08_05_00_10</tag>
+    <local>/pnfs/uboone/resilient/users/tmw/tar/ubcv_v08_00_00_29c_dl.tar</local>
     <qual>e17:prof</qual>
   </larsoft>
 
 
+  <!-- Local FCL directory -->
+  <fcldir>/pnfs/uboone/resilient/users/tmw/fcls</fcldir>
+
   <!-- Project stages -->
   <stage name="ssnet">
+    <inputdef>prodgenie_bnb_nu_uboone_overlay_mcc9.0_run3_G_reco1</inputdef>
     <startscript>condor_start_project_crt_merge_v06_26_01_13.sh</startscript>
-    <initsource>init_dlreco.sh</initsource>
+    <filelistdef>1</filelistdef>
+    <initsource>/pnfs/uboone/resilient/users/tmw/fcls/init_dlreco.sh</initsource>
     <fcl>crt_merge_extra_v06_26_01_13_dlrename.fcl</fcl>
     <fcl>standard_overlay_notpc_uboone.fcl</fcl>
     <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
@@ -45,12 +51,10 @@
     <fcl>dlreco2.fcl</fcl>
     <fcl>mcc9_dlreco_driver_overlay_and_mc.fcl</fcl>
     <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
-    <endscript>rundlreco_ssnetvertexonly_mcoverlay.sh</endscript>
+    <endscript>/pnfs/uboone/resilient/users/tmw/fcls/rundlreco_ssnetvertexonly_mcoverlay.sh</endscript>
     <outdir>&logout;/&name;_&dl_part;/out/&release;</outdir>
     <logdir>&logout;/&name;_&dl_part;/log/&release;</logdir>
     <workdir>&projectout;</workdir>
-    <inputdef>prodgenie_bnb_nu_uboone_overlay_mcc9.0_run3_G_reco1</inputdef>
-    <filelistdef>1</filelistdef>
     <numjobs>5</numjobs>
     <maxfilesperjob>1</maxfilesperjob>
     <datatier>larlite</datatier>

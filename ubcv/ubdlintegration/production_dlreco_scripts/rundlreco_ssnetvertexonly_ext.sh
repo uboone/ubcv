@@ -23,6 +23,13 @@ SUPERA=out_larcv_test.root  # has adc image, chstatus, ssnet output, mrcnn
 OPRECO=larlite_opreco.root
 RECO2D=larlite_reco2d.root
 
+# HERE's OUR HACK: bring down ubdl, bring up dllee_unified
+unsetup ubdl
+
+echo "<<< SETUP DLLEE_UNIFIED >>>"
+setup dllee_unified v1_0_4 -q e17:prof
+#setup dllee_unified develop -q e17:prof
+
 echo "<<< CHECKING TO SEE IF THE FILE IS EMPTY >>>"
 py_script="
 import sys,os
@@ -52,13 +59,6 @@ else
     exit 0
 fi
 
-# HERE's OUR HACK: bring down ubdl, bring up dllee_unified
-unsetup ubdl
-
-echo "<<< SETUP DLLEE_UNIFIED >>>"
-setup dllee_unified v1_0_4 -q e17:prof
-#setup dllee_unified develop -q e17:prof
-
 # SETUP ENV FOR TAGGER BIN
 export PATH=$LARLITECV_BASEDIR/app/TaggerCROI/bin:$PATH
 
@@ -72,7 +72,7 @@ NUEID_INTER_DIR=${LARLITECV_BASEDIR}/app/LLCVProcessor/InterTool/Sel/NueID/mac/ 
 TAGGER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tagger_configs/tagger_extbnb_v2_splity_mcc9.cfg
 VERTEX_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/vertex_configs/prod_fullchain_mcc9ssnet_combined_newtag_extbnb_c10_union.cfg
 #VERTEX_CONFIG=prod_fullchain_mcc9ssnet_combined_newtag_extbnb_c10_union.cfg # for debug
-TRACKER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tracker_configs/tracker_read_cosmo.cfg
+TRACKER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tracker_configs/tracker_read_cosmo_tickbackwards.cfg
 NUEID_INTER_CONFIG=${NUEID_INTER_DIR}/inter_nue_data_mcc9.cfg
 #SHOWER_RECO_CONFIG=$SHOWER_MAC_DIR/config_nueid.cfg
 #SHOWER_RECO_DQDS=$SHOWER_MAC_DIR/dqds_mc_xyz.txt
@@ -116,7 +116,7 @@ VERTEXOUT=vertexout.root
 VERTEXANA=vertexana.root
 
 echo "<<< RUN TRACKER >>>"
-python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_tracker_reco3d.py -c $TRACKER_CONFIG -i $SUPERA -t $TAGGER_LARCV -p $VERTEXOUT -d ./ 
+python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_tracker_reco3d.py -c $TRACKER_CONFIG -t $TAGGER_LARCV -p $VERTEXOUT -d ./ 
 TRACKEROUT=tracker_reco.root
 TRACKERANA=tracker_anaout.root
 mv -f tracker_reco_0.root $TRACKEROUT
