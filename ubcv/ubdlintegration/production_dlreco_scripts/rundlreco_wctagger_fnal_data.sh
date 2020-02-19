@@ -21,16 +21,15 @@ cat larStage1.err
 source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
 
 SUPERA=out_larcv_test.root  # has adc image, chstatus, ssnet output, mrcnn
-LARCV_TRUTH=larcv.root
 OPRECO=larlite_opreco.root
 RECO2D=larlite_reco2d.root
-MCINFO=larlite_mcinfo.root
 WCHITS=larlite_wctagger.root
 
+# HERE's OUR HACK: bring down ubdl, bring up dllee_unified
 unsetup ubdl
 
 echo "<<< SETUP DLLEE_UNIFIED >>>"
-setup dllee_unified v1_0_3 -q e17:prof
+setup dllee_unified v1_0_4 -q e17:prof
 #export PRODUCTS=/uboone/app/users/tmw/ups_dev/products:${PRODUCTS}
 #setup dllee_unified develop -q e17:prof
 
@@ -61,12 +60,10 @@ if [ $ret -eq 0 ];then
     echo "File Contains Events. Continuing with Reco Script."
 else
     echo "File Contains No Events. Creating Empty File and Killing Job."
-    hadd -f merged_dlreco.root $SUPERA $OPRECO $RECO2D $MCINFO
+    hadd -f merged_dlreco.root $SUPERA $OPRECO $RECO2D
     exit 0
 fi
 echo "<<<< END OF EMPTY FILE CHECK>>>>"
-
-# HERE's OUR HACK: bring down ubdl, bring up dllee_unified
 
 
 # DIRS
@@ -75,15 +72,15 @@ SHOWER_MAC_DIR=${LARLITECV_BASEDIR}/app/LLCVProcessor/DLHandshake/mac/ # using u
 
 # CONFIGS
 # -------
-VERTEX_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/vertex_configs/prod_fullchain_mcc9ssnet_wctagger_mc.cfg
+VERTEX_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/vertex_configs/prod_fullchain_mcc9ssnet_wctagger_data.cfg
 TRACKER_CONFIG=$DLLEE_UNIFIED_DIR/dlreco_scripts/tracker_configs/tracker_read_cosmo_tickbackwards.cfg
-NUEID_INTER_CONFIG=${NUEID_INTER_DIR}/inter_nue_mc_mcc9.cfg
+NUEID_INTER_CONFIG=${NUEID_INTER_DIR}/inter_nue_data_mcc9.cfg
 SHOWER_RECO_CONFIG=$SHOWER_MAC_DIR/config_nueid.cfg
 SHOWER_RECO_DQDS=$SHOWER_MAC_DIR/dqds_mc_xyz.txt
 
 # LARLITE FILES TO MERGE
 # -----------------------
-LARLITE_FILE_LIST="larlite_dlmerged.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root tracker_reco.root nueid_ll_out_0.root shower_reco_out_0.root larlite_wctagger.root"
+LARLITE_FILE_LIST="larlite_dlmerged.root larlite_opreco.root larlite_reco2d.root  tracker_reco.root nueid_ll_out_0.root larlite_ssnetshowerreco.root larlite_wctagger.root"
 
 echo "<<< CONFIGS >>>"
 echo "VERTEX:  ${VERTEX_CONFIG}"
@@ -112,12 +109,12 @@ TAGGER_LARCV=thrumu_outfile.root
 
 
 echo "<<< RUN VERTEXER >>>"
-python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_vertexer.py -c $VERTEX_CONFIG -a vertexana.root -o vertexout.root -d ./ $SUPERA $TAGGER_LARCV $LARCV_TRUTH
+python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_vertexer.py -c $VERTEX_CONFIG -a vertexana.root -o vertexout.root -d ./ $SUPERA $TAGGER_LARCV
 VERTEXOUT=vertexout.root
 VERTEXANA=vertexana.root
 
 echo "<<< RUN TRACKER >>>"
-python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_tracker_reco3d.py -c $TRACKER_CONFIG -i $VERTEXOUT -t $TAGGER_LARCV -p $VERTEXOUT -d ./
+python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/run_tracker_reco3d.py -c $TRACKER_CONFIG -t $TAGGER_LARCV -p $VERTEXOUT -d ./
 TRACKEROUT=tracker_reco.root
 TRACKERANA=tracker_anaout.root
 mv -f tracker_reco_0.root $TRACKEROUT
@@ -126,10 +123,11 @@ mv -f tracker_anaout_0.root  $TRACKERANA
 echo "<<< RUN SHOWER RECO >>>"
 echo "  < make inter file > "
 echo "python ${NUEID_INTER_DIR}/inter_ana_nue_server.py -c ${NUEID_INTER_CONFIG} -mc -d -id 0 -od ./ -re larlite_reco2d.root vertexout.root"
-python ${NUEID_INTER_DIR}/inter_ana_nue_server.py -c ${NUEID_INTER_CONFIG} -mc -d -id 0 -od ./ -re larlite_reco2d.root vertexout.root
+python ${NUEID_INTER_DIR}/inter_ana_nue_server.py -c ${NUEID_INTER_CONFIG} -d -id 0 -od ./ -re larlite_reco2d.root vertexout.root
 
-echo "  < shower file >"
-python ${SHOWER_MAC_DIR}/reco_recluster_shower.py -c $SHOWER_RECO_CONFIG -mc -id 0 -od ./ --reco2d larlite_reco2d.root -dqds $SHOWER_RECO_DQDS nueid_lcv_out_0.root
+echo "<<< RUN SHOWER RECO >>>"
+#python ${SHOWER_MAC_DIR}/reco_recluster_shower.py -c $SHOWER_RECO_CONFIG -mc -id 0 -od ./ --reco2d larlite_reco2d.root -dqds $SHOWER_RECO_DQDS nueid_lcv_out_0.root
+python $DLLEE_UNIFIED_DIR/larlitecv/app/SSNetShowerReco/bin/run_ssnetshowerreco.py -ilcv $VERTEXOUT -ssn ubspurn -ill tracker_reco.root -f larlite -o larlite_ssnetshowerreco.root
 
 echo "<< combine larlite files >>"
 python $DLLEE_UNIFIED_DIR/dlreco_scripts/bin/combine_larlite.py -o $LARLITE_FILE_LIST
@@ -164,4 +162,4 @@ echo "<<< cleanup excess root files >>>"
 rm -f larlite_dlmerged.root larlite_larflow.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root out_larcv_test.root
 rm -f larlite_wctagger.root
 rm -f tagger_anaout_larcv.root tagger_anaout_larlite.root tracker_anaout.root tracker_reco.root vertexana.root vertexout.root
-rm -f shower_reco_out_0.root nueid_lcv_out_0.root nueid_ll_out_0.root lcv_trash.root nueid_ana_0.root
+rm -f shower_reco_out_0.root larlite_ssnetshowerreco.root nueid_lcv_out_0.root nueid_ll_out_0.root lcv_trash.root nueid_ana_0.root
