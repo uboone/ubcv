@@ -7,7 +7,7 @@
 <!ENTITY file_type    "data"      >
 <!ENTITY run_type     "physics"   >
 <!ENTITY name         "dlreco">
-<!ENTITY dl_part      "run3G_overlay_test"       >
+<!ENTITY dl_part      "run3G_bnb_test"       >
 <!ENTITY username     "tmw"       >
 <!ENTITY projectout   "/pnfs/uboone/resilient/users/tmw/work">
 <!ENTITY logout       "/pnfs/uboone/persistent/users/tmw/dlreco_v08_00_00_29d_dl">
@@ -19,7 +19,7 @@
 <project name="&name;">
 
   <!-- Project size -->
-  <numevents>10</numevents>
+  <numevents>5</numevents>
 
   <!-- Operating System -->
   <os>SL7</os>
@@ -27,30 +27,21 @@
   <!-- Larsoft information -->
   <!-- Remember to make/update your larsoft tarball and point to it here -->
   <larsoft>
-    <tag>v08_05_00_10</tag>
+    <tag>&release;</tag>
     <local>/pnfs/uboone/resilient/users/tmw/tar/ubcv_v08_00_00_29d_dl.tar</local>
     <qual>e17:prof</qual>
   </larsoft>
 
   <!-- Project stages -->
   <stage name="ssnet">
-    <inputdef>prodgenie_bnb_nu_uboone_overlay_mcc9.0_run3_G_reco1</inputdef>
-    <startscript>condor_start_project_crt_merge_v06_26_01_13.sh</startscript>
-    <filelistdef>1</filelistdef>
     <initsource>init_dlreco.sh</initsource>
-    <fcl>crt_merge_extra_v06_26_01_13_dlrename.fcl</fcl>
-    <fcl>standard_overlay_notpc_uboone.fcl</fcl>
-    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
-    <fcl>wirecell_detsim_optical_overlay_uboone.fcl</fcl>
-    <fcl>standard_overlay_optical_uboone.fcl</fcl>
-    <fcl>reco_uboone_mcc9_8_driver_overlay_optical.fcl</fcl>
-    <fcl>dlreco2.fcl</fcl>
-    <fcl>mcc9_dlreco_driver_overlay_and_mc.fcl</fcl>
+    <fcl>mcc9_dlreco_driver_data.fcl</fcl>
     <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
-    <endscript>rundlreco_ssnetvertexonly_mcoverlay.sh</endscript>
+    <endscript>rundlreco_ssnetvertexonly_bnb.sh</endscript>
     <outdir>&logout;/&name;_&dl_part;/out/&release;</outdir>
     <logdir>&logout;/&name;_&dl_part;/log/&release;</logdir>
     <workdir>&projectout;</workdir>
+    <inputdef>data_bnb_mcc9.1_v08_00_00_25_reco2_G1_beam_good_reco2_1e19</inputdef>
     <numjobs>5</numjobs>
     <maxfilesperjob>1</maxfilesperjob>
     <datatier>larlite</datatier>
