@@ -105,7 +105,7 @@ physics:
    @table::dlprod_analyzers
    wctagger: @local::litedata_wctagger
  }
-
+ 
  dlnetpath: [ophitBeamCalib,ophitCosmicCalib,simpleFlashBeam,simpleFlashCosmic,merger,mergerextra,crthitcorr,crttzero,crttrack,ubdl]
  stream: [opreco, reco2d, wctagger, out1]
  end_paths: [stream]
