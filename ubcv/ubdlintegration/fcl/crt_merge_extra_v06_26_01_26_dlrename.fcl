@@ -28,7 +28,7 @@ microboone_tfile_metadata:
 source:
 {
   module_type: RootInput
-  maxEvents:  -1        # Number of events to read
+  maxEvents: -1        # Number of events to read
   saveMemoryObjectThreshold: 0
   inputCommands: ["keep *_*_*_*",
                   "drop crt::CRTHits_merger_*_*",
@@ -37,6 +37,7 @@ source:
                   "drop *_*_*_OverlayDetsimOptical*",
                   "drop *_*_*_DataOverlayOptical*",
                   "drop *_*_*_OverlayStage1Optical*" ]
+k
 }
 
 physics:
@@ -98,7 +99,7 @@ services.message.destinations:
   }
 }
 
-services.CRTFileManager.ubversion_CRTHits: prod_v06_26_01_13
+services.CRTFileManager.ubversion_CRTHits: prod_v06_26_01_26
 
 physics.producers.merger.debug: false
 physics.producers.mergerextra.debug: false

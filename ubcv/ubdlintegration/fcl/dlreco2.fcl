@@ -49,3 +49,4 @@ microboone_tfile_metadata:
 physics.filters.crtveto: @local::UBCRTCosmicFilterBNBOFF
 physics.producers.crthitcorrFirstPass.IsOverlay: true
 physics.producers.crthitcorr.CrtHitsIn_Label1: "crthitcorrFirstPass"
+physics.producers.crthitcorr.CrtHitsIn_Label2: "mergerextra"

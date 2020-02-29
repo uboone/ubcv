@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+
+<!-- Production Project -->
+
+<!DOCTYPE project [
+<!ENTITY release      "v08_00_00_29" >
+<!ENTITY file_type    "data"      >
+<!ENTITY run_type     "physics"   >
+<!ENTITY name         "bnbrun3g">
+<!ENTITY dl_part      "wctest"       >
+<!ENTITY username     "tmw"       >
+<!ENTITY projectout   "/pnfs/uboone/resilient/users/tmw/work">
+<!ENTITY logout       "/pnfs/uboone/persistent/users/tmw/dlsupera_wctagger">
+<!ENTITY test         "test" >
+]>
+
+<job>
+
+<project name="&name;">
+
+  <!-- Project size -->
+  <numevents>1000000</numevents>
+
+  <!-- Operating System -->
+  <os>SL7</os>
+
+  <!-- Larsoft information -->
+  <!-- Remember to make/update your larsoft tarball and point to it here -->
+  <larsoft>
+    <tag>v08_00_00_29e_dl</tag>
+    <qual>e17:prof</qual>
+  </larsoft>
+
+  <!-- Project stages -->
+  <stage name="ssnet_G">
+    <inputdef>data_bnb_mcc9.1_wcp_port_TEST_v08_00_00_29_reco1.5_1e19_reco1.5</inputdef>
+    <initsource>init_dlreco.sh</initsource>
+    <fcl>mcc9_dlreco_w_wirecell_driver_data_run3G.fcl</fcl>
+    <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
+    <endscript>rundlreco_wctagger_fnal_data.sh</endscript>
+    <outdir>&logout;/&name;_&dl_part;/out/&release;</outdir>
+    <logdir>&logout;/&name;_&dl_part;/log/&release;</logdir>
+    <workdir>&projectout;</workdir>
+    <numjobs>5</numjobs>
+    <maxfilesperjob>1</maxfilesperjob>
+    <datatier>larlite</datatier>
+    <memory>4000</memory>
+    <disk>10GB</disk>
+    <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+    <!-- subgroup=test for testing job, remove for big, real jobs -->
+    <jobsub>--subgroup=test --expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--subgroup=test --expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+
+  </stage>
+
+  <stage name="ssnet_F">
+    <inputdef>data_bnb_mcc9.1_wcp_port_TEST_v08_00_00_29_reco1.5_F_reco1.5</inputdef>
+    <initsource>init_dlreco.sh</initsource>
+    <fcl>mcc9_dlreco_w_wirecell_driver_data_run3F.fcl</fcl>
+    <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
+    <endscript>rundlreco_wctagger_fnal_data.sh</endscript>
+    <outdir>&logout;/&name;_&dl_part;/out/&release;</outdir>
+    <logdir>&logout;/&name;_&dl_part;/log/&release;</logdir>
+    <workdir>&projectout;</workdir>
+    <numjobs>5</numjobs>
+    <maxfilesperjob>1</maxfilesperjob>
+    <datatier>larlite</datatier>
+    <memory>4000</memory>
+    <disk>10GB</disk>
+    <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+    <!-- subgroup=test for testing job, remove for big, real jobs -->
+    <jobsub>--subgroup=test --expected-lifetime=16h -e IFDH_CP_UNLINK_ON_ERROR=1 --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.has_avx==true)'</jobsub>
+    <jobsub_start>--subgroup=test --expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+  </stage>
+
+  <!-- file type -->
+  <filetype>&file_type;</filetype>
+
+  <!-- run type -->
+  <runtype>&run_type;</runtype>
+
+</project>
+
+</job>

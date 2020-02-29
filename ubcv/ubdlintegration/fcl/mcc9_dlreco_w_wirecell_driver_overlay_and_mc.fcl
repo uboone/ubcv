@@ -77,6 +77,11 @@ physics:
  trigger_paths: [ dlnetpath ]
 }
 
+# drop past optical products
+source.inputCommands: ["keep *_*_*_*", 
+                       "drop *_*_*_Data*RecoStage2", 
+                       "drop *_*_*_MC*RecoStage2"]
+
 # configure larlite
 # -- trigger --
 # MC
@@ -88,10 +93,10 @@ physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
 physics.analyzers.opreco.DAQHeaderProducer: "daq"
 physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
 
-physics.analyzers.opreco.DataLookUpMap.ophit: ["ophitBeam::OverlayStage1a","ophitCosmic::OverlayStage1a"]
-physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::OverlayStage1a","simpleFlashCosmic::OverlayStage1a"]
-physics.analyzers.opreco.AssociationLookUpMap.ophit: ["ophitBeam::OverlayStage1a","ophitCosmic::OverlayStage1a"]
-physics.analyzers.opreco.AssociationLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","simpleFlashBeam::OverlayStage1a","simpleFlashCosmic::OverlayStage1a"]
+physics.analyzers.opreco.DataLookUpMap.ophit: ["ophitBeam::OverlayStage1OpticalDLrerun","ophitCosmic::OverlayStage1OpticalDLrerun","ophitBeamCalib","ophitCosmicCalib"]
+physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::OverlayStage1OpticalDLrerun","simpleFlashCosmic::OverlayStage1OpticalDLrerun"]
+physics.analyzers.opreco.AssociationLookUpMap.ophit: ["ophitBeamCalib","ophitCosmicCalib","ophitBeam::OverlayStage1OpticalDLrerun","ophitCosmic::OverlayStage1OpticalDLrerun"]
+physics.analyzers.opreco.AssociationLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","simpleFlashBeam::OverlayStage1OpticalDLrerun","simpleFlashCosmic::OverlayStage1OpticalDLrerun"]
 
 # configure truth supera
 #physics.analyzers.superaMCTruthOnly.supera_params: "supera_mctruth_test.fcl"
