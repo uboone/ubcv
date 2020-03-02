@@ -38,11 +38,10 @@
     <startscript>condor_start_project_crt_merge_v06_26_01_13.sh</startscript>
     <initsource>init_dlreco.sh</initsource>
     <fcl>crt_merge_extra_v06_26_01_13_dlrename.fcl</fcl>
-    <fcl>standard_overlay_notpc_uboone_dlrerun.fcl</fcl>
-    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>wirecell_detsim_optical_overlay_uboone_dlrerun.fcl</fcl>
-    <fcl>standard_overlay_optical_uboone_dlrerun.fcl</fcl>
+    <fcl>standard_overlay_notpc_uboone_dlrerun.fcl</fcl>
     <fcl>reco_uboone_mcc9_8_driver_overlay_optical_dlrerun.fcl</fcl>
+    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>dlreco2.fcl</fcl>
     <fcl>mcc9_dlreco_w_wirecell_driver_overlay_and_mc.fcl</fcl>
     <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
@@ -66,11 +65,10 @@
     <startscript>condor_start_project_crt_merge_v06_26_01_26.sh</startscript>
     <initsource>init_dlreco.sh</initsource>
     <fcl>crt_merge_extra_v06_26_01_26_dlrename.fcl</fcl>
-    <fcl>standard_overlay_notpc_uboone_dlrerun.fcl</fcl>
-    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>wirecell_detsim_optical_overlay_uboone_dlrerun.fcl</fcl>
-    <fcl>standard_overlay_optical_uboone_dlrerun.fcl</fcl>
+    <fcl>standard_overlay_notpc_uboone_dlrerun.fcl</fcl>
     <fcl>reco_uboone_mcc9_8_driver_overlay_optical_dlrerun.fcl</fcl>
+    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>dlreco2.fcl</fcl>
     <fcl>mcc9_dlreco_w_wirecell_driver_overlay_and_mc.fcl</fcl>
     <fcl>standard_dlreco_uboone_metadata.fcl</fcl>

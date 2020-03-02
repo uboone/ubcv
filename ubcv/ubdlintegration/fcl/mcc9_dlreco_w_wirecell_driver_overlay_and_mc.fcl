@@ -78,9 +78,9 @@ physics:
 }
 
 # drop past optical products
-source.inputCommands: ["keep *_*_*_*", 
-                       "drop *_*_*_Data*RecoStage2", 
-                       "drop *_*_*_MC*RecoStage2"]
+source.inputCommands: ["keep *_*_*_*"]
+#                       "drop *_*_*_Data*RecoStage2", 
+#                       "drop *_*_*_MC*RecoStage2"]
 
 # configure larlite
 # -- trigger --

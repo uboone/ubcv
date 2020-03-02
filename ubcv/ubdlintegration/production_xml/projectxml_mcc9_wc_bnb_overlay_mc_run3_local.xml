@@ -38,17 +38,16 @@
     <startscript>condor_start_project_crt_merge_v06_26_01_13.sh</startscript>
     <initsource>init_dlreco.sh</initsource>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/crt_merge_extra_v06_26_01_13_dlrename.fcl</fcl>
-    <fcl>/pnfs/uboone/resilient/users/tmw/fcls/standard_overlay_notpc_uboone_dlrerun.fcl</fcl>
-    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/wirecell_detsim_optical_overlay_uboone_dlrerun.fcl</fcl>
-    <fcl>/pnfs/uboone/resilient/users/tmw/fcls/standard_overlay_optical_uboone_dlrerun.fcl</fcl>
+    <fcl>/pnfs/uboone/resilient/users/tmw/fcls/standard_overlay_notpc_uboone_dlrerun.fcl</fcl>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/reco_uboone_mcc9_8_driver_overlay_optical_dlrerun.fcl</fcl>
+    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/dlreco2.fcl</fcl>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/mcc9_dlreco_w_wirecell_driver_overlay_and_mc.fcl</fcl>
     <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
     <endscript>/pnfs/uboone/resilient/users/tmw/dlreco_scripts/rundlreco_wctagger_fnal_mc.sh</endscript>
-    <outdir>&logout;/&name;_&dl_part;/out/&release;</outdir>
-    <logdir>&logout;/&name;_&dl_part;/log/&release;</logdir>
+    <outdir>&logout;/ssnet_G_&name;_&dl_part;/out/&release;</outdir>
+    <logdir>&logout;/ssnet_G_&name;_&dl_part;/log/&release;</logdir>
     <workdir>&projectout;</workdir>
     <filelistdef>1</filelistdef>
     <numjobs>5</numjobs>
@@ -62,21 +61,20 @@
   </stage>
 
   <stage name="ssnet_F">
-    <inputdef></inputdef>
+    <inputdef>dummy</inputdef>
     <startscript>condor_start_project_crt_merge_v06_26_01_26.sh</startscript>
     <initsource>init_dlreco.sh</initsource>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/crt_merge_extra_v06_26_01_26_dlrename.fcl</fcl>
-    <fcl>/pnfs/uboone/resilient/users/tmw/fcls/standard_overlay_notpc_uboone_dlrerun.fcl</fcl>
-    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/wirecell_detsim_optical_overlay_uboone_dlrerun.fcl</fcl>
-    <fcl>/pnfs/uboone/resilient/users/tmw/fcls/standard_overlay_optical_uboone_dlrerun.fcl</fcl>
+    <fcl>/pnfs/uboone/resilient/users/tmw/fcls/standard_overlay_notpc_uboone_dlrerun.fcl</fcl>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/reco_uboone_mcc9_8_driver_overlay_optical_dlrerun.fcl</fcl>
+    <fcl>run_eventweight_microboone_justSplines.fcl</fcl>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/dlreco2.fcl</fcl>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/mcc9_dlreco_w_wirecell_driver_overlay_and_mc.fcl</fcl>
     <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
     <endscript>/pnfs/uboone/resilient/users/tmw/dlreco_scripts/rundlreco_wctagger_fnal_mc.sh</endscript>
-    <outdir>&logout;/&name;_&dl_part;/out/&release;</outdir>
-    <logdir>&logout;/&name;_&dl_part;/log/&release;</logdir>
+    <outdir>&logout;/ssnet_F_&name;_&dl_part;/out/&release;</outdir>
+    <logdir>&logout;/ssnet_F_&name;_&dl_part;/log/&release;</logdir>
     <workdir>&projectout;</workdir>
     <filelistdef>1</filelistdef>
     <numjobs>5</numjobs>
