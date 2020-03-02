@@ -34,6 +34,7 @@
   <!-- Project stages -->
   <stage name="ssnet_G">
     <inputdef>data_bnb_mcc9.1_wcp_port_TEST_v08_00_00_29_reco1.5_1e19_reco1.5</inputdef>
+    <startscript>condor_start_project_crt_merge_v06_26_01_13.sh</startscript>
     <initsource>init_dlreco.sh</initsource>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/mcc9_dlreco_w_wirecell_driver_data_run3G.fcl</fcl>
     <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
@@ -55,6 +56,7 @@
 
   <stage name="ssnet_F">
     <inputdef>data_bnb_mcc9.1_wcp_port_TEST_v08_00_00_29_reco1.5_F_reco1.5</inputdef>
+    <startscript>condor_start_project_crt_merge_v06_26_01_26.sh</startscript>
     <initsource>init_dlreco.sh</initsource>
     <fcl>/pnfs/uboone/resilient/users/tmw/fcls/mcc9_dlreco_w_wirecell_driver_data_run3F.fcl</fcl>
     <fcl>standard_dlreco_uboone_metadata.fcl</fcl>
