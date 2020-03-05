@@ -37,7 +37,6 @@ source:
                   "drop *_*_*_OverlayDetsimOptical*",
                   "drop *_*_*_DataOverlayOptical*",
                   "drop *_*_*_OverlayStage1Optical*" ]
-k
 }
 
 physics:
