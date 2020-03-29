@@ -2,6 +2,6 @@
 
 process_name: DLDeployWireMod
 
+physics.producers.ubdl.WireProducerName: "wiremod"
+physics.producers.ubdl.SuperaConfigFile: "supera_ssnetinterface_wiremod.fcl"
 physics.analyzers.superaMCTruthOnly.supera_params: "supera_mctruthonly_wiremod.fcl"
-physics.analyzers.ubdl.WireProducerName: "wiremod"
-physics.analyzers.ubdl.SuperaConfigFile: "supera_ssnetinterface_wiremod.fcl"
