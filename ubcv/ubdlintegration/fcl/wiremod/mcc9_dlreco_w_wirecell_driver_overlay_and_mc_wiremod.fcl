@@ -1,0 +1,7 @@
+#include "mcc9_dlreco_w_wirecell_driver_overlay_and_mc.fcl"
+
+process_name: DLDeployWireMod
+
+physics.analyzers.superaMCTruthOnly.supera_params: "supera_mctruthonly_wiremod.fcl"
+physics.analyzers.ubdl.WireProducerName: "wiremod"
+physics.analyzers.ubdl.SuperaConfigFile: "supera_ssnetinterface_wiremod.fcl"
