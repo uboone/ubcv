@@ -132,3 +132,4 @@ install_scripts()
 
 add_subdirectory(production_dlreco_scripts)
 add_subdirectory(fcl)
+add_subdirectory(production_wiremod)
