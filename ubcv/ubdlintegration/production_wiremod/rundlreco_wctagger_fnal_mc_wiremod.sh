@@ -7,16 +7,15 @@ echo "<< FILES available >> "
 ls -lh
 
 echo "<< Dump larstage outputs >>"
-#echo "<<larstage0.out>>"
-#cat larStage0.out
-#echo "<<larstage0.err>>"
-#cat larStage0.err
-#
-#echo "<<larstage1.out>>"
-#cat larStage1.out
-#echo "<<larstage1.err>>"
-#cat larStage1.err
-echo "<< skipping this for now... >>"
+echo "<<larstage7.out>>"
+cat larStage7.out
+echo "<<larstage7.err>>"
+cat larStage7.err
+
+echo "<<larstage8.out>>"
+cat larStage8.out
+echo "<<larstage8.err>>"
+cat larStage8.err
 
 # OUTPUT FILES FROM PREVIOUS STAGE
 source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
@@ -108,7 +107,7 @@ ls supera_tagger_combine.root > input_larcv.txt
 echo $LARCV_BASEDIR
 $LARCV_BASEDIR/app/WC_Tagger/./thrumu_maker_tickforward input_larcv.txt
 # don't need the cheat file sticking around
-#rm supera_tagger_combine.root  # but leaving it in for debugging purposes...
+rm supera_tagger_combine.root
 TAGGER_LARCV=thrumu_outfile.root
 
 
@@ -163,8 +162,7 @@ echo "<<< cleanup excess root files >>>"
 #-rw-r--r-- 1 tmw microboone  14M Oct 24 14:33 out_larsoft.root
 #-rw-r--r-- 1 tmw microboone 173K Oct 24 14:37 shower_reco_out_0.root
 
-echo "<<< skipping this for debugging purposes... >>>"
-#rm -f larlite_dlmerged.root larlite_larflow.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root out_larcv_test.root
-#rm -f larlite_wctagger.root
-#rm -f tagger_anaout_larcv.root tagger_anaout_larlite.root tracker_anaout.root tracker_reco.root vertexana.root vertexout.root
-#rm -f shower_reco_out_0.root larlite_ssnetshowerreco.root nueid_lcv_out_0.root nueid_ll_out_0.root lcv_trash.root nueid_ana_0.root
+rm -f larlite_dlmerged.root larlite_larflow.root larlite_opreco.root larlite_reco2d.root larlite_mcinfo.root out_larcv_test.root
+rm -f larlite_wctagger.root
+rm -f tagger_anaout_larcv.root tagger_anaout_larlite.root tracker_anaout.root tracker_reco.root vertexana.root vertexout.root
+rm -f shower_reco_out_0.root larlite_ssnetshowerreco.root nueid_lcv_out_0.root nueid_ll_out_0.root lcv_trash.root nueid_ana_0.root
