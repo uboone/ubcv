@@ -7,6 +7,9 @@
 #include "DataFormat/EventPixel2D.h"
 #include "DataFormat/EventROI.h"
 
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+
 namespace larcv {
 
   static SuperaKeyPointClusterProcessFactory __global_SuperaKeyPointClusterProcessFactory__;
@@ -36,11 +39,9 @@ namespace larcv {
 
   larcv::Vertex SuperaKeyPointCluster::GetPoint(const supera::LArMCStep_t& step)
   {
-    static double xyz[3];
-    static const double drift_velocity = ::supera::DriftVelocity() * 1.0e-3; // make it cm/ns
-    xyz[0] = step.X();
-    xyz[1] = step.Y();
-    xyz[2] = step.Z();
+    static const double drift_velocity =
+      ::supera::DriftVelocity(art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob()) * 1.0e-3; // make it cm/ns
+    double xyz[3] = {step.X(), step.Y(), step.Z()};
     if(_apply_sce) supera::ApplySCE(xyz);
       
     larcv::Vertex pt(xyz[0],xyz[1],xyz[2],
@@ -185,7 +186,8 @@ namespace larcv {
 
     static std::vector<std::vector<unsigned short> > data_v;
     data_v.resize(meta_v.size());
-
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob(clockData);
     for(size_t plane=0; plane<meta_v.size(); ++plane) {
       LARCV_DEBUG() << "Clustering plane " << plane << std::endl;
       auto const& meta = meta_v[plane];
@@ -197,7 +199,7 @@ namespace larcv {
 	xyz[0] = pt.X();
 	xyz[1] = pt.Y();
 	xyz[2] = pt.Z();
-	double tick_float = (double)(::supera::TPCG4Time2Tick(pt.T()) + time_offset) + supera::PlaneTickOffset(0,plane) + 0.5;
+        double tick_float = (double)(::supera::TPCG4Time2Tick(clockData, pt.T()) + time_offset) + supera::PlaneTickOffset(clockData, detProp, 0,plane) + 0.5;
 	double wire_float = (double)(::supera::NearestWire(xyz, plane)) + 0.5;
 	LARCV_DEBUG() << wire_float << " ... " << meta.min_x() << " => " << meta.max_x() << std::endl;
 	LARCV_DEBUG() << tick_float << " ... " << meta.min_y() << " => " << meta.max_y() << std::endl;

@@ -5,6 +5,7 @@
 #include "Base/larcv_logger.h"
 #include "LArUtil/Geometry.h"
 
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 namespace supera {
 
@@ -60,6 +61,7 @@ namespace supera {
 
     int numpixfilled_pass0 = 0;
     int numpixfilled_pass1 = 0;
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
     for (int ipass=0; ipass<2; ipass++) {
       // first pass: Y-only. This is to provide guidance on how to break ambiguities
       // second pass: U,V planes
@@ -91,7 +93,7 @@ namespace supera {
 	col -= (size_t)(meta.min_x());
 
 	for (auto const tick_ides : sch.TDCIDEMap()) {
-	  int tick = supera::TPCTDC2Tick((double)(tick_ides.first)) + time_offset; // true deposition tick
+          int tick = supera::TPCTDC2Tick(clockData, (double)(tick_ides.first)) + time_offset; // true deposition tick
 	  if (tick <= meta.min_y()) continue;
 	  if (tick >= meta.max_y()) continue;
 	  // Where is this tick in column vector?
