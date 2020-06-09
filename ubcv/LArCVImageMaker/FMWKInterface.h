@@ -12,6 +12,10 @@
 #include "lardataobj/MCBase/MCShower.h"
 #include "lardataobj/MCBase/MCTrack.h"
 #include "lardataobj/Simulation/SimChannel.h"
+namespace detinfo {
+  class DetectorClocksData;
+  class DetectorPropertiesData;
+}
 
 namespace supera {
   typedef larcv::PSet        Config_t;
@@ -35,8 +39,8 @@ namespace supera {
   // LArProperties
   //
 
-  /// DriftVelocity in cm/us
-  double DriftVelocity();
+  // DriftVelocity in cm/us
+  double DriftVelocity(detinfo::DetectorPropertiesData const& detProp);
 
   //
   // Geometry
@@ -79,26 +83,28 @@ namespace supera {
   // DetectorClockService
   //
   
-  /// Number of time ticks
-  unsigned int NumberTimeSamples();
+  // /// Number of time ticks
+  // unsigned int NumberTimeSamples();
   
   /// G4 time to TPC tick
-  int TPCG4Time2Tick(double ns);
+  int TPCG4Time2Tick(detinfo::DetectorClocksData const& clockData, double ns);
 
   /// G4 time to TPC tick
-  int TPCG4Time2TDC(double ns);
+  int TPCG4Time2TDC(detinfo::DetectorClocksData const& clockData, double ns);
 
   /// per-plane tick offset
-  double PlaneTickOffset(size_t plane0, size_t plane1);
+  double PlaneTickOffset(detinfo::DetectorClocksData const& clockData,
+                         detinfo::DetectorPropertiesData const& detProp,
+                         size_t plane0, size_t plane1);
   
   /// TPC TDC to Tick
-  double TPCTDC2Tick(double tdc);
+  double TPCTDC2Tick(detinfo::DetectorClocksData const& clockData, double tdc);
 
   /// Trigger tick
-  double TriggerOffsetTPC();
+  double TriggerOffsetTPC(detinfo::DetectorClocksData const& clockData);
 
   /// TPC sampling period
-  double TPCTickPeriod();
+  double TPCTickPeriod(detinfo::DetectorClocksData const& clockData);
 
   //
   // SpaceChargeService

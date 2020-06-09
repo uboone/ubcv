@@ -17,17 +17,9 @@ namespace supera {
       return geom->ChannelToWire(ch).front();
   }
   
-  double DriftVelocity()
+  double DriftVelocity(detinfo::DetectorPropertiesData const& detProp)
   { 
-    auto const* detp = ::lar::providerFrom<detinfo::DetectorPropertiesService>();
-    return detp->DriftVelocity(); 
-  }
-  
-  unsigned int NumberTimeSamples()
-  {
-    throw ::larcv::larbys("NumberTimeSamples function not available!");
-    auto const* detp = ::lar::providerFrom<detinfo::DetectorPropertiesService>();
-    return detp->NumberTimeSamples(); 
+    return detProp.DriftVelocity();
   }
   
   unsigned int Nchannels()
@@ -104,41 +96,38 @@ namespace supera {
     return geom->DetLength();
   }
   
-  int TPCG4Time2Tick(double ns)
+  int TPCG4Time2Tick(detinfo::DetectorClocksData const& clockData, double ns)
   { 
-    auto const* ts = ::lar::providerFrom<detinfo::DetectorClocksService>();      
-    return ts->TPCG4Time2Tick(ns); 
+    return clockData.TPCG4Time2Tick(ns);
   }
 
-  int TPCG4Time2TDC(double ns)
+  int TPCG4Time2TDC(detinfo::DetectorClocksData const& clockData, double ns)
   {
-    auto const* ts = ::lar::providerFrom<detinfo::DetectorClocksService>();
-    return ts->TPCG4Time2TDC(ns);
+    return clockData.TPCG4Time2TDC(ns);
   }
   
-  double TPCTDC2Tick(double tdc)
+  double TPCTDC2Tick(detinfo::DetectorClocksData const& clockData, double tdc)
   { 
-    auto const* ts = ::lar::providerFrom<detinfo::DetectorClocksService>();
-    return ts->TPCTDC2Tick(tdc); 
+    return clockData.TPCTDC2Tick(tdc);
   }
 
-  double TPCTickPeriod()
+  double TPCTickPeriod(detinfo::DetectorClocksData const& clockData)
   {
-    auto const* ts = ::lar::providerFrom<detinfo::DetectorClocksService>();
-    return ts->TPCClock().TickPeriod();
+    return clockData.TPCClock().TickPeriod();
   }
 
-  double TriggerOffsetTPC()
+  double TriggerOffsetTPC(detinfo::DetectorClocksData const& clockData)
   {
-    auto const* ts = ::lar::providerFrom<detinfo::DetectorClocksService>();
-    return ts->TriggerOffsetTPC();
+    return clockData.TriggerOffsetTPC();
   }
   
-  double PlaneTickOffset(size_t plane0, size_t plane1)
+  double PlaneTickOffset(detinfo::DetectorClocksData const& clockData,
+                         detinfo::DetectorPropertiesData const& detProp,
+                         size_t plane0, size_t plane1)
   {
     static double pitch = ::lar::providerFrom<geo::Geometry>()->PlanePitch();
-    static double tick_period = ::lar::providerFrom<detinfo::DetectorClocksService>()->TPCClock().TickPeriod();
-    return (plane1 - plane0) * pitch / DriftVelocity() / tick_period;
+    double tick_period = clockData.TPCClock().TickPeriod();
+    return (plane1 - plane0) * pitch / DriftVelocity(detProp) / tick_period;
   }
 
   void ApplySCE(double& x, double& y, double& z)
