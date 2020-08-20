@@ -7,6 +7,9 @@
 #include "DataFormat/DataFormatUtil.h"
 #include <cmath>
 
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+
 namespace supera {
 
   void PulledPork3DSlicer::configure(const supera::Config_t& cfg)
@@ -21,6 +24,8 @@ namespace supera {
     _slicer.Clear();
     LARCV_INFO() << std::endl;
     // Set the grid size by minimum wire spacing
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob(clockData);
     double grid_size_ymin = std::numeric_limits<double>::max();
     double grid_size_zmin = std::numeric_limits<double>::max();
     for(size_t plane=0; plane<supera::Nplanes(); ++plane) {
@@ -39,7 +44,7 @@ namespace supera {
       if(grid_size_y < grid_size_ymin) grid_size_ymin = grid_size_y;
       if(grid_size_z < grid_size_zmin) grid_size_zmin = grid_size_z;
     }
-    _slicer.SetGridSize(supera::DriftVelocity()*supera::TPCTickPeriod(),grid_size_ymin,grid_size_zmin);
+    _slicer.SetGridSize(supera::DriftVelocity(detProp)*supera::TPCTickPeriod(clockData),grid_size_ymin,grid_size_zmin);
     // Target volume size
     auto width_v = cfg.get<std::vector<double> >("WidthArray");
     if(width_v.size()!=3) {
@@ -167,6 +172,7 @@ namespace supera {
 
     LARCV_INFO() << "Searching for a constraint from " << mctruth.NParticles() 
 		 << " particles in one MCTruth..." << std::endl;
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob();
     for(int i=0; i<mctruth.NParticles(); ++i) {
 
       auto const& mcp = mctruth.GetParticle(i);
@@ -191,7 +197,7 @@ namespace supera {
       if(_apply_sce) supera::ApplySCE(x,y,z);
 
       // shift X coodrinate for T0 correction
-      x += (pos.T() - _t0_g4ns) / 1.e3 * supera::DriftVelocity();
+      x += (pos.T() - _t0_g4ns) / 1.e3 * supera::DriftVelocity(detProp);
       
       AddConstraint(x,y,z);
     }
@@ -236,7 +242,9 @@ namespace supera {
     double zmin = min_grid.z * _slicer.GridSizeZ();
 
     // Convenient conversion factor
-    const double tdc2x = supera::TPCTickPeriod() * supera::DriftVelocity();
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob(clockData);
+    const double tdc2x = supera::TPCTickPeriod(clockData) * supera::DriftVelocity(detProp);
     // Being lazy, use std::set for a unique set of points
     std::set<supera::GridPoint3D> point_s;
     // Loop over sim channel and register relevant points
@@ -244,7 +252,7 @@ namespace supera {
       for (auto const tdc_ides : sch.TDCIDEMap()) {
 
 	// Check tdc: this is effectively checking X in image coordinate
-	double xpos = (tdc_ides.first - supera::TPCG4Time2TDC(_t0_g4ns)) * tdc2x;
+        double xpos = (tdc_ides.first - supera::TPCG4Time2TDC(clockData, _t0_g4ns)) * tdc2x;
 	if(xpos < xmin || xpos > xmax) continue;
 
 	for(auto const& edep : tdc_ides.second) {
@@ -309,6 +317,7 @@ namespace supera {
       }
     }
     // Clean up edge effects
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
     for(size_t plane=0; plane<supera::Nplanes(); ++plane) {
       auto& wire_range = wire_range_v[plane];
       auto const& pixel_count = _wire_pixel_v[plane];
@@ -348,8 +357,8 @@ namespace supera {
     // Tick conversion from X
     //int tick_start = (int)((min_pt.x / supera::DriftVelocity() - supera::TriggerOffsetTPC()) / supera::TPCTickPeriod() + 0.5) + time_offset;
     //int tick_end   = (int)((max_pt.x / supera::DriftVelocity() - supera::TriggerOffsetTPC()) / supera::TPCTickPeriod() + 0.5) + time_offset;
-    int tick_start = min_pt.x + time_offset - supera::TriggerOffsetTPC() / supera::TPCTickPeriod();
-    int tick_end   = max_pt.x + time_offset - supera::TriggerOffsetTPC() / supera::TPCTickPeriod();
+    int tick_start = min_pt.x + time_offset - supera::TriggerOffsetTPC(clockData) / supera::TPCTickPeriod(clockData);
+    int tick_end   = max_pt.x + time_offset - supera::TriggerOffsetTPC(clockData) / supera::TPCTickPeriod(clockData);
 
     LARCV_INFO() << "X range: " << min_pt.x << " => " << max_pt.x
 		 << " converted to " << tick_start << " => " << tick_end << std::endl;

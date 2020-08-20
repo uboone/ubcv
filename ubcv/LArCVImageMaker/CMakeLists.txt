@@ -20,6 +20,7 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 	   	   nug4_ParticleNavigation lardataobj_Simulation
 		   lardataobj_RecoBase
 		   nusimdata_SimulationBase
+                   lardataalg_DetectorInfo
 		   lardataobj_MCBase
 		   larcoreobj_SummaryData
 		   lardataobj_RawData
