@@ -4,9 +4,8 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "Base/larbys.h"
 #include "FMWKInterface.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesServiceStandard.h"
-#include "lardata/DetectorInfoServices/LArPropertiesServiceStandard.h"
-#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
+#include "lardataalg/DetectorInfo/DetectorPropertiesData.h"
+#include "lardataalg/DetectorInfo/DetectorClocksData.h"
 #include "larevt/SpaceChargeServices/SpaceChargeService.h"
 
 namespace supera {
