@@ -32,7 +32,7 @@ product                 version
 ubevt                   v09_15_00
 larcv                   v06_71_00a
 larlite                 v06_71_00a
-cetbuildtools	        v7_15_01	-	only_for_build
+cetbuildtools	        v7_17_01	-	only_for_build
 end_product_list
 
 qualifier      ubevt          larcv          larlite        
