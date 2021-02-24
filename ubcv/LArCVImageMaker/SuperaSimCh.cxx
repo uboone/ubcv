@@ -21,6 +21,7 @@ namespace larcv {
     supera::ParamsImage2D::configure(cfg);
     supera::ImageMetaMaker::configure(cfg);
     _origin = cfg.get<unsigned short>("Origin",0);
+    _tick_backward = cfg.get<bool>("TickBackward",true);
   }
 
   void SuperaSimCh::initialize()
@@ -54,6 +55,10 @@ namespace larcv {
     }
 
     std::vector<larcv::ROIType_t> track2type_v;
+    
+    LARCV_DEBUG() << "Size of mctrack vector:  " << LArData<supera::LArMCTrack_t>().size()  << std::endl;
+    LARCV_DEBUG() << "Size of mcshower vector: " << LArData<supera::LArMCShower_t>().size() << std::endl;
+
     for(auto const& mctrack : LArData<supera::LArMCTrack_t>()) {
 
       if(_origin && ((unsigned short)(mctrack.Origin())) != _origin) continue;
@@ -95,7 +100,7 @@ namespace larcv {
       }
     }
 
-    auto image_v = supera::SimCh2Image2D(meta_v, track2type_v, LArData<supera::LArSimCh_t>(), TimeOffset());
+    auto image_v = supera::SimCh2Image2D(meta_v, track2type_v, LArData<supera::LArSimCh_t>(), TimeOffset(), _tick_backward);
 
     for(size_t plane=0; plane<image_v.size(); ++plane) {
       auto& image = image_v[plane];

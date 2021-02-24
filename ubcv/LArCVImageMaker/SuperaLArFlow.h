@@ -52,7 +52,13 @@ namespace larcv {
   private:
 
     unsigned short _origin;
+    std::string    _wire_producer;
     std::string    _chstatus_producer;
+    std::string    _simch_producer;
+    std::string    _simedep_producer;
+    bool           _use_edep;
+    bool           _edep_at_anode;
+    bool           _tick_backward;
 
   };
 

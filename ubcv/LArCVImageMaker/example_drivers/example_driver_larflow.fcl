@@ -1,0 +1,54 @@
+#include "dlprod_fclbase_analyzers.fcl"
+
+BEGIN_PROLOG
+
+SuperaLArFlow: @local::SuperaWholeView
+
+# larflow only
+#SuperaLArFlow.supera_params: "../supera_larflow.fcl" 
+
+# full-mctruth: segment+instance+ancestor+larflow
+# when using ups larcv/larlite
+SuperaLArFlow.supera_params: "../supera_mctruth_all.fcl" 
+
+# full-mctruth: segment+instance+ancestor+larflow
+# when using ubdl
+#SuperaLArFlow.supera_params: "../supera_mctruth_ubdl.fcl" 
+
+
+END_PROLOG
+
+#include "standard_ana_uboone.fcl"
+
+process_name: SuperaAna
+
+# Add larcv required services.
+
+services.LLMetaMaker: {Enable: false}
+services.LArCVMetaMaker: {Enable: false}
+
+# Add larcv analyzer modules.
+
+physics.analyzers:  {
+		    @table::physics.analyzers
+		    @table::dlprod_analyzers
+		    larflow: @local::SuperaLArFlow
+		    }
+
+# Define larcv analyzer sequence.
+physics.larcv: [ larflow ]
+
+# Add larcv sequence to end_paths.
+
+physics.end_paths: [ larcv ]
+
+# Configuration for TFileMetadataMicroBooNE service.
+
+microboone_tfile_metadata:
+{
+  JSONFileName:	[ "larcv.root.json" ]
+  GenerateTFileMetadata: [ true ]
+  dataTier:              [ "larcv" ]
+  fileFormat:            [ "root" ]
+}
+
