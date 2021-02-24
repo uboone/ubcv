@@ -286,25 +286,25 @@ namespace supera {
     //const larutil::Geometry& geo = *(larutil::Geometry::GetME());    
     art::ServiceHandle<geo::Geometry> geom;
     //const float driftvelocity = 0.1098; // hand-coded for current mcc9-beta velocity
-    const float driftvelocity = supera::DriftVelocity();
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
+    auto const detPropData = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob(clockData);
+    const float driftvelocity = supera::DriftVelocity(detPropData);
 
     // sce module
     //auto const* SCE = lar::providerFrom<spacecharge::SpaceChargeService>();
 
     // Get time offset for x space charge correction
-    auto const& detProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-    auto const& detClocks = lar::providerFrom<detinfo::DetectorClocksService>();
     auto const& gen = mctruth_v.at(0);
-    double det_xtickoffset = detProperties->GetXTicksOffset(0,0,0);
-    double det_trigoffset  = detProperties->TriggerOffset();
+    double det_xtickoffset = detPropData.GetXTicksOffset(0,0,0);
+    double det_trigoffset  = trigger_offset(clockData);
     double g4Ticks  = 0;
     if ( gen.NeutrinoSet() )
-      g4Ticks = detClocks->TPCG4Time2Tick(gen.GetNeutrino().Nu().T());
+      g4Ticks = clockData.TPCG4Time2Tick(gen.GetNeutrino().Nu().T());
     else
-      g4Ticks = detClocks->TPCG4Time2Tick(gen.GetParticle(0).T());
+      g4Ticks = clockData.TPCG4Time2Tick(gen.GetParticle(0).T());
     g4Ticks += det_xtickoffset;
     g4Ticks -= det_trigoffset;
-    double xtimeoffset = detProperties->ConvertTicksToX(g4Ticks,0,0,0);
+    double xtimeoffset = detPropData.ConvertTicksToX(g4Ticks,0,0,0);
     
     // we create for each plane:
     //  2 images that list column in other images
@@ -373,7 +373,7 @@ namespace supera {
       xyz_sce[2] = xyz[2];
 
       double tedep = sed.Time(); // (function returns midpoint time)
-      double tick  = supera::TPCG4Time2Tick( tedep ) + time_offset + xyz_sce[0]/driftvelocity/0.5;
+      double tick  = supera::TPCG4Time2Tick(clockData, tedep) + time_offset + xyz_sce[0]/driftvelocity/0.5;
 
       //std::cout << "sed: (" << xyz[0] << "," << xyz[1] << "," << xyz[2] << ") t=" << tedep << " tick=" << tick << std::endl;
 
