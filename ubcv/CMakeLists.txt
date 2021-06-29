@@ -1,1 +1,5 @@
 add_subdirectory(LArCVImageMaker)
+add_subdirectory(ubdldata)
+if ( USE_DL_INTEGRATION )
+  add_subdirectory(ubdlintegration)
+endif()

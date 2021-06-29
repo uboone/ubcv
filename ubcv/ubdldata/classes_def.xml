@@ -1,0 +1,31 @@
+<!--                                                                                  -->
+<!--  $Author:  $                                                                     -->
+<!--  $Date: 2010/04/12 18:12:28 $                                                    -->
+<!--                                                                                  -->
+<!--  Include art::Wrapper lines for objects that we would like to put into the event -->
+<!--  Include the non-wrapper lines for all objects on the art::Wrapper lines and     -->
+<!--  for all objects that are data members of those objects.                         -->
+
+
+<lcgdict>
+ <!-- support classes (e.g., elements of data product classes) -->
+ <!-- for art association metadata -->
+ <class name="std::vector<float>"                                />
+ <!-- LArSoft structures --> 
+ <!-- data product classes -->
+ <class name="ubdldata::pixeldata"                               />
+ <!-- art pointers and pointer vectors -->
+ <class name="art::Ptr<ubdldata::pixeldata>"                     />
+ <class name="art::PtrVector<ubdldata::pixeldata>"               />
+ 
+ <!-- pairs and tuples for associations --> 
+ <!-- associations -->
+ 
+ <!-- vectors for data products -->
+ <class name="std::vector<ubdldata::pixeldata>"                  />
+ 
+ <!-- art data product wrappers -->
+ <class name="art::Wrapper< std::vector< ubdldata::pixeldata > >" />
+
+ <!-- art association wrappers -->
+</lcgdict>

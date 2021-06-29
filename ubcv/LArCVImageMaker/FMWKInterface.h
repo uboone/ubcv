@@ -16,6 +16,7 @@ namespace detinfo {
   class DetectorClocksData;
   class DetectorPropertiesData;
 }
+#include "lardataobj/Simulation/SimEnergyDeposit.h"
 
 namespace supera {
   typedef larcv::PSet        Config_t;
@@ -27,6 +28,7 @@ namespace supera {
   typedef sim::MCShower      LArMCShower_t;
   typedef sim::SimChannel    LArSimCh_t;
   typedef sim::MCStep        LArMCStep_t;
+  typedef sim::SimEnergyDeposit LArSimEdep_t;
 }
 //
 // Utility functions (geometry, lar properties, etc.)
