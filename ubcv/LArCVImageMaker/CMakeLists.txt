@@ -19,30 +19,29 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    larcore_Geometry_Geometry_service
                    nug4_ParticleNavigation lardataobj_Simulation
                    lardataobj_RecoBase
-                   nusimdata_SimulationBase
+                   nusimdata::SimulationBase
                    lardataalg_DetectorInfo
                    lardataobj_MCBase
                    larcoreobj_SummaryData
                    lardataobj_RawData
                    lardata_RecoObjects
                    ${UBOONECODE_LIB}
-                   nusimdata_SimulationBase
                    ${LARRECO_LIB}
                    ${LARDATA_LIB}
-                   ${ART_FRAMEWORK_CORE}
-                   ${ART_FRAMEWORK_PRINCIPAL}
-                   ${ART_FRAMEWORK_SERVICES_REGISTRY}
-                   ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-                   ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-                   art_Persistency_Common
-                   art_Persistency_Provenance
-                   art_Utilities canvas
-                   ${MF_MESSAGELOGGER}
-                   ${FHICLCPP}
-                   cetlib cetlib_except
-                   ${ROOT_GEOM}
-                   ${ROOT_XMLIO}
-                   ${ROOT_GDML}
+                   art::Framework_Core
+                   art::Framework_Principal
+                   art::Framework_Services_Registry
+                   art_root_io::tfile_support ROOT::Core
+                   art_root_io::TFileService_service
+                   art::Persistency_Common
+                   art::Persistency_Provenance
+                   art::Utilities canvas::canvas
+                   messagefacility::MF_MessageLogger
+                   fhiclcpp::fhiclcpp fhiclcpp::types
+                   cetlib::cetlib cetlib_except
+                   ROOT::Geom
+                   ROOT::XMLIO
+                   ROOT::Gdml
           MODULE_LIBRARIES
                    uboonecode_uboone_LArCVImageMaker
                    TFileMetadataMicroBooNE_service
@@ -55,7 +54,7 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    nug4_ParticleNavigation lardataobj_Simulation
                    larevt_CalibrationDBI_IOVData
                    larevt_CalibrationDBI_Providers
-                   nusimdata_SimulationBase
+                   nusimdata::SimulationBase
                    lardata_Utilities
                    lardataobj_MCBase
                    larcoreobj_SummaryData
@@ -66,34 +65,33 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    larevt_CalibrationDBI_IOVData
                    larevt_CalibrationDBI_Providers
                    ${UBOONECODE_LIB}
-                   nusimdata_SimulationBase
                    ${LARRECO_LIB}
                    ${LARDATA_LIB}
-                   ${ART_FRAMEWORK_CORE}
-                   ${ART_FRAMEWORK_PRINCIPAL}
-                   ${ART_FRAMEWORK_SERVICES_REGISTRY}
-                   ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-                   ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-                   art_Persistency_Common
-                   art_Persistency_Provenance
-                   art_Utilities canvas
-                   ${MF_MESSAGELOGGER}
-                   ${FHICLCPP}
-                   cetlib_except
-                   ${ROOT_GEOM}
-                   ${ROOT_XMLIO}
-                   ${ROOT_GDML}
+                   art::Framework_Core
+                   art::Framework_Principal
+                   art::Framework_Services_Registry
+                   art_root_io::tfile_support ROOT::Core
+                   art_root_io::TFileService_service
+                   art::Persistency_Common
+                   art::Persistency_Provenance
+                   art::Utilities canvas::canvas
+                   messagefacility::MF_MessageLogger
+                   fhiclcpp::fhiclcpp fhiclcpp::types
+                   cetlib_except::cetlib_except
+                   ROOT::Geom
+                   ROOT::XMLIO
+                   ROOT::Gdml
                 )
 
 simple_plugin(LArCVMetaMaker "service"
               TFileMetadataMicroBooNE_service
               FileCatalogMetadataMicroBooNE_service
               ${ART_FRAMEWORK_SERVICES_SYSTEM_FILECATALOGMETADATA_SERVICE}
-              art_Utilities canvas
-              art_Framework_Principal
-              ${MF_MESSAGELOGGER}
-              ${FHICLCPP}
-              cetlib cetlib_except
+              art::Utilities canvas::canvas
+              art::Framework_Principal
+              messagefacility::MF_MessageLogger
+              fhiclcpp::fhiclcpp fhiclcpp::types
+              cetlib::cetlib cetlib_except
               BASENAME_ONLY
 )
 
