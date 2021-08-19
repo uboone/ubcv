@@ -49,6 +49,7 @@ find_ups_product( larcore )
 find_ups_product( nutools )
 find_ups_product( nusimdata )
 find_ups_product( nug4 )
+find_ups_root()
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
