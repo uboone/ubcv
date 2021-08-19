@@ -44,8 +44,8 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    ROOT::Gdml
           MODULE_LIBRARIES
                    uboonecode_uboone_LArCVImageMaker
-                   TFileMetadataMicroBooNE_service
-                   FileCatalogMetadataMicroBooNE_service
+                   ubevt::TFileMetadataMicroBooNE_service
+                   ubevt::FileCatalogMetadataMicroBooNE_service
                    LArCVMetaMaker_service
                    ubobj_MuCS
                    larcorealg_Geometry
@@ -84,8 +84,8 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                 )
 
 simple_plugin(LArCVMetaMaker "service"
-              TFileMetadataMicroBooNE_service
-              FileCatalogMetadataMicroBooNE_service
+              ubevt::TFileMetadataMicroBooNE_service
+              ubevt::FileCatalogMetadataMicroBooNE_service
               ${ART_FRAMEWORK_SERVICES_SYSTEM_FILECATALOGMETADATA_SERVICE}
               art::Utilities canvas::canvas
               art::Framework_Principal
