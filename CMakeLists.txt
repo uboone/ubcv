@@ -12,9 +12,9 @@
 #  make package (builds distribution tarfile)
 # ======================================================================
 
-cmake_minimum_required (VERSION 3.12...3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
-project(ubcv LANGUAGES CXX)
+project(ubcv VERSION 09.28.02.01 LANGUAGES CXX)
 
 # cetbuildtools contains our cmake modules
 find_package(cetbuildtools REQUIRED)
@@ -47,7 +47,9 @@ find_ups_product( art v1_00_00 )
 find_ups_product(art_root_io)
 find_ups_product( larcore )
 find_ups_product( nutools )
+find_ups_product( nusimdata )
 find_ups_product( nug4 )
+find_ups_root()
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)

@@ -30,16 +30,14 @@ table_fragment_end
 
 product                 version
 ubevt                   v09_30_00
-larcv                   v06_71_00c
-larlite                 v06_71_00c
-cetbuildtools	        v7_17_01	-	only_for_build
+larcv                   v06_71_00d
+larlite                 v06_71_00d
+cetbuildtools	        v8_17_03	-	only_for_build
 end_product_list
 
 qualifier      ubevt          larcv          larlite        
 c7:debug       c7:debug       c7:debug       c7:debug       
 c7:prof        c7:prof        c7:prof        c7:prof        
-e19:debug      e19:debug      e19:debug      e19:debug
-e19:prof       e19:prof       e19:prof       e19:prof
 e20:debug      e20:debug      e20:debug      e20:debug
 e20:prof       e20:prof       e20:prof       e20:prof
 end_qualifier_list
