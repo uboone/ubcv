@@ -6,9 +6,9 @@ set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lL
 include_directories ( $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} )
 
 # use with ups larcv
-link_libraries( ${LIB_NAME} ${ROOTLIB} ${LARLITE_LIB} -L$ENV{LARCV_LIBDIR} -llarcv ) # All execs need this
+link_libraries( ${LARLITE_LIB} -L$ENV{LARCV_LIBDIR} -llarcv ) # All execs need this
 # use with ubdl
-#link_libraries( ${LIB_NAME} ${ROOTLIB} ${LARLITE_LIB}) # All execs need this
+#link_libraries( ${LARLITE_LIB}) # All execs need this
 
 #add_subdirectory(job)
 
@@ -43,7 +43,6 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 		   ROOT::Geom
 		   ROOT::XMLIO
 		   ROOT::Gdml
-		   ${ROOT_BASIC_LIB_LIST}
           MODULE_LIBRARIES
                    uboonecode_uboone_LArCVImageMaker
                    ubevt::TFileMetadataMicroBooNE_service
@@ -81,7 +80,6 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 		   ROOT::Geom
 		   ROOT::XMLIO
 		   ROOT::Gdml
-		   ${ROOT_BASIC_LIB_LIST}
 		)
 
 simple_plugin(LArCVMetaMaker "service"
