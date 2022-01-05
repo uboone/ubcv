@@ -1,7 +1,5 @@
 set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
 
-#set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
-
 # use with ubdl
 #include_directories ( $ENV{LARLITE_COREDIR} ${LARCV_INCLUDE_DIR} )
 # use with ups larcv
@@ -30,25 +28,21 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    larcoreobj_SummaryData
                    lardataobj_RawData
                    lardata_RecoObjects
-		   #${UBOONECODE_LIB}
-		   nusimdata_SimulationBase
-                   ${LARRECO_LIB}
-                   ${LARDATA_LIB}
-		   ${ART_FRAMEWORK_CORE}
-		   ${ART_FRAMEWORK_PRINCIPAL}
-                   ${ART_FRAMEWORK_BASIC}
-		   ${ART_FRAMEWORK_SERVICES_REGISTRY}
-		   ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-		   ${ART_ROOT_IO_TFILESERVICE_SERVICE}
+		   nusimdata::SimulationBase
+		   art::Framework_Core
+		   art::Framework_Principal
+		   art::Framework_Services_Registry
+		   art_root_io::tfile_support ROOT::Core
+		   art_root_io::TFileService_service
                    art::Persistency_Common
                    art::Persistency_Provenance
                    art::Utilities canvas::canvas
-		   ${MF_MESSAGELOGGER}
-		   ${FHICLCPP}
+		   messagefacility::MF_MessageLogger
+		   fhiclcpp::fhiclcpp
                    cetlib::cetlib cetlib_except
-		   ${ROOT_GEOM}
-		   ${ROOT_XMLIO}
-		   ${ROOT_GDML}
+		   ROOT::Geom
+		   ROOT::XMLIO
+		   ROOT::Gdml
 		   ${ROOT_BASIC_LIB_LIST}
           MODULE_LIBRARIES
                    uboonecode_uboone_LArCVImageMaker
@@ -72,32 +66,27 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    larevt_Filters
                    larevt_CalibrationDBI_IOVData
                    larevt_CalibrationDBI_Providers
-		   #${UBOONECODE_LIB}
-		   nusimdata_SimulationBase
-                   ${LARRECO_LIB}
-                   ${LARDATA_LIB}
-		   ${ART_FRAMEWORK_CORE}
-		   ${ART_FRAMEWORK_PRINCIPAL}
-                   ${ART_FRAMEWORK_BASIC}
-		   ${ART_FRAMEWORK_SERVICES_REGISTRY}
-		   ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-		   ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-                   art_Persistency_Common
-                   art_Persistency_Provenance
-		   art_Utilities canvas
-		   ${MF_MESSAGELOGGER}
-		   ${FHICLCPP}
+		   nusimdata::SimulationBase
+		   art::Framework_Core
+		   art::Framework_Principal
+		   art::Framework_Services_Registry
+		   art_root_io::tfile_support ROOT::Core
+		   art_root_io::TFileService_service
+                   art::Persistency_Common
+                   art::Persistency_Provenance
+		   art::Utilities canvas
+		   messagefacility::MF_MessageLogger
+		   fhiclcpp::fhiclcpp
                    cetlib_except::cetlib_except
-		   ${ROOT_GEOM}
-		   ${ROOT_XMLIO}
-		   ${ROOT_GDML}
+		   ROOT::Geom
+		   ROOT::XMLIO
+		   ROOT::Gdml
 		   ${ROOT_BASIC_LIB_LIST}
 		)
 
 simple_plugin(LArCVMetaMaker "service"
               ubevt::TFileMetadataMicroBooNE_service
               ubevt::FileCatalogMetadataMicroBooNE_service
-              ${ART_FRAMEWORK_SERVICES_SYSTEM_FILECATALOGMETADATA_SERVICE}
               art::Utilities canvas::canvas
               art::Framework_Principal
               messagefacility::MF_MessageLogger

@@ -2,19 +2,17 @@
 art_make( BASENAME_ONLY
 	  LIBRARY_NAME ubcv_ubdldata
 	  LIB_LIBRARIES
-		   ${ART_FRAMEWORK_CORE}
-		   ${ART_FRAMEWORK_PRINCIPAL}
-                   ${ART_FRAMEWORK_BASIC}
-		   ${ART_FRAMEWORK_SERVICES_REGISTRY}
-		   ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-		   ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
-                   art_Persistency_Common
-                   art_Persistency_Provenance
-		   art_Utilities canvas
-		   ${MF_MESSAGELOGGER}
+		   art::Framework_Core
+		   art::Framework_Principal
+		   art::Framework_Services_Registry
 		   
-		   ${FHICLCPP}
-		   cetlib cetlib_except )
+                   art::Persistency_Common
+                   art::Persistency_Provenance
+		   art::Utilities canvas
+		   messagefacility::MF_MessageLogger
+		   
+		   fhiclcpp::fhiclcpp
+		   cetlib::cetlib cetlib_except )
 
 
 install_headers()
