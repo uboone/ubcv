@@ -39,7 +39,8 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    art::Utilities canvas::canvas
 		   messagefacility::MF_MessageLogger
 		   fhiclcpp::fhiclcpp
-                   cetlib::cetlib cetlib_except
+                   cetlib::cetlib
+                   cetlib_except::cetlib_except
 		   ROOT::Geom
 		   ROOT::XMLIO
 		   ROOT::Gdml
@@ -89,7 +90,8 @@ simple_plugin(LArCVMetaMaker "service"
               art::Framework_Principal
               messagefacility::MF_MessageLogger
               fhiclcpp::fhiclcpp fhiclcpp::types
-              cetlib::cetlib cetlib_except
+              cetlib::cetlib
+              cetlib_except::cetlib_except
               BASENAME_ONLY
 )
 
