@@ -36,7 +36,8 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 		   art_root_io::TFileService_service
                    art::Persistency_Common
                    art::Persistency_Provenance
-                   art::Utilities canvas::canvas
+                   art::Utilities
+                   canvas::canvas
 		   messagefacility::MF_MessageLogger
 		   fhiclcpp::fhiclcpp
                    cetlib::cetlib
@@ -74,7 +75,8 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 		   art_root_io::TFileService_service
                    art::Persistency_Common
                    art::Persistency_Provenance
-		   art::Utilities canvas
+		   art::Utilities
+                   canvas::canvas
 		   messagefacility::MF_MessageLogger
 		   fhiclcpp::fhiclcpp
                    cetlib_except::cetlib_except
@@ -86,7 +88,8 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
 simple_plugin(LArCVMetaMaker "service"
               ubevt::TFileMetadataMicroBooNE_service
               ubevt::FileCatalogMetadataMicroBooNE_service
-              art::Utilities canvas::canvas
+              art::Utilities
+              canvas::canvas
               art::Framework_Principal
               messagefacility::MF_MessageLogger
               fhiclcpp::fhiclcpp fhiclcpp::types
