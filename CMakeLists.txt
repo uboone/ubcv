@@ -49,7 +49,6 @@ find_ups_product(art_root_io)
 find_ups_product( larcore )
 find_ups_product( nutools )
 find_ups_product( nusimdata )
-find_ups_product( nug4 )
 find_ups_product( ubobj )
 find_ups_root()
 

@@ -20,7 +20,6 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    ubcore_Geometry
                    ubobj_MuCS
                    larcore_Geometry_Geometry_service
-                   nug4::ParticleNavigation lardataobj_Simulation
                    lardataobj_RecoBase
                    nusimdata::SimulationBase
                    lardataalg_DetectorInfo
@@ -54,7 +53,6 @@ art_make( EXCLUDE LArCVMetaMaker_service.cc
                    larcorealg_Geometry
                    ubcore_Geometry
                    larcore_Geometry_Geometry_service
-                   nug4::ParticleNavigation lardataobj_Simulation
                    larevt_CalibrationDBI_IOVData
                    larevt_CalibrationDBI_Providers
                    nusimdata::SimulationBase
