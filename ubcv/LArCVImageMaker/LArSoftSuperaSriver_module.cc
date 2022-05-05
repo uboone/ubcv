@@ -27,6 +27,7 @@
 #include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
 #include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom<>()
 #include <TString.h>
 #include <TTimeStamp.h>
 

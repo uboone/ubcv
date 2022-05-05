@@ -7,6 +7,7 @@
 #include "lardataalg/DetectorInfo/DetectorPropertiesData.h"
 #include "lardataalg/DetectorInfo/DetectorClocksData.h"
 #include "larevt/SpaceChargeServices/SpaceChargeService.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom<>()
 
 namespace supera {
 

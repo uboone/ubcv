@@ -5,6 +5,7 @@
 #include "Base/larcv_logger.h"
 #include "LArUtil/Geometry.h"
 
+#include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 namespace supera {
