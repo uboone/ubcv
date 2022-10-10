@@ -40,30 +40,27 @@ namespace supera {
     return geom->Nwires(plane); 
   }
   
-  unsigned int NearestWire(const TVector3& xyz, unsigned int plane)
+  unsigned int NearestWire(const geo::Point_t& xyz, unsigned int plane)
   {
     double min_wire=0;
     double max_wire=Nwires(plane)-1;
     auto const* geom = ::lar::providerFrom<geo::Geometry>();
     
-    double wire = geom->WireCoordinate(xyz[1],xyz[2],plane,0,0) + 0.5;
+    double wire = geom->WireCoordinate(xyz, geo::PlaneID{0, 0, plane}) + 0.5;
     if(wire<min_wire) wire = min_wire;
     if(wire>max_wire) wire = max_wire;
     
     return (unsigned int)wire;
   }
 
+  unsigned int NearestWire(const TVector3& xyz, unsigned int plane)
+  {
+    return NearestWire(geo::vect::toPoint(xyz), plane);
+  }
+    
   unsigned int NearestWire(const double* xyz, unsigned int plane)
   {
-    double min_wire=0;
-    double max_wire=Nwires(plane)-1;
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    
-    double wire = geom->WireCoordinate(xyz[1],xyz[2],plane,0,0) + 0.5;
-    if(wire<min_wire) wire = min_wire;
-    if(wire>max_wire) wire = max_wire;
-    
-    return (unsigned int)wire;
+    return NearestWire(geo::vect::toPoint(xyz), plane);
   }
 
   double WireAngleToVertical(unsigned int plane)
