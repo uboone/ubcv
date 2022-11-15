@@ -352,29 +352,11 @@ namespace supera {
       // "xyz" is the position of the energy deposit in world
       // coordinates. Note that the units of distance in
       // sim::SimEnergyDeposit are supposed to be cm.
-      auto const mp = sed.MidPoint();
-      double const xyz[3] = { mp.X(), mp.Y(), mp.Z() };
-
-      //auto sce_offset = SCE->GetPosOffsets(geo::Point_t(xyz[0], xyz[1], xyz[2]));
-
-      double xyz_sce[3] = {0};
-      // proper sce correction
-      // xyz_sce[0] = (xyz[0] - sce_offset.X() + xtimeoffset)*(1.114/1.098) + 0.6;
-      // xyz_sce[1] = xyz[1] + sce_offset.Y();
-      // xyz_sce[2] = xyz[2] + sce_offset.Z();
-
-      // reverse sce correction
-      // xyz_sce[0] = (xyz[0] + sce_offset.X() + xtimeoffset)*(1.114/1.098) - 0.6;
-      // xyz_sce[1] = xyz[1] - sce_offset.Y();
-      // xyz_sce[2] = xyz[2] - sce_offset.Z();
-      
-      // just xtimeoffset
-      xyz_sce[0] = (xyz[0]+xtimeoffset)*(1.114/1.098);
-      xyz_sce[1] = xyz[1];
-      xyz_sce[2] = xyz[2];
+      auto xyz_sce = sed.MidPoint();
+      xyz_sce.SetX((xyz_sce.X() + xtimeoffset)*(1.114/1.098));
 
       double tedep = sed.Time(); // (function returns midpoint time)
-      double tick  = supera::TPCG4Time2Tick(clockData, tedep) + time_offset + xyz_sce[0]/driftvelocity/0.5;
+      double tick  = supera::TPCG4Time2Tick(clockData, tedep) + time_offset + xyz_sce.X()/driftvelocity/0.5;
 
       //std::cout << "sed: (" << xyz[0] << "," << xyz[1] << "," << xyz[2] << ") t=" << tedep << " tick=" << tick << std::endl;
 
@@ -392,27 +374,10 @@ namespace supera {
       // From the position in world coordinates, determine the
       // cryostat and tpc. If somehow the step is outside a tpc
       // (e.g., cosmic rays in rock) just move on to the next one.
-      unsigned int cryostat = 0;
-      try {
-	geom->PositionToCryostat(xyz_sce, cryostat);
-      }
-      catch(cet::exception &e){
-	LARCV_SERROR()  << "step "// << energyDeposit << "\n"
-			<< "cannot be found in a cryostat\n"
-			<< e;
-	continue;
-      }
-      unsigned int tpc = 0;
-      try {
-	geom->PositionToTPC(xyz_sce, tpc, cryostat);
-      }
-      catch(cet::exception &e){
+      if (geom->PositionToTPCptr(xyz_sce) == nullptr) {
 	LARCV_SWARNING()  << "step "// << energyDeposit << "\n"
-			  << "cannot be found in a TPC\n"
-			  << e;
-	continue;
+                          << "cannot be found in a TPC\n";
       }
-      //const geo::TPCGeo& tpcGeo = geom->TPC(tpc, cryostat);
       
       //Define charge drift direction: driftcoordinate (x, y or z) and driftsign (positive or negative). Also define coordinates perpendicular to drift direction.
       // unused int driftcoordinate = std::abs(tpcGeo.DetectDriftDirection())-1;  //x:0, y:1, z:2
