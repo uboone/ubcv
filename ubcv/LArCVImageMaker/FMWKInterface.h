@@ -1,11 +1,11 @@
 #ifndef __FMWKINTERFACE_H__
 #define __FMWKINTERFACE_H__
 
-//#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 #include "larcore/Geometry/Geometry.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "Base/PSet.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/RawData/OpDetWaveform.h"
@@ -65,6 +65,9 @@ namespace supera {
 
   /// Nearest wire
   unsigned int NearestWire(const double* xyz, unsigned int plane);
+
+  /// Nearest wire
+  unsigned int NearestWire(const geo::Point_t& xyz, unsigned int plane);
 
   /// Angle from z-axis
   double WireAngleToVertical(unsigned int plane);
