@@ -9,6 +9,10 @@
 #include "larevt/SpaceChargeServices/SpaceChargeService.h"
 #include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom<>()
 
+namespace {
+  constexpr geo::TPCID tpcid{0,0};
+}
+
 namespace supera {
 
   ::geo::WireID ChannelToWireID(unsigned int ch)
@@ -37,7 +41,7 @@ namespace supera {
   unsigned int Nwires(unsigned int plane)
   { 
     auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->Nwires(plane); 
+    return geom->Nwires(geo::PlaneID{tpcid, plane});
   }
   
   unsigned int NearestWire(const geo::Point_t& xyz, unsigned int plane)
@@ -46,7 +50,7 @@ namespace supera {
     double max_wire=Nwires(plane)-1;
     auto const* geom = ::lar::providerFrom<geo::Geometry>();
     
-    double wire = geom->WireCoordinate(xyz, geo::PlaneID{0, 0, plane}) + 0.5;
+    double wire = geom->WireCoordinate(xyz, geo::PlaneID{tpcid, plane}) + 0.5;
     if(wire<min_wire) wire = min_wire;
     if(wire>max_wire) wire = max_wire;
     
@@ -66,13 +70,13 @@ namespace supera {
   double WireAngleToVertical(unsigned int plane)
   {
     auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->WireAngleToVertical(geo::View_t(plane));
+    return geom->WireAngleToVertical(geo::View_t(plane), tpcid);
   }
 
   double WirePitch(size_t plane)
   {
     auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->WirePitch(plane);
+    return geom->WirePitch(geo::PlaneID(tpcid, plane));
   }
 
   double DetHalfWidth() 
@@ -122,7 +126,8 @@ namespace supera {
                          detinfo::DetectorPropertiesData const& detProp,
                          size_t plane0, size_t plane1)
   {
-    static double pitch = ::lar::providerFrom<geo::Geometry>()->PlanePitch();
+    static double pitch = ::lar::providerFrom<geo::Geometry>()->PlanePitch(geo::PlaneID(tpcid, plane0),
+                                                                           geo::PlaneID(tpcid, plane1));
     double tick_period = clockData.TPCClock().TickPeriod();
     return (plane1 - plane0) * pitch / DriftVelocity(detProp) / tick_period;
   }
