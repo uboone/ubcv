@@ -206,7 +206,7 @@ void VPlaneHandler::produce(art::Event & e)
   }
 
   e.put(std::move(wire_v_ptr));
-  e.removeCachedProduct(data_h);
+  data_h.removeProduct();
 }
 
 float VPlaneHandler::truncated_mean(const std::vector<float>& data,
