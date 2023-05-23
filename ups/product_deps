@@ -29,9 +29,9 @@ table_fragment_end
 # Add the dependent product and version
 
 product                 version
-ubevt                   v09_72_00
-larcv                   v06_71_00d
-larlite                 v06_71_00d
+ubevt                   v09_74_01
+larcv                   v06_71_00e
+larlite                 v06_71_00e
 cetbuildtools	        v8_18_09	-	only_for_build
 end_product_list
 
