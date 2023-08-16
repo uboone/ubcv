@@ -83,6 +83,7 @@ cet_build_plugin(
   LArCVMetaMaker art::service
   LIBRARIES
   PUBLIC
+  ubevt::Utilities
   art::Framework_Services_System_FileCatalogMetadata_service
   art::Framework_Principal
   ROOT::Core
