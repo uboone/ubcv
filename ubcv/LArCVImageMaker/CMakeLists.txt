@@ -1,8 +1,3 @@
-set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
-
-include_directories ( $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} )
-link_libraries( ${LARLITE_LIB} -L$ENV{LARCV_LIBDIR} -llarcv ) # All execs need this
-
 cet_make_library(
   SOURCE
   FMWKInterface.cxx
@@ -45,6 +40,8 @@ cet_make_library(
   larcore::Geometry_Geometry_service
   lardataobj::RecoBase
   nusimdata::SimulationBase
+  larcv::larcv
+  larlite::LArUtil
 )
 
 cet_build_plugin(
@@ -61,6 +58,7 @@ cet_build_plugin(
   larcore::Geometry_Geometry_service
   lardataobj::RecoBase
   nusimdata::SimulationBase
+  larcv::larcv
 )
 
 cet_build_plugin(
@@ -70,6 +68,7 @@ cet_build_plugin(
   larcore::Geometry_Geometry_service
   lardataobj::RecoBase
   nusimdata::SimulationBase
+  larcv::larcv
 )
 
 cet_build_plugin(

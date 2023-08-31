@@ -22,9 +22,13 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
 
 cet_report_compiler_flags(REPORT_THRESHOLD VERBOSE)
 
+cet_cmake_module_directories(Modules)
+
 find_package( ubevt REQUIRED EXPORT )
 find_package( larevt REQUIRED EXPORT )
 find_package( nusimdata REQUIRED EXPORT )
+find_package( larcv REQUIRED EXPORT )
+find_package( larlite REQUIRED EXPORT )
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
@@ -33,6 +37,9 @@ include(BuildPlugins)
 
 # ADD SOURCE CODE SUBDIRECTORIES HERE
 add_subdirectory(ubcv)
+
+# Cmake modules.
+add_subdirectory(Modules)
 
 # Unit tests.
 add_subdirectory(test)
