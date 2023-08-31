@@ -22,9 +22,12 @@ larcv::ANN   - libANN.so
 
 #]================================================================]
 
-# First hunt for the larcv include directory.
+# Don't do anything of this package has already been found.
 
 if(NOT larcv_FOUND)
+
+  # First hunt for the larcv include directory.
+
   message("Finding package larcv")
   find_file(_larcv_h NAMES DataFormat HINTS ENV LARCV_INCDIR NO_CACHE)
   if(_larcv_h)
@@ -34,34 +37,34 @@ if(NOT larcv_FOUND)
   else()
     message("Could not find larcv include directory")
   endif()
-endif()
 
-# Next hunt for the larcv libraries.
+  # Next hunt for the larcv libraries.
 
-if(larcv_FOUND)
+  if(larcv_FOUND)
 
-  # Loop over libraries.
+    # Loop over libraries.
 
-  foreach(_larcv_lib_name IN ITEMS larcv ANN )
-    if(NOT TARGET larcv::${_larcv_lib_name})
+    foreach(_larcv_lib_name IN ITEMS larcv ANN )
+      if(NOT TARGET larcv::${_larcv_lib_name})
 
-      # Hunt for this library.
+        # Hunt for this library.
 
-      find_library(_larcv_lib_path LIBRARY NAMES ${_larcv_lib_name} HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
-      message("Found larcv library ${_larcv_lib_path}")
+        find_library(_larcv_lib_path LIBRARY NAMES ${_larcv_lib_name} HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+        message("Found larcv library ${_larcv_lib_path}")
 
-    # Maybe make taret.
+        # Make taret.
 
-      message("Making target larcv::${_larcv_lib_name}")
-      add_library(larcv::${_larcv_lib_name} SHARED IMPORTED)
-      set_target_properties(larcv::${_larcv_lib_name} PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${_larcv_include_dir}"
-        IMPORTED_LOCATION "${_larcv_lib_path}"
-      )
-    endif()
+        message("Making target larcv::${_larcv_lib_name}")
+        add_library(larcv::${_larcv_lib_name} SHARED IMPORTED)
+        set_target_properties(larcv::${_larcv_lib_name} PROPERTIES
+          INTERFACE_INCLUDE_DIRECTORIES "${_larcv_include_dir}"
+          IMPORTED_LOCATION "${_larcv_lib_path}"
+        )
+      endif()
 
-    # End of loop over libraries.
+      # End of loop over libraries.
 
-    unset(_larcv_lib_path)
-  endforeach()
+      unset(_larcv_lib_path)
+    endforeach()
+  endif()
 endif()

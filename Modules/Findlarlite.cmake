@@ -25,9 +25,12 @@ larlite::LArUtil    - libLArLite_LArUtil.so
 
 #]================================================================]
 
-# First hunt for the larlite include directory.
+# Don't do anything of this package has already been found.
 
 if(NOT larlite_FOUND)
+
+  # First hunt for the larlite include directory.
+
   message("Finding package larlite")
   find_file(_larlite_h NAMES DataFormat HINTS ENV LARLITE_COREDIR NO_CACHE)
   if(_larlite_h)
@@ -37,34 +40,48 @@ if(NOT larlite_FOUND)
   else()
     message("Could not find larlite include directory")
   endif()
-endif()
 
-# Next hunt for the larlite libraries.
+  # Next hunt for the larlite libraries.
 
-if(larlite_FOUND)
+  if(larlite_FOUND)
 
-  # Loop over libraries.
+    # Internal transitive dependencies.
 
-  foreach(_larlite_lib_name IN ITEMS Base DataFormat Analysis LArUtil )
-    if(NOT TARGET larlite::${_larlite_lib_name})
+    set(_larlite_tdep_DataFormat "Base")
+    set(_larlite_tdep_Analysis "DataFormat")
 
-      # Hunt for this library.
+    # Loop over libraries.
 
-      find_library(_larlite_lib_path LIBRARY NAMES LArLite_${_larlite_lib_name} HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
-      message("Found larlite library ${_larlite_lib_path}")
+    foreach(_larlite_lib_name IN ITEMS Base DataFormat Analysis LArUtil )
+      if(NOT TARGET larlite::${_larlite_lib_name})
 
-    # Maybe make taret.
+        # Hunt for this library.
 
-      message("Making target larlite::${_larlite_lib_name}")
-      add_library(larlite::${_larlite_lib_name} SHARED IMPORTED)
-      set_target_properties(larlite::${_larlite_lib_name} PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${_larlite_include_dir}"
-        IMPORTED_LOCATION "${_larlite_lib_path}"
-      )
-    endif()
+        find_library(_larlite_lib_path LIBRARY NAMES LArLite_${_larlite_lib_name} HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
+        message("Found larlite library ${_larlite_lib_path}")
 
-    # End of loop over libraries.
+        # Make target.
 
-    unset(_larlite_lib_path)
-  endforeach()
+        message("Making target larlite::${_larlite_lib_name}")
+        add_library(larlite::${_larlite_lib_name} SHARED IMPORTED)
+
+        # Calculate internal transitive dependencies.
+
+        set(_larlite_tdep)
+        if(_larlite_tdep_${_larlite_lib_name})
+          set(_larlite_tdep "larlite::${_larlite_tdep_${_larlite_lib_name}}")
+        endif()
+
+        set_target_properties(larlite::${_larlite_lib_name} PROPERTIES
+          INTERFACE_INCLUDE_DIRECTORIES "${_larlite_include_dir}"
+          IMPORTED_LOCATION "${_larlite_lib_path}"
+          INTERFACE_LINK_LIBRARIES "${_larlite_tdep}"
+        )
+      endif()
+
+      # End of loop over libraries.
+
+      unset(_larlite_lib_path)
+    endforeach()
+  endif()
 endif()
