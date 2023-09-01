@@ -42,29 +42,40 @@ if(NOT larcv_FOUND)
 
   if(larcv_FOUND)
 
-    # Loop over libraries.
+    if(NOT TARGET larcv::larcv)
 
-    foreach(_larcv_lib_name IN ITEMS larcv ANN )
-      if(NOT TARGET larcv::${_larcv_lib_name})
+      # Hunt for this library.
 
-        # Hunt for this library.
+      find_library(_larcv_lib_path LIBRARY NAMES larcv HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      message("Found larcv library ${_larcv_lib_path}")
 
-        find_library(_larcv_lib_path LIBRARY NAMES ${_larcv_lib_name} HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
-        message("Found larcv library ${_larcv_lib_path}")
+      # Make taret.
 
-        # Make taret.
-
-        message("Making target larcv::${_larcv_lib_name}")
-        add_library(larcv::${_larcv_lib_name} SHARED IMPORTED)
-        set_target_properties(larcv::${_larcv_lib_name} PROPERTIES
-          INTERFACE_INCLUDE_DIRECTORIES "${_larcv_include_dir}"
-          IMPORTED_LOCATION "${_larcv_lib_path}"
-        )
-      endif()
-
-      # End of loop over libraries.
-
+      message("Making target larcv::larcv")
+      add_library(larcv::larcv SHARED IMPORTED)
+      set_target_properties(larcv::larcv PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${_larcv_include_dir}"
+        IMPORTED_LOCATION "${_larcv_lib_path}"
+      )
       unset(_larcv_lib_path)
-    endforeach()
+    endif()
+
+    if(NOT TARGET larcv::ANN)
+
+      # Hunt for this library.
+
+      find_library(_larcv_lib_path LIBRARY NAMES larcv HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      message("Found larcv library ${_larcv_lib_path}")
+
+      # Make taret.
+
+      message("Making target larcv::ANN")
+      add_library(larcv::ANN SHARED IMPORTED)
+      set_target_properties(larcv::ANN PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${_larcv_include_dir}"
+        IMPORTED_LOCATION "${_larcv_lib_path}"
+      )
+      unset(_larcv_lib_path)
+    endif()
   endif()
 endif()

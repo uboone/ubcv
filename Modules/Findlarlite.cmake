@@ -45,43 +45,78 @@ if(NOT larlite_FOUND)
 
   if(larlite_FOUND)
 
-    # Internal transitive dependencies.
+    if(NOT TARGET larlite::Base)
 
-    set(_larlite_tdep_DataFormat "Base")
-    set(_larlite_tdep_Analysis "DataFormat")
+      # Hunt for this library.
 
-    # Loop over libraries.
+      find_library(_larlite_lib_path LIBRARY NAMES LArLite_Base HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
+      message("Found larlite library ${_larlite_lib_path}")
 
-    foreach(_larlite_lib_name IN ITEMS Base DataFormat Analysis LArUtil )
-      if(NOT TARGET larlite::${_larlite_lib_name})
+      # Make target.
 
-        # Hunt for this library.
-
-        find_library(_larlite_lib_path LIBRARY NAMES LArLite_${_larlite_lib_name} HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
-        message("Found larlite library ${_larlite_lib_path}")
-
-        # Make target.
-
-        message("Making target larlite::${_larlite_lib_name}")
-        add_library(larlite::${_larlite_lib_name} SHARED IMPORTED)
-
-        # Calculate internal transitive dependencies.
-
-        set(_larlite_tdep)
-        if(_larlite_tdep_${_larlite_lib_name})
-          set(_larlite_tdep "larlite::${_larlite_tdep_${_larlite_lib_name}}")
-        endif()
-
-        set_target_properties(larlite::${_larlite_lib_name} PROPERTIES
-          INTERFACE_INCLUDE_DIRECTORIES "${_larlite_include_dir}"
-          IMPORTED_LOCATION "${_larlite_lib_path}"
-          INTERFACE_LINK_LIBRARIES "${_larlite_tdep}"
-        )
-      endif()
-
-      # End of loop over libraries.
-
+      message("Making target larlite::Base")
+      add_library(larlite::Base SHARED IMPORTED)
+      set_target_properties(larlite::Base PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${_larlite_include_dir}"
+        IMPORTED_LOCATION "${_larlite_lib_path}"
+      )
       unset(_larlite_lib_path)
-    endforeach()
+    endif()
+
+    if(NOT TARGET larlite::DataFormat)
+
+      # Hunt for this library.
+
+      find_library(_larlite_lib_path LIBRARY NAMES LArLite_DataFormat HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
+      message("Found larlite library ${_larlite_lib_path}")
+
+      # Make target.
+
+      message("Making target larlite::DataFormat")
+      add_library(larlite::DataFormat SHARED IMPORTED)
+      set_target_properties(larlite::DataFormat PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${_larlite_include_dir}"
+        IMPORTED_LOCATION "${_larlite_lib_path}"
+        INTERFACE_LINK_LIBRARIES "larlite::Base"
+      )
+      unset(_larlite_lib_path)
+    endif()
+
+    if(NOT TARGET larlite::Analysis)
+
+      # Hunt for this library.
+
+      find_library(_larlite_lib_path LIBRARY NAMES LArLite_Analysis HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
+      message("Found larlite library ${_larlite_lib_path}")
+
+      # Make target.
+
+      message("Making target larlite::Analysis")
+      add_library(larlite::Analysis SHARED IMPORTED)
+      set_target_properties(larlite::Analysis PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${_larlite_include_dir}"
+        IMPORTED_LOCATION "${_larlite_lib_path}"
+        INTERFACE_LINK_LIBRARIES "larlite::DataFormat"
+      )
+      unset(_larlite_lib_path)
+    endif()
+
+    if(NOT TARGET larlite::LArUtil)
+
+      # Hunt for this library.
+
+      find_library(_larlite_lib_path LIBRARY NAMES LArLite_LArUtil HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
+      message("Found larlite library ${_larlite_lib_path}")
+
+      # Make target.
+
+      message("Making target larlite::LArUtil")
+      add_library(larlite::LArUtil SHARED IMPORTED)
+      set_target_properties(larlite::LArUtil PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${_larlite_include_dir}"
+        IMPORTED_LOCATION "${_larlite_lib_path}"
+      )
+      unset(_larlite_lib_path)
+    endif()
   endif()
 endif()
