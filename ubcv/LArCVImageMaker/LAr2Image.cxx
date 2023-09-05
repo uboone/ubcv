@@ -263,7 +263,7 @@ namespace supera {
       for (auto& v : column) v = (float)(::larcv::kROIUnknown);
       //for (auto& v : column) v = (float)(-1);
 
-      for (auto const tick_ides : sch.TDCIDEMap()) {
+      for (auto const & tick_ides : sch.TDCIDEMap()) {
         int tick = supera::TPCTDC2Tick(clockData, (double)(tick_ides.first)) + time_offset;
 	if (tick < meta.min_y()) continue;
 	if (tick >= meta.max_y()) continue;
@@ -323,7 +323,7 @@ namespace supera {
       auto const& wid = ::supera::ChannelToWireID(ch);
       if( plane != (size_t)(wid.Plane) ) continue;
 
-      for (auto const tick_ides : sch.TDCIDEMap()) {
+      for (auto const & tick_ides : sch.TDCIDEMap()) {
 
         x_tick = (supera::TPCTDC2Tick(clockData, tick_ides.first) + time_offset) * supera::TPCTickPeriod(clockData)  * supera::DriftVelocity(detProp);
 	/*
@@ -418,7 +418,7 @@ namespace supera {
 	for (auto& v : column) v = 0.;
 	//for (auto& v : column) v = (float)(-1);
 	
-	for (auto const tick_ides : sch.TDCIDEMap()) {
+	for (auto const & tick_ides : sch.TDCIDEMap()) {
           int tick = supera::TPCTDC2Tick(clockData, (double)(tick_ides.first)) + time_offset;
 	  if (tick < meta.min_y()) continue;
 	  if (tick >= meta.max_y()) continue;

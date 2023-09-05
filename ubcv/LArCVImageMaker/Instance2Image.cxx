@@ -72,7 +72,7 @@ namespace supera {
       col -= (size_t)(meta.min_x());
       
       // loop over energy deposition
-      for (auto const tick_ides : sch.TDCIDEMap()) {
+      for (auto const& tick_ides : sch.TDCIDEMap()) {
         int tick = supera::TPCTDC2Tick(clockData, (double)(tick_ides.first)) + time_offset; // true deposition tick
 	if (tick <= meta.min_y()) continue;
 	if (tick >= meta.max_y()) continue;

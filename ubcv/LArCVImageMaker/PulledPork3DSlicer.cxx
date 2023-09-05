@@ -249,7 +249,7 @@ namespace supera {
     std::set<supera::GridPoint3D> point_s;
     // Loop over sim channel and register relevant points
     for (auto const& sch : simch_v) {
-      for (auto const tdc_ides : sch.TDCIDEMap()) {
+      for (auto const& tdc_ides : sch.TDCIDEMap()) {
 
 	// Check tdc: this is effectively checking X in image coordinate
         double xpos = (tdc_ides.first - supera::TPCG4Time2TDC(clockData, _t0_g4ns)) * tdc2x;
