@@ -26,7 +26,7 @@
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
 #include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
 #include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
-#include "larcore/Geometry/Geometry.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom<>()
 #include <TString.h>
 #include <TTimeStamp.h>
@@ -268,10 +268,10 @@ void LArSoftSuperaSriver::analyze(art::Event const & e)
   if(supera_chstatus) {
 
     // Set database status
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout>()->Get();
     const lariov::ChannelStatusProvider& chanFilt = art::ServiceHandle<lariov::ChannelStatusService>()->GetProvider();
-    for(size_t i=0; i < geom->Nchannels(); ++i) {
-      auto const wid = geom->ChannelToWire(i).front();
+    for(size_t i=0; i < channelMap.Nchannels(); ++i) {
+      auto const wid = channelMap.ChannelToWire(i).front();
       if (!chanFilt.IsPresent(i)) supera_chstatus->set_chstatus(wid.Plane, wid.Wire, ::larcv::chstatus::kNOTPRESENT);
       else supera_chstatus->set_chstatus(wid.Plane, wid.Wire, (short)(chanFilt.Status(i)));
     }

@@ -7,6 +7,7 @@
 #include "lardataalg/DetectorInfo/DetectorPropertiesData.h"
 #include "lardataalg/DetectorInfo/DetectorClocksData.h"
 #include "larevt/SpaceChargeServices/SpaceChargeService.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom<>()
 
 namespace {
@@ -17,8 +18,8 @@ namespace supera {
 
   ::geo::WireID ChannelToWireID(unsigned int ch)
   { 
-      auto const* geom = ::lar::providerFrom<geo::Geometry>();
-      return geom->ChannelToWire(ch).front();
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.ChannelToWire(ch).front();
   }
   
   double DriftVelocity(detinfo::DetectorPropertiesData const& detProp)
@@ -28,29 +29,29 @@ namespace supera {
   
   unsigned int Nchannels()
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->Nchannels();
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.Nchannels();
   }
   
   unsigned int Nplanes()
   { 
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->Nplanes();
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.Nplanes({0, 0});
   }
   
   unsigned int Nwires(unsigned int plane)
   { 
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->Nwires(geo::PlaneID{tpcid, plane});
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.Nwires(geo::PlaneID{tpcid, plane});
   }
   
   unsigned int NearestWire(const geo::Point_t& xyz, unsigned int plane)
   {
     double min_wire=0;
     double max_wire=Nwires(plane)-1;
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
     
-    double wire = geom->WireCoordinate(xyz, geo::PlaneID{tpcid, plane}) + 0.5;
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    double wire = channelMap.Plane(geo::PlaneID{tpcid, plane}).WireCoordinate(xyz) + 0.5;
     if(wire<min_wire) wire = min_wire;
     if(wire>max_wire) wire = max_wire;
     
@@ -69,32 +70,32 @@ namespace supera {
 
   double WireAngleToVertical(unsigned int plane)
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->WireAngleToVertical(geo::View_t(plane), tpcid);
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.WireAngleToVertical(geo::View_t(plane), tpcid);
   }
 
   double WirePitch(size_t plane)
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->WirePitch(geo::PlaneID(tpcid, plane));
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.Plane(geo::PlaneID(tpcid, plane)).WirePitch();
   }
 
   double DetHalfWidth() 
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->DetHalfWidth();
+    auto const& tpc = art::ServiceHandle<geo::Geometry>()->TPC();
+    return tpc.HalfWidth();
   }
 
   double DetHalfHeight() 
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->DetHalfHeight();
+    auto const& tpc = art::ServiceHandle<geo::Geometry>()->TPC();
+    return tpc.HalfHeight();
   }
 
   double DetLength() 
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->DetLength();
+    auto const& tpc = art::ServiceHandle<geo::Geometry>()->TPC();
+    return tpc.Length();
   }
   
   int TPCG4Time2Tick(detinfo::DetectorClocksData const& clockData, double ns)
@@ -126,8 +127,8 @@ namespace supera {
                          detinfo::DetectorPropertiesData const& detProp,
                          size_t plane0, size_t plane1)
   {
-    static double pitch = ::lar::providerFrom<geo::Geometry>()->PlanePitch(geo::PlaneID(tpcid, plane0),
-                                                                           geo::PlaneID(tpcid, plane1));
+    static double const pitch =
+      art::ServiceHandle<geo::WireReadout const>()->Get().PlanePitch({0, 0}, plane0, plane1);
     double tick_period = clockData.TPCClock().TickPeriod();
     return (plane1 - plane0) * pitch / DriftVelocity(detProp) / tick_period;
   }
