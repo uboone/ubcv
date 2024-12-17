@@ -5,8 +5,8 @@
 #include "LAr2Image.h"
 #include "ImageMetaMakerFactory.h"
 #include "PulledPork3DSlicer.h"
-#include "DataFormat/EventVoxel3D.h"
-#include "DataFormat/DataFormatUtil.h"
+#include "larcv/core/DataFormat/EventVoxel3D.h"
+#include "larcv/core/DataFormat/DataFormatUtil.h"
 namespace larcv {
 
   static SuperaSimVoxel3DProcessFactory __global_SuperaSimVoxel3DProcessFactory__;
