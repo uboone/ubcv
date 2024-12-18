@@ -63,6 +63,7 @@ include(ArtDictionary)
 include(ArtMake)
 include(BuildPlugins)
 
+
 # activate this to build SSNET/DL Integration
 # commented out for now until ready
 # set( USE_DL_INTEGRATION 1 )
@@ -114,6 +115,14 @@ if ( USE_DL_INTEGRATION )
   #set( Torch_DIR "${EXTERN_LIBDIR}/libtorch/share/cmake/Torch" )
   set( Torch_DIR "${UPS_PRODUCT_DIR}/libtorch/v1_0_1/Linux64bit+3.10-2.17_e17_prof_openblas_nonnpack/share/cmake/Torch" )
   find_package( Torch CONFIG )
+
+else()
+
+  set( larcv_DIR "$ENV{LARCV_BUILDDIR}/installed/lib/cmake/larcv" )
+  find_package(larcv REQUIRED CONFIG)
+
+  set( ublarcvapp_DIR "$ENV{UBLARCVAPP_BASEDIR}/build/lib/cmake/ublarcvapp" )
+  find_package(ublarcvapp REQUIRED CONFIG)
 
 endif()
 
