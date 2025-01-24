@@ -92,12 +92,12 @@ namespace supera {
 	int start_index = range.begin_index() + time_offset;
 	int end_index   = start_index + adcs.size() - 1;
 	if (start_index > ymax) {
-	  LARCV_SINFO() << "Wire[" << wire.Channel() << "] ROI[" << nrois-1 << "] start index (" << start_index << ") is past the image end bound (" << ymax << ")" << std::endl;
+	  LARCV_SDEBUG() << "Wire[" << wire.Channel() << "] ROI[" << nrois-1 << "] start index (" << start_index << ") is past the image end bound (" << ymax << ")" << std::endl;
 	  nroi_outofbounds++;
 	  continue;
 	}
 	else if ( end_index < ymin) {
-	  LARCV_SINFO() << "Wire[" << wire.Channel() << "] ROI[" << nrois-1 << "] start index (" << end_index << ") is before the image starting bound (" << ymin << ")" << std::endl;
+	  LARCV_SDEBUG() << "Wire[" << wire.Channel() << "] ROI[" << nrois-1 << "] start index (" << end_index << ") is before the image starting bound (" << ymin << ")" << std::endl;
 	  nroi_outofbounds++;
 	  continue;
 	}
