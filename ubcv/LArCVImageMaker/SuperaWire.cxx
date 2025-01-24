@@ -20,7 +20,7 @@ namespace larcv {
     SuperaBase::configure(cfg);
     supera::ParamsImage2D::configure(cfg);
     supera::ImageMetaMaker::configure(cfg);
-    _tick_backward = cfg.get<bool>("TickBackward",true);
+    _tick_backward = cfg.get<bool>("TickBackward",false); // for DLGen1 - deprecated
   }
 
   void SuperaWire::initialize()

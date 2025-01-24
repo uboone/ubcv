@@ -34,7 +34,7 @@ namespace larcv {
       throw std::runtime_error("SuperaLArFlow: must specifc only one SimCh or SimEdep producer");
     }
     _edep_at_anode     = cfg.get<bool>("EdepAtAnode",true);
-    _tick_backward     = cfg.get<bool>("TickBackward",true);
+    _tick_backward     = cfg.get<bool>("TickBackward",false); // for DLGen1 - deprecated
   }
 
   void SuperaLArFlow::initialize()
