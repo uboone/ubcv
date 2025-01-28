@@ -21,7 +21,7 @@ namespace larcv {
     supera::ParamsImage2D::configure(cfg);
     supera::ImageMetaMaker::configure(cfg);
     _origin = cfg.get<unsigned short>("Origin",0);
-    _tick_backward = cfg.get<bool>("TickBackward",true);
+    _tick_backward = cfg.get<bool>("TickBackward",false); // from DLGen1 - deprecated
   }
 
   void SuperaSimCh::initialize()
