@@ -118,11 +118,21 @@ if ( USE_DL_INTEGRATION )
 
 else()
 
+  # --- LArCV
   set( larcv_DIR "$ENV{LARCV_BUILDDIR}/installed/lib/cmake/larcv" )
   find_package(larcv REQUIRED CONFIG)
 
+  # --- UB LArCV APP
   set( ublarcvapp_DIR "$ENV{UBLARCVAPP_BASEDIR}/build/lib/cmake/ublarcvapp" )
   find_package(ublarcvapp REQUIRED CONFIG)
+
+  # --- Torch
+  set( Torch_DIR "$ENV{LIBTORCH_FQ_DIR}/lib/python2.7/site-packages/torch/share/cmake/Torch" )
+  find_package( Torch CONFIG )
+
+  # --- Python
+  find_package( PythonInterp 2.7 REQUIRED )
+  find_package( PythonLibs 2.7 REQUIRED )
 
 endif()
 
