@@ -130,10 +130,6 @@ else()
   set( Torch_DIR "$ENV{LIBTORCH_FQ_DIR}/lib/python2.7/site-packages/torch/share/cmake/Torch" )
   find_package( Torch CONFIG )
 
-  # --- Python
-  find_package( PythonInterp 2.7 REQUIRED )
-  find_package( PythonLibs 2.7 REQUIRED )
-
 endif()
 
 # ADD SOURCE CODE SUBDIRECTORIES HERE
