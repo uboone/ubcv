@@ -320,7 +320,8 @@ namespace supera {
     return img_v;
   }
 
-  larcv::Voxel3DSet
+  //larcv::Voxel3DSet
+  larcv::SparseTensor3D
   SimCh2Voxel3D(const larcv::Voxel3DMeta& meta,
 		const std::vector<int>& track_v,
 		const std::vector<supera::LArSimCh_t>& sch_v,
@@ -328,7 +329,9 @@ namespace supera {
 		const size_t plane)
   {
     LARCV_SINFO() << "Filling Voxel3D ground truth volume..." << std::endl;
-    larcv::Voxel3DSet res(meta);
+    //larcv::Voxel3DSet res(meta);
+    larcv::VoxelSet voxelset;
+    larcv::SparseTensor3D res;
     //double x, y, z, x_tick;
     double y, z, x_tick;
     //std::cout << "x_offset " << x_offset << std::endl;
@@ -360,14 +363,19 @@ namespace supera {
 	  //supera::ApplySCE(x,y,z);
 	  //std::cout << " ... " << x << std::endl;
 	  // Now use tick-based position for x
-	  auto vid = meta.ID(x_tick,y,z);
+	  //auto vid = meta.ID(x_tick,y,z);
+	  auto vid = meta.id(x_tick,y,z);
 	  if(vid == larcv::kINVALID_VOXEL3DID) continue;
 
-	  larcv::Voxel3D vx(vid,edep.energy);
-	  res.Emplace(std::move(vx));
+	  //larcv::Voxel3D vx(vid,edep.energy);
+	  //res.Emplace(std::move(vx));
+          larcv::Voxel vx(vid,edep.energy);
+          voxelset.add(vx);
 	}
       }
     }
+    //return res;
+    res.set( std::move(voxelset), meta );
     return res;
   }
 

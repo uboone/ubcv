@@ -1,9 +1,11 @@
-set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
+#set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
+set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -llarlite_Analysis -llarlite_LArUtil -llarlite_DataFormat -llarlite_Base )
 
 #set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
 
 # use with ubdl
-include_directories ( $ENV{LARLITE_COREDIR} ${LARCV_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
+#include_directories ( $ENV{LARLITE_COREDIR} ${LARCV_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
+include_directories ( $ENV{LARLITE_BASEDIR}/build/installed/include/larlite $ENV{LARLITE_BASEDIR}/build/installed/include ${LARCV_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
 # use with ups larcv
 #include_directories ( $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
 
