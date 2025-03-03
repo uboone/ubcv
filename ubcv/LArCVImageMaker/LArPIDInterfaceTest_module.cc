@@ -7,22 +7,25 @@
 // from cetlib version v3_05_01.
 ////////////////////////////////////////////////////////////////////////
 
-//#include <Python.h> // Python/C API header
-
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
+#include "art/Framework/Services/Optional/TFileService.h"
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "ubreco/WcpPortedReco/ProducePort/SpacePointStructs.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
+#include "larlite/DataFormat/storage_manager.h"
 
 #include "LArPIDInterface.h"
+#include "LArCVBackTracker.h"
+
+#include <TTree.h>
 
 #include <unordered_map>
 #include <cmath>
@@ -54,15 +57,62 @@ private:
   //bool fUseGPU;
   unsigned int fPixelThreshold; // only run model over prongs with at least this many pixels in at least one plane
   bool fAllPlaneThreshold; //if true, only run model over prongs that pass the pixel threshold in all three planes
-  //std::string fPythonScript;
   unsigned int iImg_start;
+
+  // Output TTree variables
+  TTree* tree_;
+  int run_;
+  int subrun_;
+  int event_;
+  int wirecell_pid_;
+  int larpid_pid_;
+  int larpid_process_;
+  float larpid_completeness_;
+  float larpid_purity_;
+  float larpid_pidScore_el_;
+  float larpid_pidScore_ph_;
+  float larpid_pidScore_mu_;
+  float larpid_pidScore_pi_;
+  float larpid_pidScore_pr_;
+  float larpid_procScore_prim_;
+  float larpid_procScore_ntrl_;
+  float larpid_procScore_chgd_;
+  int truthMatch_pid_;
+  int truthMatch_tid_;
+  float truthMatch_purity_;
+  float truthMatch_completeness_;
+  int truthMatch_nSimParts_;
+  int truthMatch_simPart_pid_[1000];
+  float truthMatch_simPart_purity_[1000];
+  int prongImg_plane0_nPix_;
+  int prongImg_plane0_row_[262144];
+  int prongImg_plane0_col_[262144];
+  float prongImg_plane0_val_[262144];
+  int prongImg_plane1_nPix_;
+  int prongImg_plane1_row_[262144];
+  int prongImg_plane1_col_[262144];
+  float prongImg_plane1_val_[262144];
+  int prongImg_plane2_nPix_;
+  int prongImg_plane2_row_[262144];
+  int prongImg_plane2_col_[262144];
+  float prongImg_plane2_val_[262144];
+  int contextImg_plane0_nPix_;
+  int contextImg_plane0_row_[262144];
+  int contextImg_plane0_col_[262144];
+  float contextImg_plane0_val_[262144];
+  int contextImg_plane1_nPix_;
+  int contextImg_plane1_row_[262144];
+  int contextImg_plane1_col_[262144];
+  float contextImg_plane1_val_[262144];
+  int contextImg_plane2_nPix_;
+  int contextImg_plane2_row_[262144];
+  int contextImg_plane2_col_[262144];
+  float contextImg_plane2_val_[262144];
 
 };
 
 
 void LArPIDInterfaceTest::beginJob() {
-  // Initialize Python interpreter
-  //Py_Initialize();
   iImg_start = 0;
 }
 
@@ -74,10 +124,58 @@ LArPIDInterfaceTest::LArPIDInterfaceTest(fhicl::ParameterSet const& p)
      //fUseGPU(p.get<bool>("UseGPU")),
      fPixelThreshold(p.get<unsigned int>("PixelThreshold")),
      fAllPlaneThreshold(p.get<bool>("AllPlaneThreshold"))
-     //fPythonScript(p.get<std::string>("PythonScript"))
   // More initializers here.
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
+  art::ServiceHandle<art::TFileService> fileService;
+  tree_ = fileService->make<TTree>("ProngTree", "ProngTree");
+  tree_->Branch("run", &run_, "run/I");
+  tree_->Branch("subrun", &subrun_, "subrun/I");
+  tree_->Branch("event", &event_, "event/I");
+  tree_->Branch("wirecell_pid", &wirecell_pid_, "wirecell_pid/I");
+  tree_->Branch("larpid_pid", &larpid_pid_, "larpid_pid/I");
+  tree_->Branch("larpid_process", &larpid_process_, "larpid_process/I");
+  tree_->Branch("larpid_completeness", &larpid_completeness_, "larpid_completeness/F");
+  tree_->Branch("larpid_purity", &larpid_purity_, "larpid_purity/F");
+  tree_->Branch("larpid_pidScore_el", &larpid_pidScore_el_, "larpid_pidScore_el/F");
+  tree_->Branch("larpid_pidScore_ph", &larpid_pidScore_ph_, "larpid_pidScore_ph/F");
+  tree_->Branch("larpid_pidScore_mu", &larpid_pidScore_mu_, "larpid_pidScore_mu/F");
+  tree_->Branch("larpid_pidScore_pi", &larpid_pidScore_pi_, "larpid_pidScore_pi/F");
+  tree_->Branch("larpid_pidScore_pr", &larpid_pidScore_pr_, "larpid_pidScore_pr/F");
+  tree_->Branch("larpid_procScore_prim", &larpid_procScore_prim_, "larpid_procScore_prim/F");
+  tree_->Branch("larpid_procScore_ntrl", &larpid_procScore_ntrl_, "larpid_procScore_ntrl/F");
+  tree_->Branch("larpid_procScore_chgd", &larpid_procScore_chgd_, "larpid_procScore_chgd/F");
+  tree_->Branch("truthMatch_pid", &truthMatch_pid_, "truthMatch_pid/I");
+  tree_->Branch("truthMatch_tid", &truthMatch_tid_, "truthMatch_tid/I");
+  tree_->Branch("truthMatch_purity", &truthMatch_purity_, "truthMatch_purity/F");
+  tree_->Branch("truthMatch_completeness", &truthMatch_completeness_, "truthMatch_completeness/F");
+  tree_->Branch("truthMatch_nSimParts", &truthMatch_nSimParts_, "truthMatch_nSimParts/I");
+  tree_->Branch("truthMatch_simPart_pid", truthMatch_simPart_pid_, "truthMatch_simPart_pid[truthMatch_nSimParts]/I");
+  tree_->Branch("truthMatch_simPart_purity", truthMatch_simPart_purity_, "truthMatch_simPart_purity[truthMatch_nSimParts]/F");
+  tree_->Branch("prongImg_plane0_nPix", &prongImg_plane0_nPix_, "prongImg_plane0_nPix/I");
+  tree_->Branch("prongImg_plane0_row", prongImg_plane0_row_, "prongImg_plane0_row[prongImg_plane0_nPix]/I");
+  tree_->Branch("prongImg_plane0_col", prongImg_plane0_col_, "prongImg_plane0_col[prongImg_plane0_nPix]/I");
+  tree_->Branch("prongImg_plane0_val", prongImg_plane0_val_, "prongImg_plane0_val[prongImg_plane0_nPix]/F");
+  tree_->Branch("prongImg_plane1_nPix", &prongImg_plane1_nPix_, "prongImg_plane1_nPix/I");
+  tree_->Branch("prongImg_plane1_row", prongImg_plane1_row_, "prongImg_plane1_row[prongImg_plane1_nPix]/I");
+  tree_->Branch("prongImg_plane1_col", prongImg_plane1_col_, "prongImg_plane1_col[prongImg_plane1_nPix]/I");
+  tree_->Branch("prongImg_plane1_val", prongImg_plane1_val_, "prongImg_plane1_val[prongImg_plane1_nPix]/F");
+  tree_->Branch("prongImg_plane2_nPix", &prongImg_plane2_nPix_, "prongImg_plane2_nPix/I");
+  tree_->Branch("prongImg_plane2_row", prongImg_plane2_row_, "prongImg_plane2_row[prongImg_plane2_nPix]/I");
+  tree_->Branch("prongImg_plane2_col", prongImg_plane2_col_, "prongImg_plane2_col[prongImg_plane2_nPix]/I");
+  tree_->Branch("prongImg_plane2_val", prongImg_plane2_val_, "prongImg_plane2_val[prongImg_plane2_nPix]/F");
+  tree_->Branch("contextImg_plane0_nPix", &contextImg_plane0_nPix_, "contextImg_plane0_nPix/I");
+  tree_->Branch("contextImg_plane0_row", contextImg_plane0_row_, "contextImg_plane0_row[contextImg_plane0_nPix]/I");
+  tree_->Branch("contextImg_plane0_col", contextImg_plane0_col_, "contextImg_plane0_col[contextImg_plane0_nPix]/I");
+  tree_->Branch("contextImg_plane0_val", contextImg_plane0_val_, "contextImg_plane0_val[contextImg_plane0_nPix]/F");
+  tree_->Branch("contextImg_plane1_nPix", &contextImg_plane1_nPix_, "contextImg_plane1_nPix/I");
+  tree_->Branch("contextImg_plane1_row", contextImg_plane1_row_, "contextImg_plane1_row[contextImg_plane1_nPix]/I");
+  tree_->Branch("contextImg_plane1_col", contextImg_plane1_col_, "contextImg_plane1_col[contextImg_plane1_nPix]/I");
+  tree_->Branch("contextImg_plane1_val", contextImg_plane1_val_, "contextImg_plane1_val[contextImg_plane1_nPix]/F");
+  tree_->Branch("contextImg_plane2_nPix", &contextImg_plane2_nPix_, "contextImg_plane2_nPix/I");
+  tree_->Branch("contextImg_plane2_row", contextImg_plane2_row_, "contextImg_plane2_row[contextImg_plane2_nPix]/I");
+  tree_->Branch("contextImg_plane2_col", contextImg_plane2_col_, "contextImg_plane2_col[contextImg_plane2_nPix]/I");
+  tree_->Branch("contextImg_plane2_val", contextImg_plane2_val_, "contextImg_plane2_val[contextImg_plane2_nPix]/F");
 }
 
 void LArPIDInterfaceTest::analyze(art::Event const& e)
@@ -85,10 +183,18 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
 
   std::cout << "NEW EVENT: run "<<e.id().run()<<", subrun "<<e.id().subRun()<<", event "<<e.id().event() << std::endl;
 
+  run_ = e.id().run();
+  subrun_ = e.id().subRun();
+  event_ = e.id().event();
+
   larcv::IOManager* iolcv = new larcv::IOManager(larcv::IOManager::kREAD,"larcv",larcv::IOManager::kTickBackward);
   iolcv -> reverse_all_products();
   iolcv -> add_in_file(fLArCVImageFile);
   iolcv -> initialize();
+
+  larlite::storage_manager* ioll = new larlite::storage_manager(larlite::storage_manager::kREAD);
+  ioll -> add_in_filename(fLArCVImageFile);
+  ioll -> open();
 
   larcv::EventImage2D* wireImage2D = nullptr;
   larcv::EventImage2D* cosmicImage2D = nullptr;
@@ -99,6 +205,7 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
       wireImage2D = wireImg;
       cosmicImage2D = (larcv::EventImage2D*)(iolcv->get_data(larcv::kProductImage2D,"thrumu"));
       iImg_start = iImg+1;
+      ioll -> go_to(iImg);
       break;
     }
   }
@@ -156,23 +263,6 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
   }
 
 
-  /*
-  PyObject* pName = PyUnicode_FromString(fPythonScript.c_str());
-  PyObject* pModule = PyImport_Import(pName);
-  Py_DECREF(pName);
-
-  if (!pModule) {
-    PyErr_Print();
-    throw cet::exception("LArPIDInterfaceTest") << "Failed to load Python script: " << fPythonScript;
-  }
-
-  PyObject* pFunc = PyObject_GetAttrString(pModule, "process_data_test");
-  if (!pFunc || !PyCallable_Check(pFunc)) {
-    PyErr_Print();
-    throw cet::exception("LArPIDInterfaceTest") << "Failed to find callable function in python script.";
-  }
-  */
-
   //LArPID::TorchModel model(fModelPath, fUseGPU);
   LArPID::TorchModel model(fModelPath);
 
@@ -190,6 +280,7 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
     }
 
     if(thresholdPassInAll || (thresholdPassInOne && !fAllPlaneThreshold)){
+
       LArPID::ModelOutput output = model.run_inference(prong_vv);
       std::cout << "Successfuly ran LArPID! Model outputs:" << std::endl;
       std::cout << "    PID: " << output.pid << std::endl;
@@ -204,57 +295,91 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
       std::cout << "    primary_score: " << output.primary_score << std::endl;
       std::cout << "    neutralParent_score: " << output.neutralParent_score << std::endl;
       std::cout << "    chargedParent_score: " << output.chargedParent_score << std::endl;
-    }
 
-    /*
-    PyObject* pyDataList = PyList_New(prong_vv.size());
+      std::cout << "testA" << std::endl;
 
-    for (size_t i = 0; i < prong_vv.size(); ++i) {
-
-      const std::vector<LArPID::CropPixData_t>& planeData = prong_vv[i];
-      PyObject* pyPlaneDataList = PyList_New(planeData.size());
-
-      for (size_t j = 0; j < planeData.size(); ++j) {
-        const LArPID::CropPixData_t& cropData = planeData[j];
-        PyObject* pyTuple = PyTuple_New(6);
-        PyTuple_SetItem(pyTuple, 0, PyLong_FromLong(cropData.row));
-        PyTuple_SetItem(pyTuple, 1, PyLong_FromLong(cropData.col));
-        PyTuple_SetItem(pyTuple, 2, PyLong_FromLong(cropData.rawRow));
-        PyTuple_SetItem(pyTuple, 3, PyLong_FromLong(cropData.rawCol));
-        PyTuple_SetItem(pyTuple, 4, PyFloat_FromDouble(cropData.val));
-        PyTuple_SetItem(pyTuple, 5, PyLong_FromLong(cropData.idx));
-        PyList_SetItem(pyPlaneDataList, j, pyTuple);
+      wirecell_pid_ = 0;
+      for (auto const& particle : particles) {
+        if(particle.TrackId() == partMapPair.first){
+          wirecell_pid_ = particle.PdgCode();
+          break;
+        }
       }
 
-      PyList_SetItem(pyDataList, i, pyPlaneDataList);
+      std::cout << "testB" << std::endl;
+
+      larpid_pid_ = output.pid;
+      larpid_process_ = output.process;
+      larpid_completeness_ = output.completeness;
+      larpid_purity_ = output.purity;
+      larpid_pidScore_el_ = output.electron_score;
+      larpid_pidScore_ph_ = output.photon_score;
+      larpid_pidScore_mu_ = output.muon_score;
+      larpid_pidScore_pi_ = output.pion_score;
+      larpid_pidScore_pr_ = output.proton_score;
+      larpid_procScore_prim_ = output.primary_score;
+      larpid_procScore_ntrl_ = output.neutralParent_score;
+      larpid_procScore_chgd_ = output.chargedParent_score;
+
+      LArCVBackTrack::TruthMatchResults truthMatch = LArCVBackTrack::run_backtracker(prong_vv, *iolcv, *ioll, adc_v);
+      truthMatch_pid_ = truthMatch.pdg;
+      truthMatch_tid_ = truthMatch.tid;
+      truthMatch_purity_ = truthMatch.purity;
+      truthMatch_completeness_ = truthMatch.completeness;
+      truthMatch_nSimParts_ = (int)truthMatch.allMatches.size();
+      for(unsigned int iM = 0; iM < truthMatch.allMatches.size(); ++iM){
+        truthMatch_simPart_pid_[iM] = truthMatch.allMatches[iM].pdg;
+        truthMatch_simPart_purity_[iM] = truthMatch.allMatches[iM].purity;
+      }
+
+      std::cout << "testC" << std::endl;
+
+      prongImg_plane0_nPix_ = (int)prong_vv[0].size();
+      for(unsigned int iP = 0; iP < prong_vv[0].size(); ++iP){
+        prongImg_plane0_row_[iP] = prong_vv[0][iP].row;
+        prongImg_plane0_col_[iP] = prong_vv[0][iP].col;
+        prongImg_plane0_val_[iP] = prong_vv[0][iP].val;
+      }
+      prongImg_plane1_nPix_ = (int)prong_vv[1].size();
+      for(unsigned int iP = 0; iP < prong_vv[1].size(); ++iP){
+        prongImg_plane1_row_[iP] = prong_vv[1][iP].row;
+        prongImg_plane1_col_[iP] = prong_vv[1][iP].col;
+        prongImg_plane1_val_[iP] = prong_vv[1][iP].val;
+      }
+      prongImg_plane2_nPix_ = (int)prong_vv[2].size();
+      for(unsigned int iP = 0; iP < prong_vv[2].size(); ++iP){
+        prongImg_plane2_row_[iP] = prong_vv[2][iP].row;
+        prongImg_plane2_col_[iP] = prong_vv[2][iP].col;
+        prongImg_plane2_val_[iP] = prong_vv[2][iP].val;
+      }
+      contextImg_plane0_nPix_ = (int)prong_vv[3].size();
+      for(unsigned int iP = 0; iP < prong_vv[3].size(); ++iP){
+        contextImg_plane0_row_[iP] = prong_vv[3][iP].row;
+        contextImg_plane0_col_[iP] = prong_vv[3][iP].col;
+        contextImg_plane0_val_[iP] = prong_vv[3][iP].val;
+      }
+      contextImg_plane1_nPix_ = (int)prong_vv[4].size();
+      for(unsigned int iP = 0; iP < prong_vv[4].size(); ++iP){
+        contextImg_plane1_row_[iP] = prong_vv[4][iP].row;
+        contextImg_plane1_col_[iP] = prong_vv[4][iP].col;
+        contextImg_plane1_val_[iP] = prong_vv[4][iP].val;
+      }
+      contextImg_plane2_nPix_ = (int)prong_vv[5].size();
+      for(unsigned int iP = 0; iP < prong_vv[5].size(); ++iP){
+        contextImg_plane2_row_[iP] = prong_vv[5][iP].row;
+        contextImg_plane2_col_[iP] = prong_vv[5][iP].col;
+        contextImg_plane2_val_[iP] = prong_vv[5][iP].val;
+      }
+
+      std::cout << "filling ProngTree with larpid outputs, truth info, and images" << std::endl;
+      tree_ -> Fill();
 
     }
 
-    PyObject* pArgs = PyTuple_New(1);
-    PyTuple_SetItem(pArgs, 0, pyDataList);
-    PyObject* pResult = PyObject_CallObject(pFunc, pArgs);
-
-    //PyObject* pyProngData = PyROOT::Bind(prong_vv);
-    //PyObject* pResult = PyObject_CallFunctionObjArgs(pFunc, pyProngData, NULL);
-
-    if (pResult != nullptr) {
-      std::cout << "Python function executed successfully." << std::endl;
-      Py_DECREF(pResult);
-    }
-    else {
-      PyErr_Print();
-      throw cet::exception("LArPIDInterfaceTest") << "Error in Python function call.";
-    }
-
-    Py_DECREF(pArgs);
-    Py_DECREF(pyDataList);
-    //Py_DECREF(pyProngData);
-    */
   }
 
-
-  //Py_XDECREF(pFunc);
-  //Py_DECREF(pModule);
+  delete iolcv;
+  delete ioll;
 
 }
 

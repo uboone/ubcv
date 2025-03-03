@@ -1,11 +1,12 @@
 #set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
 set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -llarlite_Analysis -llarlite_LArUtil -llarlite_DataFormat -llarlite_Base )
+set( UBLARCVAPP_LIB -L$ENV{UBLARCVAPP_LIBDIR} -lLArCVApp_MCTools -lLArCVApp_dbscan )
 
 #set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
 
 # use with ubdl
 #include_directories ( $ENV{LARLITE_COREDIR} ${LARCV_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
-include_directories ( $ENV{LARLITE_BASEDIR}/build/installed/include/larlite $ENV{LARLITE_BASEDIR}/build/installed/include ${LARCV_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
+include_directories ( $ENV{LARLITE_BASEDIR}/build/installed/include/larlite $ENV{LARLITE_BASEDIR}/build/installed/include ${LARCV_INCLUDE_DIR} $ENV{UBLARCVAPP_INCDIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
 # use with ups larcv
 #include_directories ( $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
 
@@ -13,7 +14,7 @@ include_directories ( $ENV{LARLITE_BASEDIR}/build/installed/include/larlite $ENV
 #link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} -L$ENV{LARCV_LIBDIR} -llarcv ${TORCH_LIBRARIES} ) # All execs need this
 # use with ubdl
 set(CMAKE_CXX_STANDARD 17)
-link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ${TORCH_LIBRARIES} ) # All execs need this
+link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ${UBLARCVAPP_LIB} ${TORCH_LIBRARIES} ) # All execs need this
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DHAS_TORCH")
 
 add_definitions("-Wno-register")
