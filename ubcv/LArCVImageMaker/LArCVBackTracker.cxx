@@ -28,7 +28,7 @@ namespace LArCVBackTrack {
     std::unordered_map<int, SimPartInfo> simTrackMap;
     float totalPixI = 0.;
 
-    for(unsigned int p = 0; p < sparseimg_vv.size(); ++p){
+    for(unsigned int p = 0; p < 3; ++p){
       for(const auto& pix : sparseimg_vv[p]){
         totalPixI += pix.val;
         auto pixContents = mcpm.getPixContent(p, pix.rawRow, pix.rawCol);

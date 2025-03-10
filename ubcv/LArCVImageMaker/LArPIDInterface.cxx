@@ -1,6 +1,8 @@
 
 #include "LArPIDInterface.h"
 
+#include <limits>
+
 
 namespace LArPID {
 
@@ -107,14 +109,19 @@ namespace LArPID {
         int col = hit.targetwire[p];
         float val = adc_v[p].pixel(row, col);
         float val_cosmic = thrumu_v[p].pixel(row, col);
-          if ( val >= threshold && val_cosmic < threshold &&
-               row >= imgBounds[p][0] && row < imgBounds[p][1] &&
-               col >= imgBounds[p][2] && col < imgBounds[p][3] ) {
-            CropPixData_t cropPixData(row - imgBounds[p][0], col - imgBounds[p][2], row, col, val);
-            if( std::find(sparseimg_vv[p].begin(), sparseimg_vv[p].end(), cropPixData) ==
-                sparseimg_vv[p].end() )
+          if ( val >= threshold && val_cosmic < threshold ){
+            CropPixData_t cropPixData(row - imgBounds[p][0], col - imgBounds[p][2], row, col, val, true);
+            if( std::find(sparseimg_vv[p].begin(), sparseimg_vv[p].end(), cropPixData) != sparseimg_vv[p].end() )
+              continue;
+            if ( row >= imgBounds[p][0] && row < imgBounds[p][1] &&
+                 col >= imgBounds[p][2] && col < imgBounds[p][3] ) {
               sparseimg_vv[p].push_back(cropPixData);
-          }
+            }
+            else {
+              cropPixData.inCrop = false;
+              sparseimg_vv[p].push_back(cropPixData);
+            }
+         }
       }
 
       int idx=0;
@@ -145,7 +152,7 @@ namespace LArPID {
                (int)row >= imgBounds[p][0] && (int)row < imgBounds[p][1] &&
                (int)col >= imgBounds[p][2] && (int)col < imgBounds[p][3] ) {
             sparseimg_vv[p+3].push_back( CropPixData_t((int)row - imgBounds[p][0],
-                                                       (int)col - imgBounds[p][2], (int)row, (int)col, val) );
+                                                       (int)col - imgBounds[p][2], (int)row, (int)col, val, true) );
           }
         }
       }
@@ -163,7 +170,7 @@ namespace LArPID {
 
 
   //TorchModel::TorchModel(const std::string& model_path, const bool& useGPU){
-  TorchModel::TorchModel(const std::string& model_path){
+  TorchModel::TorchModel(const std::string& model_path, const bool& debug){
 
     try {
       model = torch::jit::load(model_path);
@@ -177,10 +184,41 @@ namespace LArPID {
       throw;
     }
 
+    debug_mode = debug;
+
     //norm_mean = torch::tensor({57.8182, 57.8182, 58.1807, 58.1807, 50.5312, 50.5312}, torch::kFloat32).view({1, 6, 1, 1}).to(device);
     //norm_std  = torch::tensor({62.9932, 62.9932, 62.6569, 62.6569, 42.0027, 42.0027}, torch::kFloat32).view({1, 6, 1, 1}).to(device);
     norm_mean = torch::tensor({57.8182, 57.8182, 58.1807, 58.1807, 50.5312, 50.5312}, torch::kFloat32).view({1, 6, 1, 1}).to(torch::kCPU);
     norm_std  = torch::tensor({62.9932, 62.9932, 62.6569, 62.6569, 42.0027, 42.0027}, torch::kFloat32).view({1, 6, 1, 1}).to(torch::kCPU);
+
+  }
+
+
+  TorchModel::TorchModel(){
+
+    //norm_mean = torch::tensor({57.8182, 57.8182, 58.1807, 58.1807, 50.5312, 50.5312}, torch::kFloat32).view({1, 6, 1, 1}).to(device);
+    //norm_std  = torch::tensor({62.9932, 62.9932, 62.6569, 62.6569, 42.0027, 42.0027}, torch::kFloat32).view({1, 6, 1, 1}).to(device);
+    norm_mean = torch::tensor({57.8182, 57.8182, 58.1807, 58.1807, 50.5312, 50.5312}, torch::kFloat32).view({1, 6, 1, 1}).to(torch::kCPU);
+    norm_std  = torch::tensor({62.9932, 62.9932, 62.6569, 62.6569, 42.0027, 42.0027}, torch::kFloat32).view({1, 6, 1, 1}).to(torch::kCPU);
+
+  }
+
+
+  void TorchModel::Initialize(const std::string& model_path, const bool& debug){
+
+    try {
+      model = torch::jit::load(model_path);
+      //device = (torch::cuda::is_available() && useGPU) ? torch::kCUDA : torch::kCPU;
+      //model.to(device);
+      model->to(torch::kCPU);
+      //model.eval();
+    }
+    catch (const c10::Error& e) {
+      std::cerr << "LArPIDInterface: Error loading the torchscript model: " << e.what() << std::endl;
+      throw;
+    }
+
+    debug_mode = debug;
 
   }
 
@@ -195,6 +233,32 @@ namespace LArPID {
   }
 
 
+  void TorchModel::printTensorValues(const torch::Tensor& tensor) {
+    auto accessor = tensor.accessor<float, 4>();
+    for (int n = 0; n < accessor.size(0); ++n) {
+      for (int c = 0; c < accessor.size(1); ++c) {
+        for (int h = 0; h < accessor.size(2); ++h) {
+          for (int w = 0; w < accessor.size(3); ++w) {
+            std::cout << "tensor[" << n << "][" << c << "][" << h << "][" << w << "] = "
+                      << accessor[n][c][h][w] << std::endl;
+          }
+        }
+      }
+    }
+  }
+
+
+  size_t TorchModel::getChannel(const size_t& pixDataIndex){
+    if(pixDataIndex == 0) return 0; //plane0 prong
+    if(pixDataIndex == 3) return 1; //plane0 context
+    if(pixDataIndex == 1) return 2; //plane1 prong
+    if(pixDataIndex == 4) return 3; //plane1 context
+    if(pixDataIndex == 2) return 4; //plane2 prong
+    if(pixDataIndex == 5) return 5; //plane2 context
+    return std::numeric_limits<size_t>::max();
+  }
+
+
   ModelOutput TorchModel::run_inference(const std::vector< std::vector<CropPixData_t> >& pixelData){
 
     torch::Tensor input_tensor = torch::zeros({1,6,512,512}, torch::kFloat32);
@@ -203,12 +267,13 @@ namespace LArPID {
 
     for(size_t v = 0; v < pixelData.size(); ++v){
       for(const auto& pix : pixelData[v]){
-        input_tensor[0][v][pix.row][pix.col] = pix.val;
+        if(pix.inCrop) input_tensor[0][getChannel(v)][pix.row][pix.col] = pix.val;
       }
     }
 
     input_tensor = (input_tensor - norm_mean) / norm_std;
     input_tensor = torch::clamp(input_tensor, -std::numeric_limits<float>::infinity(), 4.0);
+    if(debug_mode) printTensorValues(input_tensor);
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(input_tensor);
 
@@ -228,6 +293,11 @@ namespace LArPID {
 
     return output;
 
+  }
+
+
+  void TorchModel::Release(){
+    model.reset();
   }
 
 }

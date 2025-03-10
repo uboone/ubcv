@@ -48,6 +48,7 @@ public:
   void analyze(art::Event const& e) override;
 
   void beginJob() override;
+  void endJob() override;
 
 private:
 
@@ -57,13 +58,22 @@ private:
   //bool fUseGPU;
   unsigned int fPixelThreshold; // only run model over prongs with at least this many pixels in at least one plane
   bool fAllPlaneThreshold; //if true, only run model over prongs that pass the pixel threshold in all three planes
+  bool fDebug; //if true, print tensor values and info for debugging LArPID interface
   unsigned int iImg_start;
+
+  //storage managers for accessing info from merged_dlreco files
+  larcv::IOManager* iolcv;
+  larlite::storage_manager* ioll;
+
+  //LArPID torchscript model
+  LArPID::TorchModel model;
 
   // Output TTree variables
   TTree* tree_;
   int run_;
   int subrun_;
   int event_;
+  int prong_tid_;
   int wirecell_pid_;
   int larpid_pid_;
   int larpid_process_;
@@ -108,12 +118,42 @@ private:
   int contextImg_plane2_row_[262144];
   int contextImg_plane2_col_[262144];
   float contextImg_plane2_val_[262144];
+  int n_spacePoints_;
+  float spacePoint_x_[100000];
+  float spacePoint_y_[100000];
+  float spacePoint_z_[100000];
+  int spacePoint_tick_[100000];
+  int spacePoint_p0wire_[100000];
+  int spacePoint_p1wire_[100000];
+  int spacePoint_p2wire_[100000];
+  float cropPoint_x_;
+  float cropPoint_y_;
+  float cropPoint_z_;
 
 };
 
 
 void LArPIDInterfaceTest::beginJob() {
+
   iImg_start = 0;
+
+  iolcv = new larcv::IOManager(larcv::IOManager::kREAD,"larcv",larcv::IOManager::kTickBackward);
+  iolcv -> reverse_all_products();
+  iolcv -> add_in_file(fLArCVImageFile);
+  iolcv -> initialize();
+
+  ioll = new larlite::storage_manager(larlite::storage_manager::kREAD);
+  ioll -> add_in_filename(fLArCVImageFile);
+  ioll -> set_data_to_read( "mctrack", "mcreco" );
+  ioll -> set_data_to_read( "mcshower", "mcreco" );
+  ioll -> set_data_to_read( "mctruth", "generator" );
+  ioll -> set_data_to_read( "gtruth", "generator" );
+  ioll -> set_data_to_read( "mcflux", "generator" );
+  ioll -> set_data_to_read( "mctruth", "corsika" );
+  ioll -> open();
+
+  model.Initialize(fModelPath, fDebug);
+
 }
 
 
@@ -123,7 +163,8 @@ LArPIDInterfaceTest::LArPIDInterfaceTest(fhicl::ParameterSet const& p)
      fModelPath(p.get<std::string>("ModelPath")),
      //fUseGPU(p.get<bool>("UseGPU")),
      fPixelThreshold(p.get<unsigned int>("PixelThreshold")),
-     fAllPlaneThreshold(p.get<bool>("AllPlaneThreshold"))
+     fAllPlaneThreshold(p.get<bool>("AllPlaneThreshold")),
+     fDebug(p.get<bool>("Debug"))
   // More initializers here.
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
@@ -132,6 +173,7 @@ LArPIDInterfaceTest::LArPIDInterfaceTest(fhicl::ParameterSet const& p)
   tree_->Branch("run", &run_, "run/I");
   tree_->Branch("subrun", &subrun_, "subrun/I");
   tree_->Branch("event", &event_, "event/I");
+  tree_->Branch("prong_tid", &prong_tid_, "prong_tid/I");
   tree_->Branch("wirecell_pid", &wirecell_pid_, "wirecell_pid/I");
   tree_->Branch("larpid_pid", &larpid_pid_, "larpid_pid/I");
   tree_->Branch("larpid_process", &larpid_process_, "larpid_process/I");
@@ -176,6 +218,17 @@ LArPIDInterfaceTest::LArPIDInterfaceTest(fhicl::ParameterSet const& p)
   tree_->Branch("contextImg_plane2_row", contextImg_plane2_row_, "contextImg_plane2_row[contextImg_plane2_nPix]/I");
   tree_->Branch("contextImg_plane2_col", contextImg_plane2_col_, "contextImg_plane2_col[contextImg_plane2_nPix]/I");
   tree_->Branch("contextImg_plane2_val", contextImg_plane2_val_, "contextImg_plane2_val[contextImg_plane2_nPix]/F");
+  tree_->Branch("n_spacePoints", &n_spacePoints_, "n_spacePoints/I");
+  tree_->Branch("spacePoint_x", spacePoint_x_, "spacePoint_x[n_spacePoints]/F");
+  tree_->Branch("spacePoint_y", spacePoint_y_, "spacePoint_y[n_spacePoints]/F");
+  tree_->Branch("spacePoint_z", spacePoint_z_, "spacePoint_z[n_spacePoints]/F");
+  tree_->Branch("spacePoint_tick", spacePoint_tick_, "spacePoint_tick[n_spacePoints]/I");
+  tree_->Branch("spacePoint_p0wire", spacePoint_p0wire_, "spacePoint_p0wire[n_spacePoints]/I");
+  tree_->Branch("spacePoint_p1wire", spacePoint_p1wire_, "spacePoint_p1wire[n_spacePoints]/I");
+  tree_->Branch("spacePoint_p2wire", spacePoint_p2wire_, "spacePoint_p2wire[n_spacePoints]/I");
+  tree_->Branch("cropPoint_x", &cropPoint_x_, "cropPoint_x/F");
+  tree_->Branch("cropPoint_y", &cropPoint_y_, "cropPoint_y/F");
+  tree_->Branch("cropPoint_z", &cropPoint_z_, "cropPoint_z/F");
 }
 
 void LArPIDInterfaceTest::analyze(art::Event const& e)
@@ -186,15 +239,6 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
   run_ = e.id().run();
   subrun_ = e.id().subRun();
   event_ = e.id().event();
-
-  larcv::IOManager* iolcv = new larcv::IOManager(larcv::IOManager::kREAD,"larcv",larcv::IOManager::kTickBackward);
-  iolcv -> reverse_all_products();
-  iolcv -> add_in_file(fLArCVImageFile);
-  iolcv -> initialize();
-
-  larlite::storage_manager* ioll = new larlite::storage_manager(larlite::storage_manager::kREAD);
-  ioll -> add_in_filename(fLArCVImageFile);
-  ioll -> open();
 
   larcv::EventImage2D* wireImage2D = nullptr;
   larcv::EventImage2D* cosmicImage2D = nullptr;
@@ -247,6 +291,8 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
   for (auto const& point : spacePoints) {
     if(particleMap.count(point.real_cluster_id) < 1) continue;
     larlite::larflow3dhit hit;
+    hit.clear(); hit.reserve(3); //not needed for LArPID
+    hit.push_back(point.x); hit.push_back(point.y); hit.push_back(point.z); //not needed for LArPID
     for(unsigned int p = 0; p < adc_v.size(); ++p){
       auto center2D = larutil::GeometryHelper::GetME()->Point_3Dto2D(point.x,point.y,point.z,p);
       if(p == 0) hit.tick = (int)(center2D.t/larutil::GeometryHelper::GetME()->TimeToCm() + 3200.);
@@ -262,9 +308,6 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
               << std::endl;*/
   }
 
-
-  //LArPID::TorchModel model(fModelPath, fUseGPU);
-  LArPID::TorchModel model(fModelPath);
 
   for (const auto& partMapPair : particleMap){
 
@@ -296,7 +339,7 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
       std::cout << "    neutralParent_score: " << output.neutralParent_score << std::endl;
       std::cout << "    chargedParent_score: " << output.chargedParent_score << std::endl;
 
-      std::cout << "testA" << std::endl;
+      prong_tid_ = partMapPair.first;
 
       wirecell_pid_ = 0;
       for (auto const& particle : particles) {
@@ -305,8 +348,6 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
           break;
         }
       }
-
-      std::cout << "testB" << std::endl;
 
       larpid_pid_ = output.pid;
       larpid_process_ = output.process;
@@ -331,8 +372,6 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
         truthMatch_simPart_pid_[iM] = truthMatch.allMatches[iM].pdg;
         truthMatch_simPart_purity_[iM] = truthMatch.allMatches[iM].purity;
       }
-
-      std::cout << "testC" << std::endl;
 
       prongImg_plane0_nPix_ = (int)prong_vv[0].size();
       for(unsigned int iP = 0; iP < prong_vv[0].size(); ++iP){
@@ -371,6 +410,22 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
         contextImg_plane2_val_[iP] = prong_vv[5][iP].val;
       }
 
+      n_spacePoints_ = partMapPair.second.larflowProng.size();
+      for(unsigned int iH = 0; iH < partMapPair.second.larflowProng.size(); ++iH){
+        const auto& hit = partMapPair.second.larflowProng[iH];
+        spacePoint_x_[iH] = hit[0];
+        spacePoint_y_[iH] = hit[1];
+        spacePoint_z_[iH] = hit[2];
+        spacePoint_tick_[iH] = hit.tick;
+        spacePoint_p0wire_[iH] = hit.targetwire[0];
+        spacePoint_p1wire_[iH] = hit.targetwire[1];
+        spacePoint_p2wire_[iH] = hit.targetwire[2];
+      }
+
+      cropPoint_x_ = partMapPair.second.cropPoint.X();
+      cropPoint_y_ = partMapPair.second.cropPoint.Y();
+      cropPoint_z_ = partMapPair.second.cropPoint.Z();
+
       std::cout << "filling ProngTree with larpid outputs, truth info, and images" << std::endl;
       tree_ -> Fill();
 
@@ -378,11 +433,14 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
 
   }
 
-  delete iolcv;
-  delete ioll;
-
 }
 
+
+void LArPIDInterfaceTest::endJob() {
+  delete iolcv;
+  delete ioll;
+  model.Release();
+}
 
 
 DEFINE_ART_MODULE(LArPIDInterfaceTest)
