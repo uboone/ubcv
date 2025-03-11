@@ -8,6 +8,7 @@
 #include "larevt/SpaceChargeServices/SpaceChargeService.h" 
 #include "lardata/DetectorInfoServices/DetectorClocksService.h" 
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h" 
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom<>()
 
 namespace supera {
 
@@ -56,6 +57,7 @@ namespace supera {
 
     int numpixfilled_pass0 = 0;
     int numpixfilled_pass1 = 0;
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
     for (int ipass=0; ipass<2; ipass++) {
       // first pass: Y-only. This is to provide guidance on how to break ambiguities
       // second pass: U,V planes
@@ -85,9 +87,8 @@ namespace supera {
 	// remove offset to get position inside image
 	col -= (size_t)(meta.min_x());
 
-	for (auto const tick_ides : sch.TDCIDEMap()) {
-	  int tick = supera::TPCTDC2Tick((double)(tick_ides.first)) + time_offset; // true deposition tick
-
+	for (auto const& tick_ides : sch.TDCIDEMap()) {
+          int tick = supera::TPCTDC2Tick(clockData, (double)(tick_ides.first)) + time_offset; // true deposition tick
 	  if (tick <= meta.min_y()) continue;
 	  if (tick >= meta.max_y()) continue;
 
@@ -286,25 +287,25 @@ namespace supera {
     //const larutil::Geometry& geo = *(larutil::Geometry::GetME());    
     art::ServiceHandle<geo::Geometry> geom;
     //const float driftvelocity = 0.1098; // hand-coded for current mcc9-beta velocity
-    const float driftvelocity = supera::DriftVelocity();
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
+    auto const detPropData = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob(clockData);
+    const float driftvelocity = supera::DriftVelocity(detPropData);
 
     // sce module
     //auto const* SCE = lar::providerFrom<spacecharge::SpaceChargeService>();
 
     // Get time offset for x space charge correction
-    auto const& detProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-    auto const& detClocks = lar::providerFrom<detinfo::DetectorClocksService>();
     auto const& gen = mctruth_v.at(0);
-    double det_xtickoffset = detProperties->GetXTicksOffset(0,0,0);
-    double det_trigoffset  = detProperties->TriggerOffset();
+    double det_xtickoffset = detPropData.GetXTicksOffset(0,0,0);
+    double det_trigoffset  = trigger_offset(clockData);
     double g4Ticks  = 0;
     if ( gen.NeutrinoSet() )
-      g4Ticks = detClocks->TPCG4Time2Tick(gen.GetNeutrino().Nu().T());
+      g4Ticks = clockData.TPCG4Time2Tick(gen.GetNeutrino().Nu().T());
     else
-      g4Ticks = detClocks->TPCG4Time2Tick(gen.GetParticle(0).T());
+      g4Ticks = clockData.TPCG4Time2Tick(gen.GetParticle(0).T());
     g4Ticks += det_xtickoffset;
     g4Ticks -= det_trigoffset;
-    double xtimeoffset = detProperties->ConvertTicksToX(g4Ticks,0,0,0);
+    double xtimeoffset = detPropData.ConvertTicksToX(g4Ticks,0,0,0);
     
     // we create for each plane:
     //  2 images that list column in other images
@@ -351,29 +352,11 @@ namespace supera {
       // "xyz" is the position of the energy deposit in world
       // coordinates. Note that the units of distance in
       // sim::SimEnergyDeposit are supposed to be cm.
-      auto const mp = sed.MidPoint();
-      double const xyz[3] = { mp.X(), mp.Y(), mp.Z() };
-
-      //auto sce_offset = SCE->GetPosOffsets(geo::Point_t(xyz[0], xyz[1], xyz[2]));
-
-      double xyz_sce[3] = {0};
-      // proper sce correction
-      // xyz_sce[0] = (xyz[0] - sce_offset.X() + xtimeoffset)*(1.114/1.098) + 0.6;
-      // xyz_sce[1] = xyz[1] + sce_offset.Y();
-      // xyz_sce[2] = xyz[2] + sce_offset.Z();
-
-      // reverse sce correction
-      // xyz_sce[0] = (xyz[0] + sce_offset.X() + xtimeoffset)*(1.114/1.098) - 0.6;
-      // xyz_sce[1] = xyz[1] - sce_offset.Y();
-      // xyz_sce[2] = xyz[2] - sce_offset.Z();
-      
-      // just xtimeoffset
-      xyz_sce[0] = (xyz[0]+xtimeoffset)*(1.114/1.098);
-      xyz_sce[1] = xyz[1];
-      xyz_sce[2] = xyz[2];
+      auto xyz_sce = sed.MidPoint();
+      xyz_sce.SetX((xyz_sce.X() + xtimeoffset)*(1.114/1.098));
 
       double tedep = sed.Time(); // (function returns midpoint time)
-      double tick  = supera::TPCG4Time2Tick( tedep ) + time_offset + xyz_sce[0]/driftvelocity/0.5;
+      double tick  = supera::TPCG4Time2Tick(clockData, tedep) + time_offset + xyz_sce.X()/driftvelocity/0.5;
 
       //std::cout << "sed: (" << xyz[0] << "," << xyz[1] << "," << xyz[2] << ") t=" << tedep << " tick=" << tick << std::endl;
 
@@ -391,27 +374,10 @@ namespace supera {
       // From the position in world coordinates, determine the
       // cryostat and tpc. If somehow the step is outside a tpc
       // (e.g., cosmic rays in rock) just move on to the next one.
-      unsigned int cryostat = 0;
-      try {
-	geom->PositionToCryostat(xyz_sce, cryostat);
-      }
-      catch(cet::exception &e){
-	LARCV_SERROR()  << "step "// << energyDeposit << "\n"
-			<< "cannot be found in a cryostat\n"
-			<< e;
-	continue;
-      }
-      unsigned int tpc = 0;
-      try {
-	geom->PositionToTPC(xyz_sce, tpc, cryostat);
-      }
-      catch(cet::exception &e){
+      if (geom->PositionToTPCptr(xyz_sce) == nullptr) {
 	LARCV_SWARNING()  << "step "// << energyDeposit << "\n"
-			  << "cannot be found in a TPC\n"
-			  << e;
-	continue;
+                          << "cannot be found in a TPC\n";
       }
-      //const geo::TPCGeo& tpcGeo = geom->TPC(tpc, cryostat);
       
       //Define charge drift direction: driftcoordinate (x, y or z) and driftsign (positive or negative). Also define coordinates perpendicular to drift direction.
       // unused int driftcoordinate = std::abs(tpcGeo.DetectDriftDirection())-1;  //x:0, y:1, z:2

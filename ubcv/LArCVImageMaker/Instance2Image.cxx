@@ -5,6 +5,8 @@
 #include "larcv/core/Base/larcv_logger.h"
 #include "LArUtil/Geometry.h"
 
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 namespace supera {
 
@@ -48,6 +50,7 @@ namespace supera {
     // loop over sim channel information
     //int num_no_ancestor = 0;
     //std::set<int> noancestorids;
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
     for (auto const& sch : sch_v) {
       auto ch = sch.Channel();
       auto const& wid   = ::supera::ChannelToWireID(ch);
@@ -69,8 +72,8 @@ namespace supera {
       col -= (size_t)(meta.min_x());
       
       // loop over energy deposition
-      for (auto const tick_ides : sch.TDCIDEMap()) {
-	int tick = supera::TPCTDC2Tick((double)(tick_ides.first)) + time_offset; // true deposition tick
+      for (auto const& tick_ides : sch.TDCIDEMap()) {
+        int tick = supera::TPCTDC2Tick(clockData, (double)(tick_ides.first)) + time_offset; // true deposition tick
 	if (tick <= meta.min_y()) continue;
 	if (tick >= meta.max_y()) continue;
 	// Where is this tick in the image

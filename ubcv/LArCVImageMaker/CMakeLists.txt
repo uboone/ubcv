@@ -1,129 +1,108 @@
-#set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -lLArLite_Analysis -lLArLite_LArUtil -lLArLite_DataFormat -lLArLite_Base )
-set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -llarlite_Analysis -llarlite_LArUtil -llarlite_DataFormat -llarlite_Base )
-set( UBLARCVAPP_LIB -L$ENV{UBLARCVAPP_LIBDIR} -lLArCVApp_MCTools -lLArCVApp_dbscan )
 
-#set( UBOONECODE_LIB -L$ENV{UBOONECODE_LIB} )
+#set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -llarlite_Analysis -llarlite_LArUtil -llarlite_DataFormat -llarlite_Base )
+#set( UBLARCVAPP_LIB -L$ENV{UBLARCVAPP_LIBDIR} -lLArCVApp_MCTools -lLArCVApp_dbscan )
+#include_directories ( $ENV{LARLITE_BASEDIR}/build/installed/include/larlite $ENV{LARLITE_BASEDIR}/build/installed/include ${LARCV_INCLUDE_DIR} $ENV{UBLARCVAPP_INCDIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
+#set(CMAKE_CXX_STANDARD 17)
+#link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ${UBLARCVAPP_LIB} ${TORCH_LIBRARIES} )
+#set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DHAS_TORCH")
+#add_definitions("-Wno-register")
 
-# use with ubdl
-#include_directories ( $ENV{LARLITE_COREDIR} ${LARCV_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
-include_directories ( $ENV{LARLITE_BASEDIR}/build/installed/include/larlite $ENV{LARLITE_BASEDIR}/build/installed/include ${LARCV_INCLUDE_DIR} $ENV{UBLARCVAPP_INCDIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
-# use with ups larcv
-#include_directories ( $ENV{LARCV_INCDIR} $ENV{LARLITE_COREDIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
-
-# use with ups larcv
-#link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} -L$ENV{LARCV_LIBDIR} -llarcv ${TORCH_LIBRARIES} ) # All execs need this
-# use with ubdl
-set(CMAKE_CXX_STANDARD 17)
-link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ${UBLARCVAPP_LIB} ${TORCH_LIBRARIES} ) # All execs need this
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DHAS_TORCH")
-
-add_definitions("-Wno-register")
-
-#add_subdirectory(job)
-
-art_make( EXCLUDE LArCVMetaMaker_service.cc
-	  BASENAME_ONLY
-	  LIBRARY_NAME     uboonecode_uboone_LArCVImageMaker
-	  LIB_LIBRARIES
-	  	   larcorealg_Geometry
-		   ubcore_Geometry
-		   ubobj_MuCS
-		   larcore_Geometry_Geometry_service
-	   	   nutools_ParticleNavigation lardataobj_Simulation
-		   lardataobj_RecoBase
-		   nusimdata_SimulationBase
-		   lardataobj_MCBase
-		   larcoreobj_SummaryData
-		   lardataobj_RawData
-		   lardata_RecoObjects
-		   #${UBOONECODE_LIB}
-		   nusimdata_SimulationBase
-		   ${LARRECO_LIB}
-		   ${LARDATA_LIB}
-		   ${ART_FRAMEWORK_CORE}
-		   ${ART_FRAMEWORK_PRINCIPAL}
-                   ${ART_FRAMEWORK_BASIC}
-		   ${ART_FRAMEWORK_SERVICES_REGISTRY}
-		   ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-		   ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
-                   art_Persistency_Common
-                   art_Persistency_Provenance
-		   art_Utilities canvas
-		   ${MF_MESSAGELOGGER}
-		   
-		   ${FHICLCPP}
-		   cetlib cetlib_except
-		   ${ROOT_GEOM}
-		   ${ROOT_XMLIO}
-		   ${ROOT_GDML}
-		   ${ROOT_BASIC_LIB_LIST}
-
-          MODULE_LIBRARIES 	  		   
-		   uboonecode_uboone_LArCVImageMaker	   
-	      	   TFileMetadataMicroBooNE_service
-	      	   FileCatalogMetadataMicroBooNE_service
-		   LArCVMetaMaker_service
-		   ubobj_MuCS
-		   larcorealg_Geometry
-		   ubcore_Geometry
-		   larcore_Geometry_Geometry_service
-		   nutools_ParticleNavigation lardataobj_Simulation
-                   larevt_CalibrationDBI_IOVData
-                   larevt_CalibrationDBI_Providers
-		   nusimdata_SimulationBase
-		   lardata_Utilities
-		   lardataobj_MCBase
-		   larcoreobj_SummaryData
-		   lardataobj_RawData
-		   lardataobj_RecoBase
-		   lardata_RecoObjects
-                   larevt_Filters
-                   larevt_CalibrationDBI_IOVData
-                   larevt_CalibrationDBI_Providers
-		   #${UBOONECODE_LIB}
-		   nusimdata_SimulationBase
-		   ${LARRECO_LIB}
-		   ${LARDATA_LIB}
-		   ${ART_FRAMEWORK_CORE}
-		   ${ART_FRAMEWORK_PRINCIPAL}
-                   ${ART_FRAMEWORK_BASIC}
-		   ${ART_FRAMEWORK_SERVICES_REGISTRY}
-		   ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-		   ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
-                   art_Persistency_Common
-                   art_Persistency_Provenance
-		   art_Utilities canvas
-		   ${MF_MESSAGELOGGER}
-		   
-		   ${FHICLCPP}
-		   cetlib_except
-		   ${ROOT_GEOM}
-		   ${ROOT_XMLIO}
-		   ${ROOT_GDML}
-		   ${ROOT_BASIC_LIB_LIST}
-		)
-
-simple_plugin(LArCVMetaMaker "service"
-	      TFileMetadataMicroBooNE_service
-	      FileCatalogMetadataMicroBooNE_service
-	      ${ART_FRAMEWORK_SERVICES_SYSTEM_FILECATALOGMETADATA_SERVICE}	      
-	      art_Utilities canvas
-              art_Framework_Principal
-	      ${MF_MESSAGELOGGER}
-	      
-	      ${FHICLCPP}
-	      cetlib cetlib_except
-	      ${ROOT_BASIC_LIB_LIST}
-              BASENAME_ONLY
+cet_make_library(
+  SOURCE
+  FMWKInterface.cxx
+  ImageMetaFromConfig.cxx
+  ImageMetaMaker.cxx
+  ImageMetaMakerBase.cxx
+  ImageMetaMakerFactory.cxx
+  Instance2Image.cxx
+  LAr2Image.cxx
+  LArCVSuperaDriver.cxx
+  LArFlowLAr2Image.cxx
+  MCParticleTree.cxx
+  MCROIMaker.cxx
+  ParamsChStatus.cxx
+  ParamsImage2D.cxx
+  ParamsPixel2D.cxx
+  ParamsROI.cxx
+  ParamsVoxel3D.cxx
+  PulledPork3DSlicer.cxx
+  SuperaBase.cxx
+  SuperaChStatus.cxx
+  SuperaExampleTemplate.cxx.example
+  SuperaHit.cxx
+  SuperaInstanceImage.cxx
+  SuperaKeyPointCluster.cxx
+  SuperaLArFlow.cxx
+  SuperaMCPCluster.cxx
+  SuperaMCROI.cxx
+  SuperaMetaMaker.cxx
+  SuperaOpDigit.cxx
+  SuperaSimCh.cxx
+  SuperaSimVoxel3D.cxx
+  SuperaTypes.cxx
+  SuperaWire.cxx
+  WireRange3D.cxx
+  LIBRARIES
+  PUBLIC
+  larevt::SpaceChargeService
+  lardata::DetectorClocksService
+  larcore::Geometry_Geometry_service
+  lardataobj::RecoBase
+  nusimdata::SimulationBase
+  larcv::larcv
+  larlite::LArUtil
 )
 
+cet_build_plugin(
+  LArSoftSuperaSriver art::EDAnalyzer
+  LIBRARIES
+  PRIVATE
+  ubcv::LArCVImageMaker
+)
 
-target_link_libraries( uboonecode_uboone_LArCVImageMaker LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-target_link_libraries( SSNetHitProducer_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-target_link_libraries( LArSoftSuperaSriver_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-target_link_libraries( RSEFilter_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-target_link_libraries( VPlaneHandler_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-target_link_libraries( LArCVMetaMaker_service LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+cet_build_plugin(
+  RSEFilter art::EDFilter
+  LIBRARIES
+  PRIVATE
+  larcore::Geometry_Geometry_service
+  lardataobj::RecoBase
+  nusimdata::SimulationBase
+  larcv::larcv
+)
+
+cet_build_plugin(
+  SSNetHitProducer art::EDProducer
+  LIBRARIES
+  PRIVATE
+  larcore::Geometry_Geometry_service
+  lardataobj::RecoBase
+  nusimdata::SimulationBase
+  larcv::larcv
+)
+
+cet_build_plugin(
+  VPlaneHandler art::EDProducer
+  LIBRARIES
+  PRIVATE
+  lardataobj::RecoBase
+)
+
+cet_build_plugin(
+  LArCVMetaMaker art::service
+  LIBRARIES
+  PUBLIC
+  ubevt::Utilities
+  art::Framework_Services_System_FileCatalogMetadata_service
+  art::Framework_Principal
+  ROOT::Core
+)
+
+#target_link_libraries( uboonecode_uboone_LArCVImageMaker LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+#target_link_libraries( SSNetHitProducer_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+#target_link_libraries( LArSoftSuperaSriver_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+#target_link_libraries( RSEFilter_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+#target_link_libraries( VPlaneHandler_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+#target_link_libraries( LArCVMetaMaker_service LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
 
 # install_headers()
 install_fhicl()

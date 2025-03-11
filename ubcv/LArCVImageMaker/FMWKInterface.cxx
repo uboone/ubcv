@@ -4,141 +4,133 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "larcv/core/Base/larbys.h"
 #include "FMWKInterface.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesServiceStandard.h"
-#include "lardata/DetectorInfoServices/LArPropertiesServiceStandard.h"
-#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
+#include "lardataalg/DetectorInfo/DetectorPropertiesData.h"
+#include "lardataalg/DetectorInfo/DetectorClocksData.h"
 #include "larevt/SpaceChargeServices/SpaceChargeService.h"
+#include "larcore/Geometry/WireReadout.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom<>()
+
+namespace {
+  constexpr geo::TPCID tpcid{0,0};
+}
 
 namespace supera {
 
   ::geo::WireID ChannelToWireID(unsigned int ch)
   { 
-      auto const* geom = ::lar::providerFrom<geo::Geometry>();
-      return geom->ChannelToWire(ch).front();
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.ChannelToWire(ch).front();
   }
   
-  double DriftVelocity()
+  double DriftVelocity(detinfo::DetectorPropertiesData const& detProp)
   { 
-    auto const* detp = ::lar::providerFrom<detinfo::DetectorPropertiesService>();
-    return detp->DriftVelocity(); 
-  }
-  
-  unsigned int NumberTimeSamples()
-  {
-    throw ::larcv::larbys("NumberTimeSamples function not available!");
-    auto const* detp = ::lar::providerFrom<detinfo::DetectorPropertiesService>();
-    return detp->NumberTimeSamples(); 
+    return detProp.DriftVelocity();
   }
   
   unsigned int Nchannels()
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->Nchannels();
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.Nchannels();
   }
   
   unsigned int Nplanes()
   { 
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->Nplanes();
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.Nplanes({0, 0});
   }
   
   unsigned int Nwires(unsigned int plane)
   { 
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->Nwires(plane); 
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.Nwires(geo::PlaneID{tpcid, plane});
   }
   
-  unsigned int NearestWire(const TVector3& xyz, unsigned int plane)
+  unsigned int NearestWire(const geo::Point_t& xyz, unsigned int plane)
   {
     double min_wire=0;
     double max_wire=Nwires(plane)-1;
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
     
-    double wire = geom->WireCoordinate(xyz[1],xyz[2],plane,0,0) + 0.5;
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    double wire = channelMap.Plane(geo::PlaneID{tpcid, plane}).WireCoordinate(xyz) + 0.5;
     if(wire<min_wire) wire = min_wire;
     if(wire>max_wire) wire = max_wire;
     
     return (unsigned int)wire;
   }
 
+  unsigned int NearestWire(const TVector3& xyz, unsigned int plane)
+  {
+    return NearestWire(geo::vect::toPoint(xyz), plane);
+  }
+    
   unsigned int NearestWire(const double* xyz, unsigned int plane)
   {
-    double min_wire=0;
-    double max_wire=Nwires(plane)-1;
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    
-    double wire = geom->WireCoordinate(xyz[1],xyz[2],plane,0,0) + 0.5;
-    if(wire<min_wire) wire = min_wire;
-    if(wire>max_wire) wire = max_wire;
-    
-    return (unsigned int)wire;
+    return NearestWire(geo::vect::toPoint(xyz), plane);
   }
 
   double WireAngleToVertical(unsigned int plane)
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->WireAngleToVertical(geo::View_t(plane));
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.WireAngleToVertical(geo::View_t(plane), tpcid);
   }
 
   double WirePitch(size_t plane)
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->WirePitch(plane);
+    auto const& channelMap = art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMap.Plane(geo::PlaneID(tpcid, plane)).WirePitch();
   }
 
   double DetHalfWidth() 
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->DetHalfWidth();
+    auto const& tpc = art::ServiceHandle<geo::Geometry>()->TPC();
+    return tpc.HalfWidth();
   }
 
   double DetHalfHeight() 
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->DetHalfHeight();
+    auto const& tpc = art::ServiceHandle<geo::Geometry>()->TPC();
+    return tpc.HalfHeight();
   }
 
   double DetLength() 
   {
-    auto const* geom = ::lar::providerFrom<geo::Geometry>();
-    return geom->DetLength();
+    auto const& tpc = art::ServiceHandle<geo::Geometry>()->TPC();
+    return tpc.Length();
   }
   
-  int TPCG4Time2Tick(double ns)
+  int TPCG4Time2Tick(detinfo::DetectorClocksData const& clockData, double ns)
   { 
-    auto const* ts = ::lar::providerFrom<detinfo::DetectorClocksService>();      
-    return ts->TPCG4Time2Tick(ns); 
+    return clockData.TPCG4Time2Tick(ns);
   }
 
-  int TPCG4Time2TDC(double ns)
+  int TPCG4Time2TDC(detinfo::DetectorClocksData const& clockData, double ns)
   {
-    auto const* ts = ::lar::providerFrom<detinfo::DetectorClocksService>();
-    return ts->TPCG4Time2TDC(ns);
+    return clockData.TPCG4Time2TDC(ns);
   }
   
-  double TPCTDC2Tick(double tdc)
+  double TPCTDC2Tick(detinfo::DetectorClocksData const& clockData, double tdc)
   { 
-    auto const* ts = ::lar::providerFrom<detinfo::DetectorClocksService>();
-    return ts->TPCTDC2Tick(tdc); 
+    return clockData.TPCTDC2Tick(tdc);
   }
 
-  double TPCTickPeriod()
+  double TPCTickPeriod(detinfo::DetectorClocksData const& clockData)
   {
-    auto const* ts = ::lar::providerFrom<detinfo::DetectorClocksService>();
-    return ts->TPCClock().TickPeriod();
+    return clockData.TPCClock().TickPeriod();
   }
 
-  double TriggerOffsetTPC()
+  double TriggerOffsetTPC(detinfo::DetectorClocksData const& clockData)
   {
-    auto const* ts = ::lar::providerFrom<detinfo::DetectorClocksService>();
-    return ts->TriggerOffsetTPC();
+    return clockData.TriggerOffsetTPC();
   }
   
-  double PlaneTickOffset(size_t plane0, size_t plane1)
+  double PlaneTickOffset(detinfo::DetectorClocksData const& clockData,
+                         detinfo::DetectorPropertiesData const& detProp,
+                         size_t plane0, size_t plane1)
   {
-    static double pitch = ::lar::providerFrom<geo::Geometry>()->PlanePitch();
-    static double tick_period = ::lar::providerFrom<detinfo::DetectorClocksService>()->TPCClock().TickPeriod();
-    return (plane1 - plane0) * pitch / DriftVelocity() / tick_period;
+    static double const pitch =
+      art::ServiceHandle<geo::WireReadout const>()->Get().PlanePitch({0, 0}, plane0, plane1);
+    double tick_period = clockData.TPCClock().TickPeriod();
+    return (plane1 - plane0) * pitch / DriftVelocity(detProp) / tick_period;
   }
 
   void ApplySCE(double& x, double& y, double& z)

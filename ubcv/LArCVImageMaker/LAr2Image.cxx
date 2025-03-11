@@ -4,6 +4,8 @@
 #include "LAr2Image.h"
 #include "larcv/core/Base/larcv_logger.h"
 
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+
 namespace supera {
 
   larcv::Image2D Hit2Image2D(const larcv::ImageMeta & meta,
@@ -261,6 +263,7 @@ namespace supera {
 	column.resize(img.meta().rows() + 1, (float)(::larcv::kROIUnknown));
     }
 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
     int nlabeled = 0;
     for (auto const& sch : sch_v) {
       auto ch = sch.Channel();
@@ -280,8 +283,8 @@ namespace supera {
       for (auto& v : column) v = (float)(::larcv::kROIUnknown);
       //for (auto& v : column) v = (float)(-1);
 
-      for (auto const tick_ides : sch.TDCIDEMap()) {
-	int tick = supera::TPCTDC2Tick((double)(tick_ides.first)) + time_offset;
+      for (auto const & tick_ides : sch.TDCIDEMap()) {
+        int tick = supera::TPCTDC2Tick(clockData, (double)(tick_ides.first)) + time_offset;
 	if (tick < meta.min_y()) continue;
 	if (tick >= meta.max_y()) continue;
 	// Where is this tick in column vector?
@@ -335,15 +338,17 @@ namespace supera {
     //double x, y, z, x_tick;
     double y, z, x_tick;
     //std::cout << "x_offset " << x_offset << std::endl;
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob(clockData);
     for (auto const& sch : sch_v) {
       auto ch = sch.Channel();
       
       auto const& wid = ::supera::ChannelToWireID(ch);
       if( plane != (size_t)(wid.Plane) ) continue;
 
-      for (auto const tick_ides : sch.TDCIDEMap()) {
+      for (auto const & tick_ides : sch.TDCIDEMap()) {
 
-	x_tick = (supera::TPCTDC2Tick(tick_ides.first) + time_offset) * supera::TPCTickPeriod()  * supera::DriftVelocity();
+        x_tick = (supera::TPCTDC2Tick(clockData, tick_ides.first) + time_offset) * supera::TPCTickPeriod(clockData)  * supera::DriftVelocity(detProp);
 	/*
 	std::cout << tick_ides.first << " : " << supera::TPCTDC2Tick(tick_ides.first) << " : " << time_offset << " : " << x_tick << std::flush;
 	std::cout << (supera::TPCTDC2Tick(tick_ides.first) + time_offset) << std::endl
@@ -412,6 +417,7 @@ namespace supera {
       img_v.emplace_back(meta_v[plane]);
     std::vector<size_t> nonzero_npx_v(supera::Nplanes(),0);
     
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
     for(size_t cidx=0; cidx<num_clusters; ++cidx) {
 
       // initialize image container
@@ -440,8 +446,8 @@ namespace supera {
 	for (auto& v : column) v = 0.;
 	//for (auto& v : column) v = (float)(-1);
 	
-	for (auto const tick_ides : sch.TDCIDEMap()) {
-	  int tick = supera::TPCTDC2Tick((double)(tick_ides.first)) + time_offset;
+	for (auto const & tick_ides : sch.TDCIDEMap()) {
+          int tick = supera::TPCTDC2Tick(clockData, (double)(tick_ides.first)) + time_offset;
 	  if (tick < meta.min_y()) continue;
 	  if (tick >= meta.max_y()) continue;
 	  // Where is this tick in column vector?

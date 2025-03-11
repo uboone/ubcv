@@ -6,6 +6,10 @@
 #include "FMWKInterface.h"
 #include <TLorentzVector.h> // ROOT
 #include <set>
+
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+
 namespace supera {
 
   void MCROIMaker::configure(const supera::Config_t& cfg)
@@ -31,6 +35,7 @@ namespace supera {
     // result is N planes' wire boundary + time boundary (N+1 elements)
     WTRangeArray_t result(supera::Nplanes() + 1);
     
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
     for (auto const& sch : sch_v) {
       
       auto const wire = ChannelToWireID(sch.Channel());
@@ -39,7 +44,7 @@ namespace supera {
       
       for (auto const& tdc_ide_v : sch.TDCIDEMap()) {
 	bool store = false;
-	double tick = TPCTDC2Tick((double)(tdc_ide_v.first));
+        double tick = TPCTDC2Tick(clockData, (double)(tdc_ide_v.first));
 	//if(tick<0 || tick >= NumberTimeSamples()) continue;
 	if (tick < 0 || tick >= _max_time_tick) continue;
 	tick += 0.5;
@@ -74,9 +79,12 @@ namespace supera {
   WTRangeArray_t MCROIMaker::WireTimeBoundary(const LArMCTrack_t& mct) const
   {
     LARCV_DEBUG() << "start" << std::endl;
-    const double drift_velocity = ::supera::DriftVelocity() * 1.0e-3; // make it cm/ns
+
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob(clockData);
+    const double drift_velocity = ::supera::DriftVelocity(detProp) * 1.0e-3; // make it cm/ns
     //const int tick_max = ::supera::NumberTimeSamples();
-    const double plane_tick_offset = PlaneTickOffset(0,1); // plane 1 as a reference
+    const double plane_tick_offset = PlaneTickOffset(clockData, detProp, 0,1); // plane 1 as a reference
     const int tick_max = _max_time_tick;
     TVector3 xyz; xyz[0] = xyz[1] = xyz[2] = 0.;
     
@@ -91,7 +99,7 @@ namespace supera {
       if(_apply_sce) ApplySCE(xyz);
       
       // Figure out time
-      int tick = (int)(::supera::TPCG4Time2Tick(step.T() + (xyz[0]  / drift_velocity)) + plane_tick_offset + 0.5);
+      int tick = (int)(::supera::TPCG4Time2Tick(clockData, step.T() + (xyz[0]  / drift_velocity)) + plane_tick_offset + 0.5);
       
       if (tick < 0 || tick >= tick_max) {
 	LARCV_DEBUG() << "tick out of time: " << tick << std::endl;
@@ -130,7 +138,9 @@ namespace supera {
   WTRangeArray_t MCROIMaker::WireTimeBoundary(const LArMCShower_t& mcs) const
   {
     LARCV_DEBUG() << "start" << std::endl;
-    const double drift_velocity = ::supera::DriftVelocity() * 1.0e-3; // make it cm/ns
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob(clockData);
+    const double drift_velocity = ::supera::DriftVelocity(detProp) * 1.0e-3; // make it cm/ns
     //const int tick_max = ::supera::NumberTimeSamples();
     const int tick_max = _max_time_tick;
     double xyz[3] = {0.};
@@ -146,7 +156,7 @@ namespace supera {
     //double showerlength = 100.0;
     double detprofnorm = sqrt( detprofile.Px() * detprofile.Px() + detprofile.Py() * detprofile.Py() + detprofile.Pz() * detprofile.Pz() );
     TLorentzVector showerend;
-    const double plane_tick_offset = PlaneTickOffset(0,1); // plane 1 as a reference
+    const double plane_tick_offset = PlaneTickOffset(clockData, detProp, 0,1); // plane 1 as a reference
     showerend[0] = detprofile.X() + showerlength * (detprofile.Px() / detprofnorm);
     showerend[1] = detprofile.Y() + showerlength * (detprofile.Py() / detprofnorm);
     showerend[2] = detprofile.Z() + showerlength * (detprofile.Pz() / detprofnorm);
@@ -164,7 +174,7 @@ namespace supera {
       if(_apply_sce) ApplySCE(xyz);
       
       // Figure out time
-      int tick = (int)(::supera::TPCG4Time2Tick(step.T() + (xyz[0]  / drift_velocity)) + plane_tick_offset + 0.5);
+      int tick = (int)(::supera::TPCG4Time2Tick(clockData, step.T() + (xyz[0]  / drift_velocity)) + plane_tick_offset + 0.5);
       
       if (tick < 0 || tick >= tick_max) continue;
       
@@ -205,6 +215,7 @@ namespace supera {
     for (auto const& trackid : mcs.DaughterTrackID()) daughters.insert(trackid);
     daughters.insert(mcs.TrackID());
     
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
     for (auto const& sch : sch_v) {
       
       auto const wire = ChannelToWireID(sch.Channel());
@@ -213,7 +224,7 @@ namespace supera {
       
       for (auto const& tdc_ide_v : sch.TDCIDEMap()) {
 	bool store = false;
-	double tick = TPCTDC2Tick((double)(tdc_ide_v.first));
+        double tick = TPCTDC2Tick(clockData, (double)(tdc_ide_v.first));
 	//if(tick<0 || tick >= NumberTimeSamples()) continue;
 	if (tick < 0 || tick >= _max_time_tick) continue;
 	tick += 0.5;

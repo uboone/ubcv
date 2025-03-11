@@ -7,6 +7,8 @@
 #include "PulledPork3DSlicer.h"
 #include "larcv/core/DataFormat/EventVoxel3D.h"
 #include "larcv/core/DataFormat/DataFormatUtil.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+
 namespace larcv {
 
   static SuperaSimVoxel3DProcessFactory __global_SuperaSimVoxel3DProcessFactory__;
@@ -116,8 +118,10 @@ namespace larcv {
     std::cout<<meta_v.at(2).min_y() << " : " << supera::TPCTickPeriod() << " : " << supera::TriggerOffsetTPC() << " : " << supera::DriftVelocity() << std::endl;
     std::cout<<meta_v.at(2).max_y() << " : " << supera::TPCTickPeriod() << " : " << supera::TriggerOffsetTPC() << " : " << supera::DriftVelocity() << std::endl;
     */
-    double xmin = (meta_v.at(2).min_y() - _t0_tick) * supera::TPCTickPeriod() * supera::DriftVelocity();
-    double xmax = (meta_v.at(2).max_y() - _t0_tick) * supera::TPCTickPeriod() * supera::DriftVelocity();
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob(clockData);
+    double xmin = (meta_v.at(2).min_y() - _t0_tick) * supera::TPCTickPeriod(clockData) * supera::DriftVelocity(detProp);
+    double xmax = (meta_v.at(2).max_y() - _t0_tick) * supera::TPCTickPeriod(clockData) * supera::DriftVelocity(detProp);
     Voxel3DMeta meta;
     //meta.Set(xmin, xmax, ymin, ymax, zmin, zmax, (xmax-xmin)/_voxel_size, (ymax-ymin)/_voxel_size, (zmax-zmin)/_voxel_size);
     meta.set(xmin, ymin, zmin, xmax, ymax, zmax, (xmax-xmin)/_voxel_size, (ymax-ymin)/_voxel_size, (zmax-zmin)/_voxel_size);
@@ -129,7 +133,7 @@ namespace larcv {
     
     auto voxel3dset = supera::SimCh2Voxel3D(meta, track_v,
 					    LArData<supera::LArSimCh_t>(),
-					    TimeOffset() + supera::TriggerOffsetTPC() / supera::TPCTickPeriod(),
+                                            TimeOffset() + supera::TriggerOffsetTPC(clockData) / supera::TPCTickPeriod(clockData),
 					    _target_plane);
 
     //ev_voxel3d->Move(std::move(voxel3dset));
