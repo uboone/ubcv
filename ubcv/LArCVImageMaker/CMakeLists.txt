@@ -1,3 +1,12 @@
+
+#set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -llarlite_Analysis -llarlite_LArUtil -llarlite_DataFormat -llarlite_Base )
+#set( UBLARCVAPP_LIB -L$ENV{UBLARCVAPP_LIBDIR} -lLArCVApp_MCTools -lLArCVApp_dbscan )
+#include_directories ( $ENV{LARLITE_BASEDIR}/build/installed/include/larlite $ENV{LARLITE_BASEDIR}/build/installed/include ${LARCV_INCLUDE_DIR} $ENV{UBLARCVAPP_INCDIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
+#set(CMAKE_CXX_STANDARD 17)
+#link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ${UBLARCVAPP_LIB} ${TORCH_LIBRARIES} )
+#set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DHAS_TORCH")
+#add_definitions("-Wno-register")
+
 cet_make_library(
   SOURCE
   FMWKInterface.cxx
@@ -88,6 +97,12 @@ cet_build_plugin(
   ROOT::Core
 )
 
+#target_link_libraries( uboonecode_uboone_LArCVImageMaker LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+#target_link_libraries( SSNetHitProducer_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+#target_link_libraries( LArSoftSuperaSriver_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+#target_link_libraries( RSEFilter_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+#target_link_libraries( VPlaneHandler_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
+#target_link_libraries( LArCVMetaMaker_service LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
 
 # install_headers()
 install_fhicl()

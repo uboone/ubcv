@@ -2,7 +2,7 @@
 #define __SUPERA_LARFLOW_LAR2IMAGE_CXX__
 
 #include "LArFlowLAr2Image.h"
-#include "Base/larcv_logger.h"
+#include "larcv/core/Base/larcv_logger.h"
 #include "LArUtil/Geometry.h"
 
 #include "larevt/SpaceChargeServices/SpaceChargeService.h" 

@@ -15,10 +15,10 @@
 #define MCPARTICLETREE_H
 
 #include <iostream>
-#include "DataFormat/Vertex.h"
-#include "DataFormat/ROI.h"
+#include "larcv/core/DataFormat/Vertex.h"
+#include "larcv/core/DataFormat/ROI.h"
 #include "FMWKInterface.h"
-#include "Base/larcv_base.h"
+#include "larcv/core/Base/larcv_base.h"
 namespace supera {
 
   class MCNode {

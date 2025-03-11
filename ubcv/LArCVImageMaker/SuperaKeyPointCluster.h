@@ -17,8 +17,8 @@
 #include "FMWKInterface.h"
 #include "ImageMetaMaker.h"
 #include "ParamsPixel2D.h"
-#include "DataFormat/EventPixel2D.h"
-#include "DataFormat/Vertex.h"
+#include "larcv/core/DataFormat/EventPixel2D.h"
+#include "larcv/core/DataFormat/Vertex.h"
 
 namespace larcv {
 

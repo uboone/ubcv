@@ -2,7 +2,7 @@
 #define __SUPERA_MCROIMAKER_CXX__
 
 #include "MCROIMaker.h"
-#include "Base/larbys.h"
+#include "larcv/core/Base/larbys.h"
 #include "FMWKInterface.h"
 #include <TLorentzVector.h> // ROOT
 #include <set>

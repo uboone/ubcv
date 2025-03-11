@@ -5,7 +5,7 @@
 #include "LAr2Image.h"
 #include "ImageMetaMakerFactory.h"
 #include "PulledPork3DSlicer.h"
-#include "DataFormat/EventImage2D.h"
+#include "larcv/core/DataFormat/EventImage2D.h"
 
 namespace larcv {
 
@@ -20,7 +20,7 @@ namespace larcv {
     SuperaBase::configure(cfg);
     supera::ParamsImage2D::configure(cfg);
     supera::ImageMetaMaker::configure(cfg);
-    _tick_backward = cfg.get<bool>("TickBackward",true);
+    _tick_backward = cfg.get<bool>("TickBackward",false); // for DLGen1 - deprecated
   }
 
   void SuperaWire::initialize()

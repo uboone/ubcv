@@ -4,8 +4,8 @@
 #include "SuperaKeyPointCluster.h"
 #include "ImageMetaMakerFactory.h"
 #include "PulledPork3DSlicer.h"
-#include "DataFormat/EventPixel2D.h"
-#include "DataFormat/EventROI.h"
+#include "larcv/core/DataFormat/EventPixel2D.h"
+#include "larcv/core/DataFormat/EventROI.h"
 
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"

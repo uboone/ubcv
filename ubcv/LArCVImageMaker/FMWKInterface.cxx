@@ -2,7 +2,7 @@
 #define __FMWKINTERFACE_CXX__
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "Base/larbys.h"
+#include "larcv/core/Base/larbys.h"
 #include "FMWKInterface.h"
 #include "lardataalg/DetectorInfo/DetectorPropertiesData.h"
 #include "lardataalg/DetectorInfo/DetectorClocksData.h"

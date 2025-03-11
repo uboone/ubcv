@@ -2,7 +2,7 @@
 #define __SUPERA_LAR2IMAGE_CXX__
 
 #include "LAr2Image.h"
-#include "Base/larcv_logger.h"
+#include "larcv/core/Base/larcv_logger.h"
 
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
@@ -65,6 +65,10 @@ namespace supera {
     LARCV_SINFO() << "Filling an image: " << meta.dump() << std::endl;
     LARCV_SINFO() << "(ymin,ymax) = (" << ymin << "," << ymax << ")" << std::endl;
 
+    int nrois = 0;
+    int nroi_outofbounds = 0;
+    int nroi_filled = 0;
+
     for (auto const& wire : wires) {
 
       auto const& wire_id = ::supera::ChannelToWireID(wire.Channel());
@@ -78,8 +82,9 @@ namespace supera {
 	continue;
       }
 
+      // we loop over ROI with a wire signal for this wire
       for (auto const& range : wire.SignalROI().get_ranges()) {
-
+	nrois++;
 	auto const& adcs = range.data();
 	//double sumq = 0;
 	//for(auto const& v : adcs) sumq += v;
@@ -88,10 +93,18 @@ namespace supera {
 
 	int start_index = range.begin_index() + time_offset;
 	int end_index   = start_index + adcs.size() - 1;
-	if (start_index > ymax || end_index < ymin) continue;
+	if (start_index > ymax) {
+	  LARCV_SDEBUG() << "Wire[" << wire.Channel() << "] ROI[" << nrois-1 << "] start index (" << start_index << ") is past the image end bound (" << ymax << ")" << std::endl;
+	  nroi_outofbounds++;
+	  continue;
+	}
+	else if ( end_index < ymin) {
+	  LARCV_SDEBUG() << "Wire[" << wire.Channel() << "] ROI[" << nrois-1 << "] start index (" << end_index << ") is before the image starting bound (" << ymin << ")" << std::endl;
+	  nroi_outofbounds++;
+	  continue;
+	}
 
 	if (row_comp_factor > 1) {
-
 	  for (size_t index = 0; index < adcs.size(); ++index) {
 	    if ((int)index + start_index < ymin) continue;
 	    if ((int)index + start_index > ymax) break;
@@ -143,6 +156,7 @@ namespace supera {
 				<< "Re-throwing an error:" << std::endl;
 	      throw err;
 	    }
+	    nroi_filled++;
 	  }//end of tick backward
 	  else {
 	    // forward copy: tick and image rows are in same orientation
@@ -153,7 +167,6 @@ namespace supera {
 	    // 		   << "      nskip     : "  << nskip << std::endl
 	    // 		   << "      nsample   : "  << nsample << std::endl;
 	    // Turn the following back on when going to ubdl
-	    /*
 	    try {
 	      img.forward_copy(start_index-ymin,
 			       col,
@@ -173,11 +186,18 @@ namespace supera {
 				<< "Re-throwing an error:" << std::endl;
 	      throw err;
 	    }
-	    */
+	    nroi_filled++;
 	  }
 	}
-      }
+      }      
     }
+    
+    LARCV_SINFO() << "Copied LArSoft Wire product into LArCV Image2D: "
+		  << "nrois=" << nrois 
+		  << " filled=" << nroi_filled 
+		  << " out-of-bounds=" << nroi_outofbounds 
+		  << std::endl;
+    
     return img;
   }
 
@@ -303,7 +323,8 @@ namespace supera {
     return img_v;
   }
 
-  larcv::Voxel3DSet
+  //larcv::Voxel3DSet
+  larcv::SparseTensor3D
   SimCh2Voxel3D(const larcv::Voxel3DMeta& meta,
 		const std::vector<int>& track_v,
 		const std::vector<supera::LArSimCh_t>& sch_v,
@@ -311,7 +332,9 @@ namespace supera {
 		const size_t plane)
   {
     LARCV_SINFO() << "Filling Voxel3D ground truth volume..." << std::endl;
-    larcv::Voxel3DSet res(meta);
+    //larcv::Voxel3DSet res(meta);
+    larcv::VoxelSet voxelset;
+    larcv::SparseTensor3D res;
     //double x, y, z, x_tick;
     double y, z, x_tick;
     //std::cout << "x_offset " << x_offset << std::endl;
@@ -345,14 +368,19 @@ namespace supera {
 	  //supera::ApplySCE(x,y,z);
 	  //std::cout << " ... " << x << std::endl;
 	  // Now use tick-based position for x
-	  auto vid = meta.ID(x_tick,y,z);
+	  //auto vid = meta.ID(x_tick,y,z);
+	  auto vid = meta.id(x_tick,y,z);
 	  if(vid == larcv::kINVALID_VOXEL3DID) continue;
 
-	  larcv::Voxel3D vx(vid,edep.energy);
-	  res.Emplace(std::move(vx));
+	  //larcv::Voxel3D vx(vid,edep.energy);
+	  //res.Emplace(std::move(vx));
+          larcv::Voxel vx(vid,edep.energy);
+          voxelset.add(vx);
 	}
       }
     }
+    //return res;
+    res.set( std::move(voxelset), meta );
     return res;
   }
 

@@ -3,7 +3,7 @@
 
 #include "larcore/Geometry/Geometry.h"
 #include "fhiclcpp/ParameterSet.h"
-#include "Base/PSet.h"
+#include "larcv/core/Base/PSet.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 #include "lardataobj/RecoBase/Hit.h"
