@@ -3,7 +3,7 @@
 
 #include "LArFlowLAr2Image.h"
 #include "larcv/core/Base/larcv_logger.h"
-#include "LArUtil/Geometry.h"
+#include "larlite/LArUtil/Geometry.h"
 
 #include "larevt/SpaceChargeServices/SpaceChargeService.h" 
 #include "lardata/DetectorInfoServices/DetectorClocksService.h" 

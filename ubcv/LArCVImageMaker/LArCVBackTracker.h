@@ -2,12 +2,12 @@
 #ifndef LARCVBACKTRACKER_H
 #define LARCVBACKTRACKER_H
 
+#include "LArPIDInterface.h"
+
 #include "ublarcvapp/MCTools/MCPixelPGraph.h"
 #include "ublarcvapp/MCTools/MCPixelPMap.h"
 
 #include "larlite/DataFormat/storage_manager.h"
-
-#include "LArPIDInterface.h"
 
 namespace LArCVBackTrack {
 

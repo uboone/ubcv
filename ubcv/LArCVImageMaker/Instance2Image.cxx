@@ -3,7 +3,7 @@
 
 #include "Instance2Image.h"
 #include "larcv/core/Base/larcv_logger.h"
-#include "LArUtil/Geometry.h"
+#include "larlite/LArUtil/Geometry.h"
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"

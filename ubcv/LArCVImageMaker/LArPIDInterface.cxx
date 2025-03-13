@@ -176,8 +176,8 @@ namespace LArPID {
       model = torch::jit::load(model_path);
       //device = (torch::cuda::is_available() && useGPU) ? torch::kCUDA : torch::kCPU;
       //model.to(device);
-      model->to(torch::kCPU);
-      //model.eval();
+      model.to(torch::kCPU);
+      model.eval();
     }
     catch (const c10::Error& e) {
       std::cerr << "LArPIDInterface: Error loading the torchscript model: " << e.what() << std::endl;
@@ -210,8 +210,8 @@ namespace LArPID {
       model = torch::jit::load(model_path);
       //device = (torch::cuda::is_available() && useGPU) ? torch::kCUDA : torch::kCPU;
       //model.to(device);
-      model->to(torch::kCPU);
-      //model.eval();
+      model.to(torch::kCPU);
+      model.eval();
     }
     catch (const c10::Error& e) {
       std::cerr << "LArPIDInterface: Error loading the torchscript model: " << e.what() << std::endl;
@@ -277,7 +277,7 @@ namespace LArPID {
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(input_tensor);
 
-    auto output_tuple = model->forward(inputs).toTuple();
+    auto output_tuple = model.forward(inputs).toTuple();
     at::Tensor outputT0 = output_tuple->elements()[0].toTensor();
     at::Tensor outputT1 = output_tuple->elements()[1].toTensor();
     at::Tensor outputT2 = output_tuple->elements()[2].toTensor();
@@ -293,11 +293,6 @@ namespace LArPID {
 
     return output;
 
-  }
-
-
-  void TorchModel::Release(){
-    model.reset();
   }
 
 }

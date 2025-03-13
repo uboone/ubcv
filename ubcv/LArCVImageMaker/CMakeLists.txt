@@ -1,11 +1,7 @@
 
-#set( LARLITE_LIB -L$ENV{LARLITE_LIBDIR} -llarlite_Analysis -llarlite_LArUtil -llarlite_DataFormat -llarlite_Base )
-#set( UBLARCVAPP_LIB -L$ENV{UBLARCVAPP_LIBDIR} -lLArCVApp_MCTools -lLArCVApp_dbscan )
-#include_directories ( $ENV{LARLITE_BASEDIR}/build/installed/include/larlite $ENV{LARLITE_BASEDIR}/build/installed/include ${LARCV_INCLUDE_DIR} $ENV{UBLARCVAPP_INCDIR} ${CMAKE_SOURCE_DIR}/ubreco ${TORCH_INCLUDE_DIRS} )
-#set(CMAKE_CXX_STANDARD 17)
-#link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} ${LARLITE_LIB} ${UBLARCVAPP_LIB} ${TORCH_LIBRARIES} )
-#set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DHAS_TORCH")
-#add_definitions("-Wno-register")
+#needed to compile against ubdl larcv:
+add_compile_options(-Wno-deprecated-declarations)
+add_compile_options(-Wno-maybe-uninitialized)
 
 cet_make_library(
   SOURCE
@@ -16,8 +12,11 @@ cet_make_library(
   ImageMetaMakerFactory.cxx
   Instance2Image.cxx
   LAr2Image.cxx
+  LArCVBackTracker.cxx
   LArCVSuperaDriver.cxx
+  LArCVWCThrumuImage.cxx
   LArFlowLAr2Image.cxx
+  LArPIDInterface.cxx
   MCParticleTree.cxx
   MCROIMaker.cxx
   ParamsChStatus.cxx
@@ -40,6 +39,7 @@ cet_make_library(
   SuperaSimCh.cxx
   SuperaSimVoxel3D.cxx
   SuperaTypes.cxx
+  SuperaWCThrumuImage.cxx
   SuperaWire.cxx
   WireRange3D.cxx
   LIBRARIES
@@ -49,8 +49,15 @@ cet_make_library(
   larcore::Geometry_Geometry_service
   lardataobj::RecoBase
   nusimdata::SimulationBase
-  larcv::larcv
+  larcv::Base
+  larcv::DataFormat
+  larcv::Processor
+  #larcv::larcv
+  larlite::DataFormat
   larlite::LArUtil
+  ublarcvapp::MCTools
+  ublarcvapp::dbscan
+  TorchScatter::TorchScatter
 )
 
 cet_build_plugin(
@@ -61,13 +68,26 @@ cet_build_plugin(
 )
 
 cet_build_plugin(
+  LArPIDInterfaceTest art::EDAnalyzer
+  LIBRARIES
+  PRIVATE
+  ubcv::LArCVImageMaker
+  ubreco::WcpPortedReco_ProducePort_dict
+  art_root_io::TFileService_service
+  ROOT::Tree
+)
+
+cet_build_plugin(
   RSEFilter art::EDFilter
   LIBRARIES
   PRIVATE
   larcore::Geometry_Geometry_service
   lardataobj::RecoBase
   nusimdata::SimulationBase
-  larcv::larcv
+  larcv::Base
+  larcv::DataFormat
+  larcv::Processor
+  #larcv::larcv
 )
 
 cet_build_plugin(
@@ -77,7 +97,10 @@ cet_build_plugin(
   larcore::Geometry_Geometry_service
   lardataobj::RecoBase
   nusimdata::SimulationBase
-  larcv::larcv
+  larcv::Base
+  larcv::DataFormat
+  larcv::Processor
+  #larcv::larcv
 )
 
 cet_build_plugin(
@@ -96,13 +119,6 @@ cet_build_plugin(
   art::Framework_Principal
   ROOT::Core
 )
-
-#target_link_libraries( uboonecode_uboone_LArCVImageMaker LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-#target_link_libraries( SSNetHitProducer_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-#target_link_libraries( LArSoftSuperaSriver_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-#target_link_libraries( RSEFilter_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-#target_link_libraries( VPlaneHandler_module LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
-#target_link_libraries( LArCVMetaMaker_service LArCVCoreBase LArCVCoreDataFormat LArCVCoreProcessor )
 
 # install_headers()
 install_fhicl()

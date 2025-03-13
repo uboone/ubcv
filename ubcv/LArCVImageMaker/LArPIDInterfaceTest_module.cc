@@ -7,13 +7,17 @@
 // from cetlib version v3_05_01.
 ////////////////////////////////////////////////////////////////////////
 
+//These headers MUST come before any ROOT includes to deal with ROOT/libtorch conflict
+#include "LArPIDInterface.h"
+#include "LArCVBackTracker.h"
+
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
-#include "art/Framework/Services/Optional/TFileService.h"
+#include "art_root_io/TFileService.h"
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -21,9 +25,6 @@
 #include "ubreco/WcpPortedReco/ProducePort/SpacePointStructs.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "larlite/DataFormat/storage_manager.h"
-
-#include "LArPIDInterface.h"
-#include "LArCVBackTracker.h"
 
 #include <TTree.h>
 
@@ -439,7 +440,6 @@ void LArPIDInterfaceTest::analyze(art::Event const& e)
 void LArPIDInterfaceTest::endJob() {
   delete iolcv;
   delete ioll;
-  model.Release();
 }
 
 

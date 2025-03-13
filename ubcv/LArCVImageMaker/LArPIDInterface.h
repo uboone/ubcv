@@ -2,14 +2,21 @@
 #ifndef LARPIDINTERFACE_H
 #define LARPIDINTERFACE_H
 
+//ClassDef macro from ROOT and libtorch conflict, this is necessary:
+#ifdef ClassDef
+#undef ClassDef
+#endif
+#include <torch/script.h>
+
+//Load ROOT ClassDef back in now that we have the torch headers:
+#include <Rtypes.h>
 
 #include "larcv/core/DataFormat/IOManager.h"
 #include "larcv/core/DataFormat/EventImage2D.h"
-#include "LArUtil/GeometryHelper.h"
-#include "DataFormat/larflowcluster.h"
-#include "DataFormat/larflow3dhit.h"
+#include "larlite/LArUtil/GeometryHelper.h"
+#include "larlite/DataFormat/larflowcluster.h"
+#include "larlite/DataFormat/larflow3dhit.h"
 
-#include <torch/script.h>
 #include <cmath>
 
 
@@ -103,7 +110,7 @@ namespace LArPID {
   class TorchModel {
 
     private:
-      std::shared_ptr<torch::jit::script::Module> model;
+      torch::jit::Module model;
       //torch::Device device;
       torch::Tensor norm_mean;
       torch::Tensor norm_std;
@@ -117,7 +124,6 @@ namespace LArPID {
       TorchModel(); //must call Initialize before using model if using this constructor
       TorchModel(const std::string& model_path, const bool& debug=false);
       void Initialize(const std::string& model_path, const bool& debug=false);
-      void Release();
       ModelOutput run_inference(const std::vector< std::vector<CropPixData_t> >& pixelData);
 
   };
