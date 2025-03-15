@@ -30,6 +30,7 @@
 
 #include <unordered_map>
 #include <cmath>
+#include <cstdlib>
 
 class LArPIDInterfaceTest;
 
@@ -55,10 +56,11 @@ private:
 
   // Declare member data here.
   std::string fLArCVImageFile;
-  std::string fModelPath;
+  std::string fModel;
   //bool fUseGPU;
   unsigned int fPixelThreshold; // only run model over prongs with at least this many pixels in at least one plane
   bool fAllPlaneThreshold; //if true, only run model over prongs that pass the pixel threshold in all three planes
+  bool fTickBack; //if true, read in larcv images with reverse time order
   bool fDebug; //if true, print tensor values and info for debugging LArPID interface
   unsigned int iImg_start;
 
@@ -138,9 +140,11 @@ void LArPIDInterfaceTest::beginJob() {
 
   iImg_start = 0;
 
-  iolcv = new larcv::IOManager(larcv::IOManager::kREAD,"larcv",larcv::IOManager::kTickBackward);
-  iolcv -> reverse_all_products();
+  auto tickDir = larcv::IOManager::kTickForward;
+  if(fTickBack) tickDir = larcv::IOManager::kTickBackward;
+  iolcv = new larcv::IOManager(larcv::IOManager::kREAD,"larcv",tickDir);
   iolcv -> add_in_file(fLArCVImageFile);
+  if(fTickBack) iolcv -> reverse_all_products();
   iolcv -> initialize();
 
   ioll = new larlite::storage_manager(larlite::storage_manager::kREAD);
@@ -153,7 +157,11 @@ void LArPIDInterfaceTest::beginJob() {
   ioll -> set_data_to_read( "mctruth", "corsika" );
   ioll -> open();
 
-  model.Initialize(fModelPath, fDebug);
+  const char* ubdlDir = std::getenv("UBDL_BASEDIR");
+  std::string modelPath(ubdlDir);
+  modelPath += "/model_weights/";
+  modelPath += fModel;
+  model.Initialize(modelPath, fDebug);
 
 }
 
@@ -161,10 +169,11 @@ void LArPIDInterfaceTest::beginJob() {
 LArPIDInterfaceTest::LArPIDInterfaceTest(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
      fLArCVImageFile(p.get<std::string>("LArCVImageFile")),
-     fModelPath(p.get<std::string>("ModelPath")),
+     fModel(p.get<std::string>("Model")),
      //fUseGPU(p.get<bool>("UseGPU")),
      fPixelThreshold(p.get<unsigned int>("PixelThreshold")),
      fAllPlaneThreshold(p.get<bool>("AllPlaneThreshold")),
+     fTickBack(p.get<bool>("TickBack")),
      fDebug(p.get<bool>("Debug"))
   // More initializers here.
 {
