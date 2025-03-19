@@ -121,3 +121,12 @@ outputs:
  }
 }
 
+# Configuration for TFileMetadataMicroBooNE service
+microboone_tfile_metadata:
+{
+  JSONFileName: [ "merged_dlreco.root.json" ]
+  GenerateTFileMetadata: [ true ]
+  dataTier:              [ "merged_dlreco" ]
+  fileFormat:            [ "root" ]
+}
+
