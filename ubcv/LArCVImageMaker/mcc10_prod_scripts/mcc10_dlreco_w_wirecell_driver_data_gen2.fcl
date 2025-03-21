@@ -51,10 +51,11 @@ services.SpaceCharge.EnableSimEfieldSCE:  true
 services.LLMetaMaker: {Enable: false}
 services.LArCVMetaMaker: {Enable: false}
 
-#source:
-#{
-#  module_type: RootInput
-##  maxEvents:  10        # Number of events to read
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to read
+}
 #  saveMemoryObjectThreshold: 0
 #  inputCommands: ["keep *_*_*_*",
 #                  "drop crt::CRTHits_merger_*_*",
@@ -108,7 +109,7 @@ physics:
  
  #dlnetpath: [ophitBeamCalib,ophitCosmicCalib,simpleFlashBeam,simpleFlashCosmic,merger,mergerextra,crthitcorr,crttzero,crttrack,ubdl]
  #stream: [opreco, reco2d, wctagger, out1]
- stream: [opreco, superaData]
+ stream: [opreco, superaData, out1]
  end_paths: [stream]
  #trigger_paths: [ dlnetpath ]
 }
@@ -158,10 +159,10 @@ outputs:
  out1:
  {
    module_type: RootOutput
-   #fileName:    "%ifb_%tc_ubdl1.root" #default file name, can override from command line with -o or --output
-   fileName:    "DLReco_%r_%s_%tc_ubdl1.root" #default file name, can override from command line with -o or --output
-   dataTier:    "larcv"
+   dataTier: "reconstructed"
    compressionLevel: 1
+   saveMemoryObjectThreshold: 0
+   fileName:    "%ifb_%tc_ubdl.root" #default file name, can override from command line with -o or --output
  }
 }
 

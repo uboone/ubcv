@@ -41,6 +41,12 @@ services.SpaceCharge.EnableSimEfieldSCE:  true
 services.LLMetaMaker: {Enable: false}
 services.LArCVMetaMaker: {Enable: false}
 
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to read
+}
+
 source_gen:
 {
   module_type: EmptyEvent
@@ -73,7 +79,7 @@ physics:
  #dlnetpath: [ubdl]
  #stream: [opreco, reco2d, mcinfo, gaushitMCinfoBacktracker, wctagger, superaMCTruthOnly, out1]
  #stream: [opreco, mcinfo, wctagger, superaMCTruth]
- stream: [opreco, mcinfo, superaMCTruth]
+ stream: [opreco, mcinfo, superaMCTruth, out1]
  end_paths: [stream]
  #trigger_paths: [ dlnetpath ]
 }
@@ -115,9 +121,10 @@ outputs:
  out1:
  {
    module_type: RootOutput
-   fileName:    "DLReco_%r_%s_%tc_ubdl1.root" #default file name, can override from command line with -o or --output
-   dataTier:    "larcv"
+   dataTier: "reconstructed"
    compressionLevel: 1
+   saveMemoryObjectThreshold: 0
+   fileName:    "%ifb_%tc_ubdl.root" #default file name, can override from command line with -o or --output
  }
 }
 
