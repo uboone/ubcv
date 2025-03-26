@@ -9,7 +9,7 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 find_package(cetmodules REQUIRED)
-project(ubcv VERSION 10.04.05 LANGUAGES CXX)
+project(ubcv VERSION 10.04.07.01 LANGUAGES CXX)
 
 include(CetCMakeEnv)
 cet_cmake_env()
@@ -28,11 +28,13 @@ find_package( ubevt REQUIRED EXPORT )
 find_package( larevt REQUIRED EXPORT )
 find_package( nusimdata REQUIRED EXPORT )
 find_package( ubreco REQUIRED EXPORT )
-find_package( larcv REQUIRED EXPORT )
-find_package( larlite REQUIRED EXPORT )
-find_package( ublarcvapp REQUIRED EXPORT )
 find_package( Torch QUIET EXPORT )
-find_package( TorchScatter QUIET EXPORT )
+if(Torch_FOUND)
+  find_package( larcv REQUIRED EXPORT )
+  find_package( larlite REQUIRED EXPORT )
+  find_package( ublarcvapp REQUIRED EXPORT )
+  find_package( TorchScatter QUIET EXPORT )
+endif()
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
