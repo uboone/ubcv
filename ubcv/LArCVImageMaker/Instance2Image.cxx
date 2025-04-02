@@ -33,7 +33,7 @@ namespace supera {
     std::vector<larcv::Image2D> ancestor_v; // Filling ancestor ID per pixel
     std::vector<larcv::Image2D> energy_v;   // largest energy deposition
     for ( auto const& meta : meta_v ) {
-      LARCV_SINFO() << meta.dump();      
+      //LARCV_SINFO() << meta.dump() << std::endl;
       larcv::Image2D img1(meta);
       img1.paint(-1.0);
       img_v.emplace_back( std::move(img1) );
