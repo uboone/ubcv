@@ -130,8 +130,10 @@ namespace supera {
       const larcv::ImageMeta& meta = img.meta();
       larcv::ImageMeta meta_out(meta.width(), meta.height(), 
 				int( meta.rows()/row_compression_factor.at(meta.plane()) ), int( meta.cols()/col_compression_factor.at(meta.plane()) ),
-				meta.min_x(), meta.max_y(), 
+				meta.min_x(), meta.min_y(), 
 				meta.plane() );
+      LARCV_SINFO() << "output meta: " << std::endl;
+      LARCV_SINFO() << meta_out.dump() << std::endl;
       larcv::Image2D img_out( meta_out );
       img_out.paint(-1.0);
       img_out_v.emplace_back( std::move(img_out) );
