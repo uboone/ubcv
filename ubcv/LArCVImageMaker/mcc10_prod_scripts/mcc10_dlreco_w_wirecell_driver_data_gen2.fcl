@@ -1,0 +1,177 @@
+#include "dlprod_fclbase_producers.fcl"
+#include "dlprod_fclbase_analyzers_gen2.fcl"
+#include "microboone_crt_file_manager.fcl"
+#include "microboone_crt_merger.fcl"
+#include "crtflashana.fcl"
+#include "reco_uboone_data_mcc9_8.fcl"
+##include "microboone_ubdl_module.fcl"
+#include "time_memory_tracker_microboone.fcl"
+
+## FOR RUNNING OFF OF WIRECELL 1.5
+
+BEGIN_PROLOG
+
+litedata_wctagger: @local::litemaker_base
+litedata_wctagger.out_filename: "larlite_wctagger.root"
+litedata_wctagger.DataLookUpMap:
+{
+  sps : [ "portedSpacePointsThreshold" ]
+  hit : [ "portedThresholdhit" ]
+}
+
+END_PROLOG
+
+
+process_name: DLWCDeploy
+
+services:
+{
+  TFileService: { fileName: "larcv_hist.root" }  
+  scheduler:    { defaultExceptions: false }
+  #TimeTracker:             @local::microboone_time_tracker
+  RandomNumberGenerator:   {}
+  IFDH:                    {}
+  MemoryTracker:           @local::microboone_memory_tracker
+  message:                 @local::microboone_message_services_prod_debug
+  FileCatalogMetadata:     @local::art_file_catalog_data
+  CRTFileManager:          @local::microboone_crt_file_manager
+  @table::microboone_reco_data_services
+}
+
+#services.TimeTracker.printSummary: false
+#services.TimeTracker.dbOutput: {}
+#services.MemoryTracker.printSummaries: []
+#services.MemoryTracker.includeMallocInfo: false
+services.DetectorPropertiesService.NumberTimeSamples: 6400
+services.DetectorPropertiesService.ReadOutWindowSize: 6400
+services.DetectorClocksService.InheritClockConfig:    false
+services.DetectorClocksService.TriggerOffsetTPC:      -0.400e3
+services.SpaceCharge.EnableSimSpatialSCE: true
+services.SpaceCharge.EnableSimEfieldSCE:  true
+services.LLMetaMaker: {Enable: false}
+services.LArCVMetaMaker: {Enable: false}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to read
+}
+#  saveMemoryObjectThreshold: 0
+#  inputCommands: ["keep *_*_*_*",
+#                  "drop crt::CRTHits_merger_*_*",
+#                  "drop crt::CRTHits_mergerextra_*_*" ]
+#}
+
+source_gen:
+{
+  module_type: EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:   10          # Number of events to create
+  firstRun:    1        # Run number to use for this file
+  firstEvent:  1           # number of first event in the file
+}
+
+source_reprocess:
+{
+  module_type: RootInput
+  maxEvents:   100000     # Number of events to create
+}
+
+physics:
+{
+ producers: {
+   ### OpHit finders
+   #ophitBeamCalib:                   @local::microboone_reco_data_producers::ophitcorrection
+   #ophitCosmicCalib:                 @local::microboone_reco_data_producers::ophitcorrection
+   #simpleFlashBeam:                  @local::microboone_reco_data_producers::UBFlashBeam
+   #simpleFlashCosmic:                @local::microboone_reco_data_producers::UBFlashCosmic
+
+   ### CRT
+   merger:      @local::microboone_crt_merger
+   mergerextra: @local::microboone_crt_merger_extra
+   #crtt0Correction:                  @local::microboone_reco_data_producers::crttrigger
+   #crthitcorrFirstPass:              @local::microboone_reco_data_producers::crtsimhitcorr
+   #crthitcorr:                       @local::microboone_reco_data_producers::crtdatahitcorr
+   #crttzero:                         @local::microboone_reco_data_producers::crttzero
+   #crttrack:                         @local::microboone_reco_data_producers::crttrack
+ 
+   @table::microboone_reco_data_producers
+   @table::dlprod_producers
+   #ubdl: @local::microboone_ubdl
+ }
+
+ filters: {}
+
+ analyzers: {
+   @table::dlprod_analyzers
+   wctagger: @local::litedata_wctagger
+ }
+ 
+ #dlnetpath: [ophitBeamCalib,ophitCosmicCalib,simpleFlashBeam,simpleFlashCosmic,merger,mergerextra,crthitcorr,crttzero,crttrack,ubdl]
+ #stream: [opreco, reco2d, wctagger, out1]
+ stream: [opreco, superaData, out1]
+ end_paths: [stream]
+ #trigger_paths: [ dlnetpath ]
+}
+
+# configure optical producers:
+physics.producers.ophitBeamCalib.OpHitsInputTag:   "ophitBeam"
+physics.producers.ophitCosmicCalib.OpHitsInputTag: "ophitCosmic"
+physics.producers.simpleFlashBeam.OpHitProducer:   "ophitBeamCalib"
+physics.producers.simpleFlashCosmic.OpHitProducer: "ophitCosmicCalib"
+
+
+# configure crt producers
+services.CRTFileManager.ubversion_CRTHits: prod_v06_26_01_13
+physics.producers.merger.debug: false
+physics.producers.mergerextra.debug: false
+physics.producers.crthitcorr.CrtHitsIn_Label1: "merger"
+physics.producers.crthitcorr.CrtHitsIn_Label2: "mergerextra"
+
+# configure larlite
+# -- trigger --
+# DATA
+physics.analyzers.opreco.DataLookUpMap.trigger: ["daq"]
+# -- CRT --
+physics.analyzers.opreco.DataLookUpMap.crthit:   ["crthitcorr"]
+physics.analyzers.opreco.DataLookUpMap.crttrack: ["crttrack"]
+physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
+physics.analyzers.opreco.DAQHeaderProducer: "daq"
+physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
+
+physics.analyzers.opreco.DataLookUpMap.ophit: ["ophitBeam","ophitCosmic","ophitBeamCalib","ophitCosmicCalib"]
+#physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","portedFlash","simpleFlashBeam::DLWCDeploy","simpleFlashCosmic::DLWCDeploy"]
+physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","portedFlash"]
+physics.analyzers.opreco.AssociationLookUpMap.ophit: ["ophitBeam","ophitCosmic","ophitBeamCalib","ophitCosmicCalib"]
+#physics.analyzers.opreco.AssociationLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::DLWCDeploy","simpleFlashCosmic::DLWCDeploy"]
+physics.analyzers.opreco.AssociationLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic"]
+
+# configure truth supera
+#physics.analyzers.superaMCTruthOnly.supera_params: "supera_mctruth_test.fcl"
+
+# Turn on Mask-RCNN
+#physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
+
+
+
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   dataTier: "reconstructed"
+   compressionLevel: 1
+   saveMemoryObjectThreshold: 0
+   fileName:    "%ifb_%tc_ubdl.root" #default file name, can override from command line with -o or --output
+ }
+}
+
+# Configuration for TFileMetadataMicroBooNE service
+microboone_tfile_metadata:
+{
+  JSONFileName: [ "merged_dlreco.root.json" ]
+  GenerateTFileMetadata: [ true ]
+  dataTier:              [ "merged_dlreco" ]
+  fileFormat:            [ "root" ]
+}
+

@@ -3,9 +3,9 @@
 //#ifndef __CINT__
 //#ifndef __CLING__
 #include "FMWKInterface.h"
-#include "DataFormat/Image2D.h"
-#include "DataFormat/Pixel2DCluster.h"
-#include "DataFormat/Voxel3D.h"
+#include "larcv/core/DataFormat/Image2D.h"
+#include "larcv/core/DataFormat/Pixel2DCluster.h"
+#include "larcv/core/DataFormat/Voxel3D.h"
 
 namespace supera {
 
@@ -49,7 +49,8 @@ namespace supera {
   //
   // SimChannel => Voxel3D
   //
-  larcv::Voxel3DSet
+  //larcv::Voxel3DSet
+  larcv::SparseTensor3D
   SimCh2Voxel3D(const larcv::Voxel3DMeta& meta,
 		const std::vector<int>& track_v,
 		const std::vector<supera::LArSimCh_t>& sch_v,

@@ -12,7 +12,7 @@ namespace supera {
     auto min_wire = cfg.get<double>("MinWire");
     auto image_rows = cfg.get<std::vector<size_t> >("EventImageRows");
     auto image_cols = cfg.get<std::vector<size_t> >("EventImageCols");
-    bool tick_backward = cfg.get<bool>("TickBackward",true);
+    bool tick_backward = cfg.get<bool>("TickBackward",false); // from DLGen1 - deprecated
 
     auto const& comp_rows = RowCompressionFactor();
     auto const& comp_cols = ColCompressionFactor();

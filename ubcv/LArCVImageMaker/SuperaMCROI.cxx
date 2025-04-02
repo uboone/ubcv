@@ -4,7 +4,7 @@
 #include "SuperaMCROI.h"
 #include "ImageMetaMakerFactory.h"
 #include "PulledPork3DSlicer.h"
-#include "DataFormat/EventROI.h"
+#include "larcv/core/DataFormat/EventROI.h"
 #include "LAr2Image.h"
 
 namespace larcv {

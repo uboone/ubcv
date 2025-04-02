@@ -1,3 +1,8 @@
+
+#needed to compile against ubdl larcv:
+add_compile_options(-Wno-deprecated-declarations)
+add_compile_options(-Wno-maybe-uninitialized)
+
 cet_make_library(
   SOURCE
   FMWKInterface.cxx
@@ -7,8 +12,11 @@ cet_make_library(
   ImageMetaMakerFactory.cxx
   Instance2Image.cxx
   LAr2Image.cxx
+  LArCVBackTracker.cxx
   LArCVSuperaDriver.cxx
+  LArCVWCThrumuImage.cxx
   LArFlowLAr2Image.cxx
+  LArPIDInterface.cxx
   MCParticleTree.cxx
   MCROIMaker.cxx
   ParamsChStatus.cxx
@@ -31,6 +39,7 @@ cet_make_library(
   SuperaSimCh.cxx
   SuperaSimVoxel3D.cxx
   SuperaTypes.cxx
+  SuperaWCThrumuImage.cxx
   SuperaWire.cxx
   WireRange3D.cxx
   LIBRARIES
@@ -40,8 +49,15 @@ cet_make_library(
   larcore::Geometry_Geometry_service
   lardataobj::RecoBase
   nusimdata::SimulationBase
-  larcv::larcv
+  larcv::Base
+  larcv::DataFormat
+  larcv::Processor
+  #larcv::larcv
+  larlite::DataFormat
   larlite::LArUtil
+  ublarcvapp::MCTools
+  ublarcvapp::dbscan
+  TorchScatter::TorchScatter
 )
 
 cet_build_plugin(
@@ -52,13 +68,26 @@ cet_build_plugin(
 )
 
 cet_build_plugin(
+  LArPIDInterfaceTest art::EDAnalyzer
+  LIBRARIES
+  PRIVATE
+  ubcv::LArCVImageMaker
+  ubreco::WcpPortedReco_ProducePort_dict
+  art_root_io::TFileService_service
+  ROOT::Tree
+)
+
+cet_build_plugin(
   RSEFilter art::EDFilter
   LIBRARIES
   PRIVATE
   larcore::Geometry_Geometry_service
   lardataobj::RecoBase
   nusimdata::SimulationBase
-  larcv::larcv
+  larcv::Base
+  larcv::DataFormat
+  larcv::Processor
+  #larcv::larcv
 )
 
 cet_build_plugin(
@@ -68,7 +97,10 @@ cet_build_plugin(
   larcore::Geometry_Geometry_service
   lardataobj::RecoBase
   nusimdata::SimulationBase
-  larcv::larcv
+  larcv::Base
+  larcv::DataFormat
+  larcv::Processor
+  #larcv::larcv
 )
 
 cet_build_plugin(
@@ -88,7 +120,8 @@ cet_build_plugin(
   ROOT::Core
 )
 
-
-# install_headers()
+install_headers()
 install_fhicl()
 install_source()
+
+add_subdirectory(mcc10_prod_scripts)

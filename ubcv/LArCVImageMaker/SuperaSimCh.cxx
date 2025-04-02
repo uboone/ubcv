@@ -5,8 +5,8 @@
 #include "LAr2Image.h"
 #include "ImageMetaMakerFactory.h"
 #include "PulledPork3DSlicer.h"
-#include "DataFormat/EventImage2D.h"
-#include "DataFormat/DataFormatUtil.h"
+#include "larcv/core/DataFormat/EventImage2D.h"
+#include "larcv/core/DataFormat/DataFormatUtil.h"
 namespace larcv {
 
   static SuperaSimChProcessFactory __global_SuperaSimChProcessFactory__;
@@ -21,7 +21,7 @@ namespace larcv {
     supera::ParamsImage2D::configure(cfg);
     supera::ImageMetaMaker::configure(cfg);
     _origin = cfg.get<unsigned short>("Origin",0);
-    _tick_backward = cfg.get<bool>("TickBackward",true);
+    _tick_backward = cfg.get<bool>("TickBackward",false); // from DLGen1 - deprecated
   }
 
   void SuperaSimCh::initialize()

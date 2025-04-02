@@ -5,8 +5,8 @@
 #include "LAr2Image.h"
 #include "ImageMetaMakerFactory.h"
 #include "PulledPork3DSlicer.h"
-#include "DataFormat/EventVoxel3D.h"
-#include "DataFormat/DataFormatUtil.h"
+#include "larcv/core/DataFormat/EventVoxel3D.h"
+#include "larcv/core/DataFormat/DataFormatUtil.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
 namespace larcv {
@@ -52,7 +52,8 @@ namespace larcv {
     //
     // Create output data product container
     //
-    auto ev_voxel3d = (EventVoxel3D*)(mgr.get_data(kProductVoxel3D,OutVoxel3DLabel()));
+    //auto ev_voxel3d = (EventVoxel3D*)(mgr.get_data(kProductVoxel3D,OutVoxel3DLabel()));
+    auto ev_voxel3d = (EventSparseTensor3D*)(mgr.get_data(kProductVoxel3D,OutVoxel3DLabel()));
     if(!ev_voxel3d) {
       LARCV_CRITICAL() << "Output voxel3d could not be created!" << std::endl;
       throw larbys();
@@ -122,10 +123,12 @@ namespace larcv {
     double xmin = (meta_v.at(2).min_y() - _t0_tick) * supera::TPCTickPeriod(clockData) * supera::DriftVelocity(detProp);
     double xmax = (meta_v.at(2).max_y() - _t0_tick) * supera::TPCTickPeriod(clockData) * supera::DriftVelocity(detProp);
     Voxel3DMeta meta;
-    meta.Set(xmin, xmax, ymin, ymax, zmin, zmax, (xmax-xmin)/_voxel_size, (ymax-ymin)/_voxel_size, (zmax-zmin)/_voxel_size);
+    //meta.Set(xmin, xmax, ymin, ymax, zmin, zmax, (xmax-xmin)/_voxel_size, (ymax-ymin)/_voxel_size, (zmax-zmin)/_voxel_size);
+    meta.set(xmin, ymin, zmin, xmax, ymax, zmax, (xmax-xmin)/_voxel_size, (ymax-ymin)/_voxel_size, (zmax-zmin)/_voxel_size);
 
     LARCV_INFO() << "Target Voxel3DMeta" << std::endl
-		 << meta.Dump()
+		 //<< meta.Dump()
+		 << meta.dump()
 		 << std::endl;
     
     auto voxel3dset = supera::SimCh2Voxel3D(meta, track_v,
@@ -133,7 +136,8 @@ namespace larcv {
                                             TimeOffset() + supera::TriggerOffsetTPC(clockData) / supera::TPCTickPeriod(clockData),
 					    _target_plane);
 
-    ev_voxel3d->Move(std::move(voxel3dset));
+    //ev_voxel3d->Move(std::move(voxel3dset));
+    ev_voxel3d->emplace(std::move(voxel3dset), voxel3dset.meta());
     
     return true;
   }

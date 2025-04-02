@@ -5,8 +5,8 @@
 #include "LArFlowLAr2Image.h"
 #include "ImageMetaMakerFactory.h"
 #include "PulledPork3DSlicer.h"
-#include "DataFormat/EventImage2D.h"
-#include "DataFormat/DataFormatUtil.h"
+#include "larcv/core/DataFormat/EventImage2D.h"
+#include "larcv/core/DataFormat/DataFormatUtil.h"
 namespace larcv {
 
   static SuperaLArFlowProcessFactory __global_SuperaLArFlowProcessFactory__;
@@ -34,7 +34,7 @@ namespace larcv {
       throw std::runtime_error("SuperaLArFlow: must specifc only one SimCh or SimEdep producer");
     }
     _edep_at_anode     = cfg.get<bool>("EdepAtAnode",true);
-    _tick_backward     = cfg.get<bool>("TickBackward",true);
+    _tick_backward     = cfg.get<bool>("TickBackward",false); // for DLGen1 - deprecated
   }
 
   void SuperaLArFlow::initialize()
