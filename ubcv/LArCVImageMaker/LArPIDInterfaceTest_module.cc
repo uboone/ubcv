@@ -22,7 +22,7 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
-#include "ubreco/WcpPortedReco/ProducePort/SpacePointStructs.h"
+#include "ubobj/WcpPort/SpacePointStructs.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "larlite/DataFormat/storage_manager.h"
 
