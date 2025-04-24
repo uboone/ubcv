@@ -1,0 +1,27 @@
+#include "services_microboone.fcl"
+
+process_name: lanternMetaData
+
+services:
+{
+  scheduler:    { defaultExceptions: false }    # Make all uncaught exceptions fatal.
+  message:      @local::standard_warning
+  FileCatalogMetadata:  @local::art_file_catalog_mc  # So we can read from sam.
+                                                     # Metadata doesn't matter.
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to read
+}
+
+# Configuration for TFileMetadataMicroBooNE service
+microboone_tfile_metadata:
+{
+  JSONFileName: [ "larflowreco_kpsrecomanagerana.root.json", "flat_ntuple.root.json" ]
+  GenerateTFileMetadata: [ true, true ]
+  dataTier:              [ "larflowreco_kpsrecomanagerana", "flat_ntuple" ]
+  fileFormat:            [ "root", "root" ]
+}
+
