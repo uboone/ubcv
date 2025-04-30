@@ -72,7 +72,7 @@ cet_build_plugin(
   LIBRARIES
   PRIVATE
   ubcv::LArCVImageMaker
-  ubreco::WcpPortedReco_ProducePort_dict
+  ubobj::WcpPort
   art_root_io::TFileService_service
   ROOT::Tree
 )
