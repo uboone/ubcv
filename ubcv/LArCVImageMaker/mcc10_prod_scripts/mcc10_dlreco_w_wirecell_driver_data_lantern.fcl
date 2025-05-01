@@ -1,0 +1,110 @@
+#include "dlprod_fclbase_producers.fcl"
+#include "dlprod_fclbase_analyzers_gen2.fcl"
+#include "reco_uboone_data_mcc9_10_driver_common.fcl"
+
+## To see example workflow context for this driver see: 
+## https://cdcvs.fnal.gov/redmine/projects/uboone-physics-analysis/wiki/MCC10_Release_Page#BNB-nu-overlay
+
+process_name: DLDeploy
+
+physics.producers: {
+   @table::dlprod_producers
+   @table::microboone_reco_data_producers
+}
+
+physics.filters: {
+   @table::microboone_reco_data_filters
+}
+physics.analyzers: {
+   @table::dlprod_analyzers
+}
+
+physics.reco: [ @sequence::microboone_reco_data_optical,
+                "wcopflash",
+                "rns", 
+                "crtt0Correction",
+                "crthitcorr",
+                "crttzero",
+                "crttrack" ]
+physics.trigger_paths: [reco]
+physics.stream: ["opreco", 
+                 "superaData",
+                 "out1"]
+physics.end_paths: [stream]
+
+services.TFileService: { fileName: "larcv_hist.root" }
+#services.DetectorClocksService.TrigModuleName: "daq" 
+#services.DetectorPropertiesService.NumberTimeSamples: 6400
+#services.DetectorPropertiesService.ReadOutWindowSize: 6400
+#services.DetectorClocksService.InheritClockConfig:    false
+#services.DetectorClocksService.TriggerOffsetTPC:      -0.400e3
+#services.SpaceCharge.EnableSimSpatialSCE: true
+#services.SpaceCharge.EnableSimEfieldSCE:  true
+services.LLMetaMaker: {Enable: false}
+services.LArCVMetaMaker: {Enable: false}
+
+source.inputCommands: ["keep *_*_*_*"]
+
+outputs.out1:
+ {
+   module_type: RootOutput
+   dataTier: "reconstructed"
+   compressionLevel: 1
+   saveMemoryObjectThreshold: 0
+   fileName:    "%ifb_%tc_ubdl.root" #default file name, can override from command line with -o or --output
+   outputCommands: ["keep *_*_*_*", "drop *_*_*_DLDeploy"]
+ }
+
+
+# Configuration for TFileMetadataMicroBooNE service
+microboone_tfile_metadata:
+{
+  JSONFileName: [ "merged_dlreco.root.json" ]
+  GenerateTFileMetadata: [ true ]
+  dataTier:              [ "merged_dlreco" ]
+  fileFormat:            [ "root" ]
+}
+
+## replace below
+# analyzers: {
+#   @table::dlprod_analyzers
+ #  #wctagger: @local::litedata_wctagger
+#}
+
+# configure optical producers:
+physics.producers.ophitBeamCalib.OpHitsInputTag:   "ophitBeam"
+physics.producers.ophitCosmicCalib.OpHitsInputTag: "ophitCosmic"
+physics.producers.simpleFlashBeam.OpHitProducer:   "ophitBeamCalib"
+physics.producers.simpleFlashCosmic.OpHitProducer: "ophitCosmicCalib"
+
+
+# configure crt producers
+#services.CRTFileManager.ubversion_CRTHits: prod_v06_26_01_13
+#physics.producers.merger.debug: false
+#physics.producers.mergerextra.debug: false
+physics.producers.crthitcorr.CrtHitsIn_Label1: "merger"
+physics.producers.crthitcorr.CrtHitsIn_Label2: "mergerextra"
+
+# configure larlite
+# -- trigger --
+# DATA
+physics.analyzers.opreco.DataLookUpMap.trigger: ["daq"]
+# -- CRT --
+physics.analyzers.opreco.DataLookUpMap.crthit:   ["crthitcorr"]
+physics.analyzers.opreco.DataLookUpMap.crttrack: ["crttrack"]
+physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
+physics.analyzers.opreco.DAQHeaderProducer: "daq"
+physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
+
+physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","wcopflash:beam","wcopflash:cosmic"]
+physics.analyzers.opreco.DataLookUpMap.opdigit: ["wcopflash:MergedBeam","wcopflash:MergedCosmic"]
+physics.analyzers.opreco.DataLookUpMap.ophit: []
+physics.analyzers.opreco.AssociationLookUpMap.ophit: []
+physics.analyzers.opreco.AssociationLookUpMap.opflash: []
+
+# configure supera
+#physics.analyzers.SuperaData.supera_params: "supera_data_w_wcthrumu.fcl"
+
+# Turn on Mask-RCNN
+#physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
+

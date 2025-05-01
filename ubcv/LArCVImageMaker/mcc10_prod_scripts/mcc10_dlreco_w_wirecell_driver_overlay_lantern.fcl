@@ -3,6 +3,9 @@
 #include "time_memory_tracker_microboone.fcl"
 #include "reco_uboone_data_mcc9_10.fcl"
 
+## To see example workflow context for this driver see: 
+## https://cdcvs.fnal.gov/redmine/projects/uboone-physics-analysis/wiki/MCC10_Release_Page#Data-Beam-On-NuMI
+
 BEGIN_PROLOG
 
 litedata_wctagger: @local::litemaker_base
@@ -34,10 +37,13 @@ services:
 #services.TimeTracker.dbOutput: {}
 #services.MemoryTracker.printSummaries: []
 #services.MemoryTracker.includeMallocInfo: false
-services.DetectorPropertiesService.NumberTimeSamples: 6400
-services.DetectorPropertiesService.ReadOutWindowSize: 6400
-services.DetectorClocksService.InheritClockConfig:    false
-services.DetectorClocksService.TriggerOffsetTPC:      -0.400e3
+
+services.DetectorClocksService.TrigModuleName: "daq"  # note that the clock time needed for the flash timing proper reconstruction
+services.DetectorPropertiesService.NumberTimeSamples:        6400
+services.DetectorPropertiesService.ReadOutWindowSize:        6400
+services.DetectorClocksService.InheritClockConfig:           false
+services.DetectorClocksService.TriggerOffsetTPC:             -0.400e3
+services.FileCatalogMetadata.fileType: "overlay"
 services.SpaceCharge.EnableSimSpatialSCE: true
 services.SpaceCharge.EnableSimEfieldSCE:  true
 services.LLMetaMaker: {Enable: false}
@@ -64,6 +70,12 @@ source_reprocess:
   maxEvents:   100000     # Number of events to create
 }
 
+
+# drop past optical products
+source.inputCommands: ["keep *_*_*_*"]
+#                       "drop *_*_*_Data*RecoStage2", 
+#                       "drop *_*_*_MC*RecoStage2"]
+
 physics:
 {
  producers: {
@@ -72,15 +84,26 @@ physics:
    #ubdl: @local::microboone_ubdl
  }
 
- filters: {}
+ filters: {
+   @table::microboone_reco_data_filters
+ }
 
  analyzers: {
    @table::dlprod_analyzers
    wctagger: @local::litedata_wctagger
  }
 
- reco: [ "rns", "wcopflash","crtt0Correction","crthitcorrFirstPass","crthitcorr","crttzero","crttrack" ]
- trigger_paths: [ reco]
+ reco: [ @sequence::microboone_reco_data_optical, 
+         "wcopflash",
+         "rns", 
+         "crtt0Correction",
+         "crthitcorrFirstPass",
+         "crthitcorr",
+         "crttzero",
+         "crttrack"]
+         #"opfiltercommonext" ]
+ trigger_paths: [reco]
+
 
  #dlnetpath: [ubdl]
  #stream: [opreco, reco2d, mcinfo, gaushitMCinfoBacktracker, wctagger, superaMCTruthOnly, out1]
@@ -89,38 +112,6 @@ physics:
  end_paths: [stream]
  #trigger_paths: [ dlnetpath ]
 }
-
-# drop past optical products
-source.inputCommands: ["keep *_*_*_*"]
-#                       "drop *_*_*_Data*RecoStage2", 
-#                       "drop *_*_*_MC*RecoStage2"]
-
-# configure larlite
-# -- trigger --
-# MC
-physics.analyzers.opreco.DataLookUpMap.trigger: ["triggersim"]
-# -- CRT --
-physics.analyzers.opreco.DataLookUpMap.crthit:   ["crthitcorr"]
-physics.analyzers.opreco.DataLookUpMap.crttrack: ["crttrack"]
-physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
-physics.analyzers.opreco.DAQHeaderProducer: "daq"
-physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
-
-#physics.analyzers.opreco.DataLookUpMap.ophit: ["ophitBeam::OverlayStage1OpticalDLrerun","ophitCosmic::OverlayStage1OpticalDLrerun","ophitBeamCalib","ophitCosmicCalib"]
-#physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic","simpleFlashBeam::OverlayStage1OpticalDLrerun","simpleFlashCosmic::OverlayStage1OpticalDLrerun"]
-#physics.analyzers.opreco.AssociationLookUpMap.ophit: ["ophitBeamCalib","ophitCosmicCalib","ophitBeam::OverlayStage1OpticalDLrerun","ophitCosmic::OverlayStage1OpticalDLrerun"]
-#physics.analyzers.opreco.AssociationLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","simpleFlashBeam::OverlayStage1OpticalDLrerun","simpleFlashCosmic::OverlayStage1OpticalDLrerun"]
-physics.analyzers.opreco.DataLookUpMap.ophit: ["ophitBeamCalib","ophitCosmicCalib"]
-physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","opflashBeam","opflashCosmic"]
-physics.analyzers.opreco.AssociationLookUpMap.ophit: ["ophitBeamCalib","ophitCosmicCalib"]
-physics.analyzers.opreco.AssociationLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic"]
-physics.analyzers.mcinfo.DataLookUpMap.mceventweight: []
-
-# configure truth supera
-#physics.analyzers.superaMCTruthOnly.supera_params: "supera_mctruth_test.fcl"
-
-# Turn on Mask-RCNN
-#physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
 
 outputs:
 {
@@ -132,6 +123,7 @@ outputs:
    saveMemoryObjectThreshold: 0
    fileName:    "%ifb_%tc_ubdl.root" #default file name, can override from command line with -o or --output
    outputCommands: ["keep *_*_*_*", "drop *_*_*_DLDeploy"]
+   #outputCommands: ["keep *_*_*_*"]
  }
 }
 
@@ -144,3 +136,35 @@ microboone_tfile_metadata:
   fileFormat:            [ "root" ]
 }
 
+# Turn on Mask-RCNN
+#physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
+
+# configure reco producers:
+physics.producers.saturation.HGProducer: "mixer"
+physics.producers.saturation.LGProducer: "mixer"
+physics.producers.wcopflash.OpDataProducerBeam: "mixer"
+physics.filters.crtveto: @local::UBCRTCosmicFilterBNBOFF
+physics.producers.crthitcorrFirstPass.IsOverlay: true
+physics.producers.crthitcorr.CrtHitsIn_Label1: "crthitcorrFirstPass"
+
+# configure larlite
+# -- trigger --
+# MC
+physics.analyzers.opreco.DataLookUpMap.trigger: ["triggersim"]
+# -- CRT --
+physics.analyzers.opreco.DataLookUpMap.crthit:   ["crthitcorr"]
+physics.analyzers.opreco.DataLookUpMap.crttrack: ["crttrack"]
+physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
+physics.analyzers.opreco.DAQHeaderProducer: "daq"
+physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
+
+physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","wcopflash:beam","wcopflash:cosmic"]
+physics.analyzers.opreco.DataLookUpMap.opdigit: ["wcopflash:MergedBeam","wcopflash:MergedCosmic"]
+physics.analyzers.opreco.DataLookUpMap.ophit: []
+physics.analyzers.opreco.AssociationLookUpMap.ophit: []
+physics.analyzers.opreco.AssociationLookUpMap.opflash: []
+physics.analyzers.mcinfo.DataLookUpMap.mceventweight: []
+#physics.analyzers.opreco.DataLookUpMap.ophit: ["ophitBeamNoRemap::DLDeploy","ophitBeam::DLDeploy","ophitBeamCalib::DLDeploy","ophitCosmicCalib::DLDeploy"]
+
+# configure truth supera
+#physics.analyzers.superaMCTruth.supera_params: "supera_mctruth_no_wcthrumu.fcl" # for no-WC debug only
