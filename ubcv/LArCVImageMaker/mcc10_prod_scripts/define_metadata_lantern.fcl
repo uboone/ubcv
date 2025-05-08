@@ -16,6 +16,24 @@ source:
   maxEvents:   -1        # Number of events to read
 }
 
+physics:
+{
+  stream: [out1]
+  end_paths: [stream]
+}
+
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   dataTier: "reconstructed"
+   compressionLevel: 1
+   saveMemoryObjectThreshold: 0
+   fileName:    "%ifb_%tc_copy.root" #default file name, can override from command line with -o or --output
+ }
+}
+
 # Configuration for TFileMetadataMicroBooNE service
 microboone_tfile_metadata:
 {
