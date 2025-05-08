@@ -21,7 +21,7 @@ microboone_tfile_metadata:
 {
   JSONFileName: [ "larflowreco_kpsrecomanagerana.root.json", "flat_ntuple.root.json" ]
   GenerateTFileMetadata: [ true, true ]
-  dataTier:              [ "larflowreco_kpsrecomanagerana", "flat_ntuple" ]
+  dataTier:              [ "lanternreco", "flat_ntuple" ]
   fileFormat:            [ "root", "root" ]
 }
 
