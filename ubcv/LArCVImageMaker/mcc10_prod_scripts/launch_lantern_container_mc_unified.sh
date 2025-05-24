@@ -16,10 +16,12 @@ if [[ -f "$unified_ntuple" && -f "flat_ntuple.root" ]]; then
 void copy_tree(const char* sourceFile, const char* destFile) {
     TFile *source = TFile::Open(sourceFile);
     TTree *tree = (TTree*)source->Get("EventTree");
+    TTree *pottree = (TTree*)source->Get("potTree");
     TFile *target = TFile::Open(destFile, "UPDATE");
     target->mkdir("lantern");
     target->cd("lantern");
     tree->CloneTree()->Write("EventTree");
+    pottree->CloneTree()->Write("potTree");
     target->Close();
     source->Close();
 }
