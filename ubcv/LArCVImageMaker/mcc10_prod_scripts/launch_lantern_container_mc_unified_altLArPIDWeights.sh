@@ -6,6 +6,40 @@ echo "executing run script from cvmfs lantern container"
 
 echo "Container exited with code $?"
 
+echo "Checking output lantern ntuple"
+
+#make simple root macro to validate lantern ntuple
+cat << 'EOF' > check_lantern.C
+void check_lantern() {
+    TFile *f = TFile::Open("flat_ntuple.root");
+    if (!f || f->IsZombie()) {
+        std::cerr << "lantern ntuple is missing or corrupted" << std::endl;
+        gSystem->Exit(1);
+    }
+    TTree *tree = (TTree*)f->Get("EventTree");
+    if (!tree) {
+        std::cerr << "EventTree not found in lantern ntuple" << std::endl;
+        gSystem->Exit(1);
+    }
+    f->Close();
+    gSystem->Exit(0);
+}
+EOF
+
+#run check lantern macro
+root -l -b -q check_lantern.C
+status=$?
+#clean up
+rm check_lantern.C
+
+#force job crash if lantern ntuple is missing/corrupted
+if [ $status -ne 0 ]; then
+    echo "detected lantern ntuple file error; exiting with code 1"
+    exit 1
+else
+    echo "lantern ntuple file validation passed"
+fi
+
 echo "Merging lantern ntuple into unified ntuple"
 
 unified_ntuple=$(find . -maxdepth 1 -type f -name 'reco_stage_2_hist*.root' -printf '%f\n' -quit)
