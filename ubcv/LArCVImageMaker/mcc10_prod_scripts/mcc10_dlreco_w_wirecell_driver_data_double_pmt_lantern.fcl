@@ -1,0 +1,4 @@
+#include "mcc10_dlreco_w_wirecell_driver_data_lantern.fcl"
+
+# configure optical producers:
+physics.producers.saturation.HGProducer:           "doublePMTFilter"
