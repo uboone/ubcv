@@ -65,6 +65,22 @@ SuperaMCTruthOnly.supera_params: "supera_mctruthonly.fcl"
 SuperaMCTruth: @local::SuperaWholeView
 SuperaMCTruth.supera_params: "supera_mctruth_w_wcthrumu.fcl"
 
+SuperaMCTruth2: @local::SuperaWholeView
+SuperaMCTruth2.supera_params: "supera_mctruth_set2.fcl"
+SuperaMCTruth2.out_filename: "larcv_mc2.root"
+
+SuperaMCTruth3: @local::SuperaWholeView
+SuperaMCTruth3.supera_params: "supera_mctruth_set3.fcl"
+SuperaMCTruth3.out_filename: "larcv_mc3.root"
+
+SuperaMCTruth4: @local::SuperaWholeView
+SuperaMCTruth4.supera_params: "supera_mctruth_set4.fcl"
+SuperaMCTruth4.out_filename: "larcv_mc4.root"
+
+SuperaMCTruth5: @local::SuperaWholeView
+SuperaMCTruth5.supera_params: "supera_mctruth_set5.fcl"
+SuperaMCTruth5.out_filename: "larcv_mc5.root"
+
 SuperaData: @local::SuperaWholeView
 SuperaData.supera_params: "supera_data_w_wcthrumu.fcl"
 
@@ -100,6 +116,10 @@ dlprod_analyzers:
    superaMCBasic:     @local::SuperaMCBasic
    superaMCTruthOnly: @local::SuperaMCTruthOnly
    superaMCTruth: @local::SuperaMCTruth
+   superaMCTruth2: @local::SuperaMCTruth2
+   superaMCTruth3: @local::SuperaMCTruth3
+   superaMCTruth4: @local::SuperaMCTruth4
+   superaMCTruth5: @local::SuperaMCTruth5
    superaData: @local::SuperaData
    superaWire: @local::SuperaWire
 }
