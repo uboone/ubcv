@@ -1,0 +1,16 @@
+#include "mcc10_dlreco_w_wirecell_driver_data_lantern.fcl"
+
+# configure optical producers:
+physics.reco: [ doublePMTFilter,
+                cosmicPMTFilter,
+                @sequence::microboone_reco_data_optical,
+                "wcopflash",
+                "rns", 
+                "crtt0Correction",
+                "crthitcorr",
+                "crttzero",
+                "crttrack" ]
+physics.producers.saturation.HGProducer:           "doublePMTFilter"
+physics.producers.saturation.HGProducerCosmic:     "cosmicPMTFilter"
+physics.producers.wcopflash.OpDataProducerBeam:    "doublePMTFilter"
+physics.producers.wcopflash.OpDataProducerCosmic:  "cosmicPMTFilter"
