@@ -12,17 +12,29 @@
 
 namespace supera {
 
-  //
-  // SimChannel => PixelFlowMaps
-  // 
+  /**
+   * @brief SimChannel => PixelFlowMaps
+   *
+   * @param meta_v         ImageMeta for each output wire plane image
+   * @param track2type_v   TrackIndex to particle type map stored as vector
+   * @param sch_v          input data
+   * @param ev_chstatus    Holds information about which channels are bad
+   * @param row_compression_factor   For each wireplane, indicates how many raw ticks are combined in one row pixel in output image
+   * @param col_compression_factor   For each wireplane, indicates how many raw wire are combined in one column pixel in output image
+   * @param time_offset   
+   * @param edep_at_anode  
+   * @param tick_backward  ImageMeta defined assuming tick backwards
+   * @param fill_with_uncompressed_image  If true, fill with image that does not use any downsampling. Then pool to make output image. (previous deprecated behavior.)
+   */
   std::vector<larcv::Image2D>
-    SimCh2LArFlowImages( const std::vector<larcv::ImageMeta>& meta_v,
-			 const std::vector<larcv::ROIType_t>& track2type_v,
-			 const std::vector<supera::LArSimCh_t>& sch_v,
-			 const larcv::EventChStatus& ev_chstatus,
-			 const std::vector<float>& row_compression_factor,
-			 const std::vector<float>& col_compression_factor,			 
-			 const int time_offset, const bool edep_at_anode, const bool tick_backward ) {
+  SimCh2LArFlowImages( const std::vector<larcv::ImageMeta>& meta_v,
+		       const std::vector<larcv::ROIType_t>& track2type_v,
+		       const std::vector<supera::LArSimCh_t>& sch_v,
+		       const larcv::EventChStatus& ev_chstatus,
+		       const std::vector<float>& row_compression_factor,
+		       const std::vector<float>& col_compression_factor,			 
+		       const int time_offset, const bool edep_at_anode, 
+		       const bool tick_backward, const bool fill_with_uncompressed_image ) {
     
     LARCV_SINFO() << "Filling Pixel-flow truth image... (with time_offset=" << time_offset << ")" << std::endl;
 
@@ -34,18 +46,30 @@ namespace supera {
     //  2 images that list column in other images
     //  2 images that give the probability that pixel is visible
 
-    std::vector<larcv::Image2D> flow_v;     // flow values per images
+    std::vector<larcv::Image2D> flow_v;    // flow values per images
     std::vector<larcv::Image2D> energy_v;  // energy deposition of largest particle
 
+    // Make filling images
     for ( auto const& meta : meta_v ) {
+
+      larcv::ImageMeta filling_image_meta(meta); // copy
+      if ( fill_with_uncompressed_image ) {
+	int nrows_uncompressed = meta.rows()*row_compression_factor.at(meta.plane());
+	int ncols_uncompressed = meta.cols()*col_compression_factor.at(meta.plane());
+	filling_image_meta.update( nrows_uncompressed, ncols_uncompressed );
+      }
+
       //LARCV_SINFO() << meta.dump();      
-      larcv::Image2D flow1(meta);
+      LARCV_SINFO() << "Output Meta: " << meta.dump() << std::endl;
+      LARCV_SINFO() << "Filling Meta: " << filling_image_meta.dump() << std::endl;
+
+      larcv::Image2D flow1(filling_image_meta);
       flow1.paint(-4000);
       flow_v.emplace_back( std::move(flow1) );
-      larcv::Image2D flow2(meta);
+      larcv::Image2D flow2(filling_image_meta);
       flow2.paint(-4000);
       flow_v.emplace_back( std::move(flow2) );
-      larcv::Image2D energyimg(meta);
+      larcv::Image2D energyimg(filling_image_meta);
       energyimg.paint(0.0);
       energy_v.emplace_back( std::move(energyimg) );
     }
@@ -193,12 +217,36 @@ namespace supera {
 
     // max pool compression, we do it ourselves
     //std::cout << "Max pool ourselves: compression factors (row,col)=(" << row_compression_factor.front() << "," << col_compression_factor.front() << ")" << std::endl;
+
+    // make output by compressed images -- if needed
     
-    // make output, compressed images
+    // check if compression is happening
+    bool do_compression = false;
+    if ( fill_with_uncompressed_image ) {
+      for ( auto const& plane_row_compression_factor : row_compression_factor ) {
+	if ( plane_row_compression_factor>1 ) {
+	  do_compression = true;
+	  break;
+	}
+      }
+      for ( auto const& plane_col_compression_factor : col_compression_factor ) {
+	if ( plane_col_compression_factor>1 ) {
+	  do_compression = true;
+	  break;
+	}
+      }
+    }
+
+    if ( !do_compression ) {
+      // if no compression needed, just return the current flow images
+      return flow_v;
+    }
+
+    // Compression to be performed
     std::vector<larcv::Image2D> img_out_v;
     std::vector<larcv::Image2D> img_vis_v;
     for ( auto const& img : flow_v ) {
-      const larcv::ImageMeta& meta = img.meta();
+      const larcv::ImageMeta& meta = img.meta(); // filling image meta
       float origin_y = meta.min_y();
       if ( tick_backward )
 	origin_y = meta.max_y();
@@ -257,7 +305,7 @@ namespace supera {
     }//end of loop over index
 
 
-    //std::cout << "compressed pixels filled: " << compressed_pixels_filled << std::endl;
+    LARCV_SINFO() << "compressed pixels filled: " << compressed_pixels_filled << std::endl;
 
     //std::cout << "return image" << std::endl;
 

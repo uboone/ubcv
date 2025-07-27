@@ -20,7 +20,9 @@ namespace supera {
 		       const std::vector<float>& col_compression_factor,			 
 		       const int time_offset,
 		       std::vector<larcv::Image2D>& img_out_v,
-		       std::vector<larcv::Image2D>& ancestor_out_v ) {
+		       std::vector<larcv::Image2D>& ancestor_out_v,
+		       bool fill_with_uncompressed_image ) 
+  {
     
     LARCV_SINFO() << "Instance ID Image ..." << std::endl;
 
@@ -120,16 +122,28 @@ namespace supera {
     //   std::cout << id << ", ";
     // }
     // std::cout << std::endl;
+
+    img_out_v.clear();
+    ancestor_out_v.clear();
+
+    if ( !fill_with_uncompressed_image ) {
+      for ( auto& img : img_v ) {
+	img_out_v.emplace_back( std::move(img) );
+      }
+      for ( auto& a_img : ancestor_v ) {
+	ancestor_out_v.emplace_back( std::move(a_img) );
+      }
+      return;
+    }
     
     // make output, compressed images
     //std::vector<larcv::Image2D> img_out_v;
     //std::vector<larcv::Image2D> ancestor_out_v;
-    img_out_v.clear();
-    ancestor_out_v.clear();
     for ( auto const& img : img_v ) {
       const larcv::ImageMeta& meta = img.meta();
       larcv::ImageMeta meta_out(meta.width(), meta.height(), 
-				int( meta.rows()/row_compression_factor.at(meta.plane()) ), int( meta.cols()/col_compression_factor.at(meta.plane()) ),
+				int( meta.rows()/row_compression_factor.at(meta.plane()) ), 
+				int( meta.cols()/col_compression_factor.at(meta.plane()) ),
 				meta.min_x(), meta.min_y(), 
 				meta.plane() );
       LARCV_SINFO() << "output meta: " << std::endl;

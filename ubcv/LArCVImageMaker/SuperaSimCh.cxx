@@ -102,12 +102,13 @@ namespace larcv {
 
     auto image_v = supera::SimCh2Image2D(meta_v, track2type_v, LArData<supera::LArSimCh_t>(), TimeOffset(), _tick_backward);
 
-    for(size_t plane=0; plane<image_v.size(); ++plane) {
-      auto& image = image_v[plane];
-      image.compress(image.meta().rows() / RowCompressionFactor().at(plane),
-		     image.meta().cols() / ColCompressionFactor().at(plane),
-		     larcv::Image2D::kMaxPool);
-    }
+    // We now fill image with downsampled number of rows and/or columns in the above function.
+    // for(size_t plane=0; plane<image_v.size(); ++plane) {
+    //   auto& image = image_v[plane];
+    //   image.compress(image.meta().rows() / RowCompressionFactor().at(plane),
+    // 		     image.meta().cols() / ColCompressionFactor().at(plane),
+    // 		     larcv::Image2D::kMaxPool); 
+    // }
     
     ev_image->Emplace(std::move(image_v));
     

@@ -244,6 +244,10 @@ namespace supera {
     return img;
   }
 
+  /**
+   * @brief Makes "segment" image which stores Particle ID ground truth for an image
+   *
+   */
   std::vector<larcv::Image2D>
   SimCh2Image2D(const std::vector<larcv::ImageMeta>& meta_v,
 		const std::vector<larcv::ROIType_t>& track2type_v,
@@ -253,15 +257,23 @@ namespace supera {
     LARCV_SINFO() << "Filling semantic-segmentation ground truth image..." << std::endl;
     std::vector<larcv::Image2D> img_v;
     for (auto const& meta : meta_v) {
-      //LARCV_SINFO() << meta.dump() << std::endl;
+      LARCV_SINFO() << meta.dump() << std::endl;
       img_v.emplace_back(larcv::Image2D(meta));
     }
 
+    // labels for wire of interest
     static std::vector<float> column;
+    static std::vector<float> energy_v;
+    column.clear();
+    energy_v.clear();
     for (auto const& img : img_v) {
-      if (img.meta().rows() >= column.size())
+      if (img.meta().rows() >= column.size()) {
 	column.resize(img.meta().rows() + 1, (float)(::larcv::kROIUnknown));
+	energy_v.resize(img.meta().rows() + 1,0.0);
+      }
     }
+    LARCV_SINFO() << "  column.size()=" << column.size() << std::endl;
+    LARCV_SINFO() << "  energy_v.size()=" << energy_v.size() << std::endl;
 
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
     int nlabeled = 0;
@@ -280,22 +292,26 @@ namespace supera {
       col -= (size_t)(meta.min_x());
 
       // Initialize column vector
-      for (auto& v : column) v = (float)(::larcv::kROIUnknown);
+      for (auto& v : column)   v = (float)(::larcv::kROIUnknown);
+      for (auto& v : energy_v) v = 0.0;
       //for (auto& v : column) v = (float)(-1);
 
+      // Loop over all of the filled ticks
       for (auto const & tick_ides : sch.TDCIDEMap()) {
         int tick = supera::TPCTDC2Tick(clockData, (double)(tick_ides.first)) + time_offset;
 	if (tick < meta.min_y()) continue;
 	if (tick >= meta.max_y()) continue;
-	// Where is this tick in column vector?
-	size_t index = 0;
+	// Where is this tick in column vector? (i.e. the row of the image)
+	size_t index = meta.row( (float)tick, __FILE__, __LINE__ );
 	if ( tick_backward )
-	  index = (size_t)(meta.max_y() - tick);
-	else
-	  index = (size_t)(tick-meta.min_y());
+	  index = (size_t)((int)meta.rows() - index - 1);
+
+	// Get energy of largest edep for this output pixel
+	double energy = energy_v.at(index);
+
 	// Pick type
-	double energy = 0;
 	::larcv::ROIType_t roi_type =::larcv::kROIUnknown;
+	// Loop over all the edeps for this tick
 	for (auto const& edep : tick_ides.second) {
 	  if (edep.energy < energy) continue;
 	  if (std::abs(edep.trackID) >= (int)(track2type_v.size())) {
@@ -313,7 +329,10 @@ namespace supera {
 	}
 	if ( roi_type!=::larcv::kROIUnknown )
 	  nlabeled++;
+	// set row pixel label
 	column[index] = roi_type;
+	// update highest edep energy for pixel
+	energy_v[index] = energy;
       }
       // mem-copy column vector
       img.copy(0, col, column, img.meta().rows());

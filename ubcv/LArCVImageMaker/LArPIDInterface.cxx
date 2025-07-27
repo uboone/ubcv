@@ -261,9 +261,12 @@ namespace LArPID {
 
   ModelOutput TorchModel::run_inference(const std::vector< std::vector<CropPixData_t> >& pixelData){
 
+    torch::NoGradGuard no_grad;
+
     torch::Tensor input_tensor = torch::zeros({1,6,512,512}, torch::kFloat32);
     //input_tensor = input_tensor.to(device);
     input_tensor = input_tensor.to(torch::kCPU);
+    input_tensor.set_requires_grad(false);
 
     for(size_t v = 0; v < pixelData.size(); ++v){
       for(const auto& pix : pixelData[v]){
