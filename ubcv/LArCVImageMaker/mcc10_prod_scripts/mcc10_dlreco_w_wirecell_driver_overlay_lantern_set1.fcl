@@ -53,6 +53,7 @@ source:
 {
   module_type: RootInput
   maxEvents:   -1        # Number of events to read
+  saveMemoryObjectThreshold: 0
 }
 
 source_gen:
