@@ -64,6 +64,7 @@ namespace supera {
     
     LARCV_SINFO() << "Filling an image: " << meta.dump() << std::endl;
     LARCV_SINFO() << "(ymin,ymax) = (" << ymin << "," << ymax << ")" << std::endl;
+    LARCV_SINFO() << "row compression factor: " << row_comp_factor << std::endl;
 
     int nrois = 0;
     int nroi_outofbounds = 0;
@@ -91,8 +92,10 @@ namespace supera {
 	//sumq /= (double)(adcs.size());
 	//if(sumq<3) continue;
 
+
 	int start_index = range.begin_index() + time_offset;
 	int end_index   = start_index + adcs.size() - 1;
+	//std::cout << "wire.SignalROI(): adcs.size()=" << adcs.size() << " [" << start_index << "," << end_index << "]" << std::endl;
 	if (start_index > ymax) {
 	  LARCV_SDEBUG() << "Wire[" << wire.Channel() << "] ROI[" << nrois-1 << "] start index (" << start_index << ") is past the image end bound (" << ymax << ")" << std::endl;
 	  nroi_outofbounds++;
@@ -105,12 +108,16 @@ namespace supera {
 	}
 
 	if (row_comp_factor > 1) {
+	  //std::cout << "  fill with row_comp_factor>1" << std::endl; 
 	  for (size_t index = 0; index < adcs.size(); ++index) {
-	    if ((int)index + start_index < ymin) continue;
-	    if ((int)index + start_index > ymax) break;
-	    auto row = meta.row((double)(start_index + index));
-	    img.set_pixel(row, col, adcs[index]);
+	    int tick = start_index+index;
+	    if ((double)tick < ymin) continue;
+	    if ((double)tick >= ymax) break;
+	    auto row = meta.row((double)(tick), __FILE__, __LINE__);
+	    float val = img.pixel(row,col);
+	    img.set_pixel(row, col, val+adcs[index]);
 	  }
+	  nroi_filled++;
 	} else {
 	  // Fill matrix from start_index => end_index of matrix row
 	  // By default use index 0=>length-1 index of source vector
