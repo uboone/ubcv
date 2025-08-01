@@ -26,16 +26,19 @@ namespace supera {
       std::cerr << "EventImageRows size != EventImageCols..." << std::endl;
       throw std::exception();
     }
-    
-    // construct meta
+
+    // construct meta: this is the meta with the FINAL resolution
     for(size_t plane=0; plane<image_rows.size(); ++plane) {
       
       float origin_y = min_time;
+      double image_width  = image_cols[plane] * comp_cols[plane];
+      double image_height = image_rows[plane] * comp_rows[plane];
+
       if ( tick_backward )
-	origin_y = min_time + image_rows[plane] * comp_rows[plane];
-      larcv::ImageMeta meta(image_cols[plane] * comp_cols[plane], image_rows[plane] * comp_rows[plane],
-			    image_rows[plane] * comp_rows[plane], image_cols[plane] * comp_cols[plane],
-			    min_wire, origin_y, plane);
+	origin_y = min_time + image_height;
+      larcv::ImageMeta meta(image_width, image_height,
+			    image_rows[plane], image_cols[plane],
+  			    min_wire, origin_y, plane);
       
       LARCV_INFO() << "Created meta " <<  meta.dump();
       
