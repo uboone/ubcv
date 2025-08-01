@@ -41,8 +41,8 @@ namespace supera {
       //LARCV_SINFO() << meta.dump() << std::endl;
       larcv::Image2D img1(meta);
       img1.paint(-1.0);
-      img_out_v.emplace_back( std::move(img1) );
-      
+      img_out_v.emplace_back( std::move(img1) ); 
+     
       larcv::Image2D img2(meta);
       img2.paint(-1.0);
       ancestor_out_v.emplace_back( std::move(img2) );

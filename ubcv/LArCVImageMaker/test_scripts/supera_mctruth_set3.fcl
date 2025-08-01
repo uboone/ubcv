@@ -1,0 +1,69 @@
+ProcessDriver: {
+
+  Verbosity:    1
+  EnableFilter: false
+  RandomAccess: false
+  ProcessType:  ["SuperaMetaMaker","SuperaInstanceImage","SuperaWire"]
+  ProcessName:  ["SuperaMetaMaker","SuperaInstanceImage","SuperaWire"]
+
+  IOManager: {
+    Verbosity: 2
+    Name:        "IOManager"
+    IOMode:      1
+    OutFileName: "out_test.root"
+    InputFiles:  []
+    InputDirs:   []
+    StoreOnlyType: []
+    StoreOnlyName: []
+  }
+
+  ProcessList: {
+    SuperaMetaMaker: {
+      Verbosity: 1
+      MetaConfig: {
+        MinTime:          2400
+        MinWire:          0
+        EventImageRows:   [1008,1008,1008]
+        EventImageCols:   [3456,3456,3456]
+        EventCompRows:    [6,6,6]
+        EventCompCols:    [1,1,1]
+      }
+    }
+    WireMask: {
+      Verbosity: 2
+      ChStatusProducer: "wiremc"
+      ImageProducer:    "wiremc"
+    }
+    SuperaSimCh: {
+      Verbosity: 2
+      OutImageLabel:       "segment"
+      OutROILabel:         "segment"
+      LArMCTruthProducer:  "generator"
+      LArMCTrackProducer:  "mcreco"
+      LArMCShowerProducer: "mcreco"
+      LArSimChProducer:    "driftWC simpleSC"
+      Origin: 1
+      TimeOffset: 2400
+    }
+    SuperaInstanceImage: {
+      Verbosity: 0
+      OutImageLabel:        "instance"
+      AncestorImageLabel:   "ancestor"
+      OutROILabel:          "segment"
+      LArMCTruthProducer:   "generator"
+      LArMCTrackProducer:   "mcreco"
+      LArMCShowerProducer:  "mcreco"
+      LArSimChProducer:     "driftWC simpleSC"
+      ChStatusProducer:     "wiremc"
+      Origin: 0
+      TimeOffset: 2400
+    }
+    SuperaWire: {
+      Verbosity: 2
+      OutImageLabel:    "wire"
+      LArWireProducer:  "butcher"
+      TimeOffset: 2400
+    }
+  }
+}
+

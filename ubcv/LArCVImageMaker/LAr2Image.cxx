@@ -261,26 +261,76 @@ namespace supera {
 		const std::vector<supera::LArSimCh_t>& sch_v,
 		const int time_offset, const bool tick_backward)
   {
+
     LARCV_SINFO() << "Filling semantic-segmentation ground truth image..." << std::endl;
+
+    // Make the output images based on the ImageMeta definitions in meta_v
     std::vector<larcv::Image2D> img_v;
+    std::vector<int> row_compression_factor;
+    std::vector<int> col_compression_factor;
+
     for (auto const& meta : meta_v) {
       LARCV_SINFO() << meta.dump() << std::endl;
       img_v.emplace_back(larcv::Image2D(meta));
+
+      int pixheight = (int)meta.pixel_height();
+      int pixwidth  = (int)meta.pixel_width();
+
+      if ( pixheight>1 )
+	row_compression_factor.push_back(pixheight);
+      else
+	row_compression_factor.push_back(1);
+
+      if ( pixwidth>1 )
+	col_compression_factor.push_back(pixwidth);
+      else
+	col_compression_factor.push_back(1);
     }
 
+    // This represents a pixel (at full resolution for (tick,wire))
+    // and its associated labels
+    struct PixData_t {
+
+      int col;
+      int tick;
+      double energy;
+      int segment_id; ///< particle type label
+
+      //std::array<int,4> imgcoord;
+      bool operator<( const PixData_t& rhs ) const {
+	if ( tick < rhs.tick )
+	  return true;
+	return false;
+      };
+
+    };
+
+    // We group pixels on one column (i.e. wire)
+    struct ColumnPixels_t {
+      int col;
+      std::map<int,PixData_t> pixels;
+    };
+
+    // The following stores the column of pixels for a wireplane image
+    typedef std::map< int, ColumnPixels_t > ColMap_t;
+
+    // This is the container to stored the image for each wireplane
+    std::vector< ColMap_t > planemaps_v;
+    planemaps_v.resize( meta_v.size() );
+
     // labels for wire of interest
-    static std::vector<float> column;
-    static std::vector<float> energy_v;
-    column.clear();
-    energy_v.clear();
-    for (auto const& img : img_v) {
-      if (img.meta().rows() >= column.size()) {
-	column.resize(img.meta().rows() + 1, (float)(::larcv::kROIUnknown));
-	energy_v.resize(img.meta().rows() + 1,0.0);
-      }
-    }
-    LARCV_SINFO() << "  column.size()=" << column.size() << std::endl;
-    LARCV_SINFO() << "  energy_v.size()=" << energy_v.size() << std::endl;
+    // static std::vector<float> column;
+    // static std::vector<float> energy_v;
+    // column.clear();
+    // energy_v.clear();
+    // for (auto const& img : img_v) {
+    //   if (img.meta().rows() >= column.size()) {
+    // 	column.resize(img.meta().rows() + 1, (float)(::larcv::kROIUnknown));
+    // 	energy_v.resize(img.meta().rows() + 1,0.0);
+    //   }
+    // }
+    // LARCV_SINFO() << "  column.size()=" << column.size() << std::endl;
+    // LARCV_SINFO() << "  energy_v.size()=" << energy_v.size() << std::endl;
 
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
     int nlabeled = 0;
@@ -298,54 +348,165 @@ namespace supera {
 
       col -= (size_t)(meta.min_x());
 
-      // Initialize column vector
-      for (auto& v : column)   v = (float)(::larcv::kROIUnknown);
-      for (auto& v : energy_v) v = 0.0;
-      //for (auto& v : column) v = (float)(-1);
+      // get the wire plane pixel container
+      auto& planemap = planemaps_v.at(plane);
+
+      // // Initialize column vector
+      // for (auto& v : column)   v = (float)(::larcv::kROIUnknown);
+      // for (auto& v : energy_v) v = 0.0;
+      // //for (auto& v : column) v = (float)(-1);
+
+      // get the pixels for the current column (i.e. wire)
+      auto it_colpixels = planemap.find( col );
+
+      // if the container hasnt been made for the column, insert it into the map
+      if ( it_colpixels==planemap.end() ) {
+	// insert
+	planemap[col] = ColumnPixels_t();
+	planemap[col].pixels.clear();
+	planemap[col].col = col;
+	it_colpixels = planemap.find( col ); // have iterator point to new column pixel container
+      }
 
       // Loop over all of the filled ticks
       for (auto const & tick_ides : sch.TDCIDEMap()) {
         int tick = supera::TPCTDC2Tick(clockData, (double)(tick_ides.first)) + time_offset;
 	if (tick < meta.min_y()) continue;
 	if (tick >= meta.max_y()) continue;
-	// Where is this tick in column vector? (i.e. the row of the image)
-	size_t index = meta.row( (float)tick, __FILE__, __LINE__ );
-	if ( tick_backward )
-	  index = (size_t)((int)meta.rows() - index - 1);
+	
+	// use the tick to get the pixel struct
+	auto it_pixdata = it_colpixels->second.pixels.find( tick );
 
-	// Get energy of largest edep for this output pixel
-	double energy = energy_v.at(index);
+	// if the (tick,col) pixel not found, make it and then insert it
+	if ( it_pixdata==it_colpixels->second.pixels.end() ) {
+	  // first time at pixel
+	  PixData_t pixdata;
+	  pixdata.col = col;
+	  pixdata.tick = tick;
+	  pixdata.segment_id = -1;
+	  pixdata.energy = 0.0;
+	  it_colpixels->second.pixels[tick] = pixdata;
+	  it_pixdata = it_colpixels->second.pixels.find( tick );
+	}
+
+	// get the current highest edep assigned to the pixel
+	double energy = it_pixdata->second.energy;
+
+	// // Where is this tick in column vector? (i.e. the row of the image)
+	// size_t index = meta.row( (float)tick, __FILE__, __LINE__ );
+	// if ( tick_backward )
+	//   index = (size_t)((int)meta.rows() - index - 1);
+
+	// // Get energy of largest edep for this output pixel
+	// double energy = energy_v.at(index);
 
 	// Pick type
 	::larcv::ROIType_t roi_type =::larcv::kROIUnknown;
+
 	// Loop over all the edeps for this tick
 	for (auto const& edep : tick_ides.second) {
 	  if (edep.energy < energy) continue;
+	  // now is the current highest energy deposit
+
+	  // check if the track ID has a type assignment
 	  if (std::abs(edep.trackID) >= (int)(track2type_v.size())) {
 	    //std::cout << "Edep trackid " << std::abs(edep.trackID) << " is out of track2type_v map: " << track2type_v.size() << std::endl;
 	    continue;
 	  }
+
+	  // get the particle type assignment
 	  auto temp_roi_type = track2type_v[std::abs(edep.trackID)];
 	  if (temp_roi_type ==::larcv::kROIUnknown) {
 	    //LARCV_SDEBUG() << "Label from valid edep is ROIUnknown" << std::endl;
 	    //std::cout << "Label from valid edep is ROIUnknown" << std::endl;
 	    continue;
 	  }
+
 	  energy = edep.energy;
+	  it_pixdata->second.energy = edep.energy;
 	  roi_type = (::larcv::ROIType_t)temp_roi_type;
-	}
+	  it_pixdata->second.segment_id = (int)roi_type;
+	}//end of loop over edep
+
+	// increment counter if we found a pixel
 	if ( roi_type!=::larcv::kROIUnknown )
 	  nlabeled++;
-	// set row pixel label
-	column[index] = roi_type;
-	// update highest edep energy for pixel
-	energy_v[index] = energy;
-      }
-      // mem-copy column vector
-      img.copy(0, col, column, img.meta().rows());
+
+	// // set row pixel label
+	// column[index] = roi_type;
+	// // update highest edep energy for pixel
+	// energy_v[index] = energy;
+
+      }//end of loop ticks
+      // // mem-copy column vector
+      // img.copy(0, col, column, img.meta().rows());
     }
+
     //LARCV_SDEBUG() << "nlabeled=" << nlabeled << std::endl;
     //std::cout << "nlabeled=" << nlabeled << std::endl;
+
+    // pass the information to the output image
+    int compressed_pixels_filled = 0;
+
+    // loop over list of ImageMeta that define the output images
+    for ( auto const& meta : meta_v ) {
+
+      int plane = meta.plane();
+      int origin_y = (int)meta.min_y();
+      auto& planemap = planemaps_v.at( plane );
+
+      larcv::Image2D& segment = img_v[plane];
+      
+      for (int rout=0; rout<(int)meta.rows(); rout++) {
+	for (int clout=0; clout<(int)meta.cols(); clout++) {
+	  // find pixel with max energy deposit to to transfer
+	  float enmax = 0;
+	  int maxpix_segmentid = -1;
+
+	  for (int dc=0; dc<(int)col_compression_factor.at(plane); dc++) {
+
+	    int c = clout*int(col_compression_factor.at(plane)) + dc;
+	    
+	    // get column of pixels
+	    auto it_colmap = planemap.find( c );
+	    if ( it_colmap==planemap.end() )
+	      continue; // no such column in this plane
+	    
+	    for (int dr=0; dr<(int)row_compression_factor.at(plane); dr++) {
+	      
+	      // look for pixel using tick
+	      int r = origin_y + rout *int(row_compression_factor.at(plane)) + dr;
+
+	      auto it_pixel = it_colmap->second.pixels.find( r );
+	      if ( it_pixel==it_colmap->second.pixels.end() )
+		continue; // no such row in this column of pixels
+
+	      float pixenergy = it_pixel->second.energy;
+
+	      //std::cout << "pixel(" << plane << "," << r << "," << c << ") energy=" << pixenergy 
+	      //          << " --> outpixel(" << rout << "," << clout << ", e=" << enmax << ")" << std::endl;
+	      
+	      if ( pixenergy < enmax )
+		continue;
+
+	      // set labels and update max energy
+	      enmax = pixenergy;
+	      maxpix_segmentid = it_pixel->second.segment_id;
+	      
+	    }//loop over subrows
+	  }//loop over subcols
+	  
+	  // set the output if we found a pixel following within the output pixel
+	  if ( enmax>0 ) {
+	    segment.set_pixel( rout, clout, maxpix_segmentid );
+	    compressed_pixels_filled++;
+	  }
+	}//end of downsampled column pixels
+      }//end of downsampled row pixels
+    }//end of loop over index
+    
+    LARCV_SINFO() << "Number of pixels filled in ouput image: " << compressed_pixels_filled << std::endl;
+
     return img_v;
   }
 

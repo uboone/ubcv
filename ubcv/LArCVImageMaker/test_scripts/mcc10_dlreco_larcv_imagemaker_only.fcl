@@ -1,0 +1,171 @@
+#include "dlprod_fclbase_producers.fcl"
+#include "dlprod_fclbase_analyzers_gen2.fcl"
+#include "time_memory_tracker_microboone.fcl"
+#include "reco_uboone_data_mcc9_10.fcl"
+
+## To see example workflow context for this driver see: 
+## https://cdcvs.fnal.gov/redmine/projects/uboone-physics-analysis/wiki/MCC10_Release_Page#Data-Beam-On-NuMI
+
+BEGIN_PROLOG
+
+litedata_wctagger: @local::litemaker_base
+litedata_wctagger.out_filename: "larlite_wctagger.root"
+litedata_wctagger.DataLookUpMap:
+{
+  sps : [ "portedSpacePointsThreshold" ]
+  hit : [ "portedThresholdhit" ]
+}
+
+END_PROLOG
+
+
+process_name: DLDeploy
+
+services:
+{
+  TFileService: { fileName: "larcv_hist.root" }  
+  scheduler:    { defaultExceptions: false }
+  #TimeTracker:             @local::microboone_time_tracker
+  MemoryTracker:           @local::microboone_memory_tracker
+  RandomNumberGenerator:   {} #ART native random number generator
+  message:                 @local::microboone_message_services_prod_debug
+  FileCatalogMetadata:     @local::art_file_catalog_data
+  @table::microboone_services_reco
+}
+
+#services.TimeTracker.printSummary: false
+#services.TimeTracker.dbOutput: {}
+#services.MemoryTracker.printSummaries: []
+#services.MemoryTracker.includeMallocInfo: false
+
+services.DetectorClocksService.TrigModuleName: "daq"  # note that the clock time needed for the flash timing proper reconstruction
+services.DetectorPropertiesService.NumberTimeSamples:        6400
+services.DetectorPropertiesService.ReadOutWindowSize:        6400
+services.DetectorClocksService.InheritClockConfig:           false
+services.DetectorClocksService.TriggerOffsetTPC:             -0.400e3
+services.FileCatalogMetadata.fileType: "overlay"
+services.SpaceCharge.EnableSimSpatialSCE: true
+services.SpaceCharge.EnableSimEfieldSCE:  true
+services.LLMetaMaker: {Enable: false}
+services.LArCVMetaMaker: {Enable: false}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to read
+}
+
+source_gen:
+{
+  module_type: EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:   10          # Number of events to create
+  firstRun:    1        # Run number to use for this file
+  firstEvent:  1           # number of first event in the file
+}
+
+source_reprocess:
+{
+  module_type: RootInput
+  maxEvents:   100000     # Number of events to create
+}
+
+
+# drop past optical products
+source.inputCommands: ["keep *_*_*_*"]
+#                       "drop *_*_*_Data*RecoStage2", 
+#                       "drop *_*_*_MC*RecoStage2"]
+
+physics:
+{
+ producers: {
+   @table::dlprod_producers
+ }
+
+ filters: {
+   @table::microboone_reco_data_filters
+ }
+
+ analyzers: {
+   @table::dlprod_analyzers
+   wctagger: @local::litedata_wctagger
+ }
+
+ #reco: [ @sequence::microboone_reco_data_optical, 
+ #        "wcopflash",
+ #        "rns", 
+ #        "crtt0Correction",
+ #        "crthitcorrFirstPass",
+ #        "crthitcorr",
+ #        "crttzero",
+ #        "crttrack"]
+ #        #"opfiltercommonext" ]
+ trigger_paths: []
+
+
+ #dlnetpath: [ubdl]
+ #stream: [opreco, reco2d, mcinfo, gaushitMCinfoBacktracker, wctagger, superaMCTruthOnly, out1]
+ #stream: [opreco, mcinfo, wctagger, superaMCTruth]
+ stream: [superaMCTruth]
+ end_paths: [stream]
+ #trigger_paths: [ dlnetpath ]
+}
+
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   dataTier: "reconstructed"
+   compressionLevel: 1
+   saveMemoryObjectThreshold: 0
+   fileName:    "%ifb_%tc_ubdl.root" #default file name, can override from command line with -o or --output
+   outputCommands: ["keep *_*_*_*", "drop *_*_*_DLDeploy"]
+   #outputCommands: ["keep *_*_*_*"]
+ }
+}
+
+# Configuration for TFileMetadataMicroBooNE service
+microboone_tfile_metadata:
+{
+  JSONFileName: [ "merged_dlreco.root.json" ]
+  GenerateTFileMetadata: [ false ]
+  dataTier:              [ "merged_dlreco" ]
+  fileFormat:            [ "root" ]
+}
+
+# Turn on Mask-RCNN
+#physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
+
+# configure reco producers:
+#physics.producers.saturation.HGProducer: "mixer"
+#physics.producers.saturation.LGProducer: "mixer"
+#physics.producers.wcopflash.OpDataProducerBeam: "mixer"
+#physics.filters.crtveto: @local::UBCRTCosmicFilterBNBOFF
+#physics.producers.crthitcorrFirstPass.IsOverlay: true
+#physics.producers.crthitcorr.CrtHitsIn_Label1: "crthitcorrFirstPass"
+
+# configure larlite
+# -- trigger --
+# MC
+#physics.analyzers.opreco.DataLookUpMap.trigger: ["triggersim"]
+# -- CRT --
+#physics.analyzers.opreco.DataLookUpMap.crthit:   ["crthitcorr"]
+#physics.analyzers.opreco.DataLookUpMap.crttrack: ["crttrack"]
+#physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
+#physics.analyzers.opreco.DAQHeaderProducer: "daq"
+#physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
+
+#physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","wcopflash:beam","wcopflash:cosmic"]
+#physics.analyzers.opreco.DataLookUpMap.opdigit: ["wcopflash:MergedBeam","wcopflash:MergedCosmic"]
+#physics.analyzers.opreco.DataLookUpMap.ophit: []
+#physics.analyzers.opreco.AssociationLookUpMap.ophit: []
+#physics.analyzers.opreco.AssociationLookUpMap.opflash: []
+#physics.analyzers.mcinfo.DataLookUpMap.mceventweight: []
+#physics.analyzers.opreco.DataLookUpMap.ophit: ["ophitBeamNoRemap::DLDeploy","ophitBeam::DLDeploy","ophitBeamCalib::DLDeploy","ophitCosmicCalib::DLDeploy"]
+
+# configure truth supera
+physics.analyzers.superaMCTruth.supera_params: "supera_mctruth_set2.fcl" # MC only: segment image
+#physics.analyzers.superaMCTruth.supera_params: "supera_mctruth_set3.fcl" # MC only: instance+ancestor image
+#physics.analyzers.superaMCTruth.supera_params: "supera_mctruth_set5.fcl"  # MC only: larflow image
+#physics.analyzers.superaMCTruth.supera_params: "supera_mctruth_set5_larflow_compress.fcl"  # MC only: instance+ancestor image
