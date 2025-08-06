@@ -10,19 +10,33 @@
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h" 
 #include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom<>()
 
+#include <map>
+
 namespace supera {
 
-  //
-  // SimChannel => PixelFlowMaps
-  // 
+  /**
+   * @brief SimChannel => PixelFlowMaps
+   *
+   * @param meta_v         ImageMeta for each output wire plane image
+   * @param track2type_v   TrackIndex to particle type map stored as vector
+   * @param sch_v          input data
+   * @param ev_chstatus    Holds information about which channels are bad
+   * @param row_compression_factor   For each wireplane, indicates how many raw ticks are combined in one row pixel in output image
+   * @param col_compression_factor   For each wireplane, indicates how many raw wire are combined in one column pixel in output image
+   * @param time_offset   
+   * @param edep_at_anode  
+   * @param tick_backward  ImageMeta defined assuming tick backwards
+   * @param fill_with_uncompressed_image  If true, fill with image that does not use any downsampling. Then pool to make output image. (previous deprecated behavior.)
+   */
   std::vector<larcv::Image2D>
-    SimCh2LArFlowImages( const std::vector<larcv::ImageMeta>& meta_v,
-			 const std::vector<larcv::ROIType_t>& track2type_v,
-			 const std::vector<supera::LArSimCh_t>& sch_v,
-			 const larcv::EventChStatus& ev_chstatus,
-			 const std::vector<float>& row_compression_factor,
-			 const std::vector<float>& col_compression_factor,			 
-			 const int time_offset, const bool edep_at_anode, const bool tick_backward ) {
+  SimCh2LArFlowImages( const std::vector<larcv::ImageMeta>& meta_v,
+		       const std::vector<larcv::ROIType_t>& track2type_v,
+		       const std::vector<supera::LArSimCh_t>& sch_v,
+		       const larcv::EventChStatus& ev_chstatus,
+		       const std::vector<float>& row_compression_factor,
+		       const std::vector<float>& col_compression_factor,			 
+		       const int time_offset, const bool edep_at_anode, 
+		       const bool tick_backward, const bool fill_with_uncompressed_image ) {
     
     LARCV_SINFO() << "Filling Pixel-flow truth image... (with time_offset=" << time_offset << ")" << std::endl;
 
@@ -34,20 +48,24 @@ namespace supera {
     //  2 images that list column in other images
     //  2 images that give the probability that pixel is visible
 
-    std::vector<larcv::Image2D> flow_v;     // flow values per images
-    std::vector<larcv::Image2D> energy_v;  // energy deposition of largest particle
+    std::vector<larcv::Image2D> flow_v;    // flow values per images
 
+    // Make the output flow images: their dimensions and number of 
+    // rows and columns are defined by ImageMeta objects in meta_v
     for ( auto const& meta : meta_v ) {
+
+      if ( fill_with_uncompressed_image ) {
+      }
+
       //LARCV_SINFO() << meta.dump();      
+      LARCV_SINFO() << "Output Meta: " << meta.dump() << std::endl;
+
       larcv::Image2D flow1(meta);
-      flow1.paint(-4000);
+      flow1.paint(0);
       flow_v.emplace_back( std::move(flow1) );
       larcv::Image2D flow2(meta);
-      flow2.paint(-4000);
+      flow2.paint(0);
       flow_v.emplace_back( std::move(flow2) );
-      larcv::Image2D energyimg(meta);
-      energyimg.paint(0.0);
-      energy_v.emplace_back( std::move(energyimg) );
     }
     //std::cout << "Pixel Flow vector: " << img_v.size() << std::endl;
     //std::cout << " Filling Image shape: (row,col)=(" << meta_v.front().rows() << "," << meta_v.front().cols() << ")" << std::endl;
@@ -55,13 +73,39 @@ namespace supera {
     // in order to handle overlapping tracks, we have to set a rule to avoid ambiguity
     // we first fill out the y-plane. this plane is used to resolve duplicates
 
+    // create a sparse representation of the data
+
+    struct PixData_t {
+
+      int row;
+      int col;
+      int tick;
+      double energy;
+      std::array<int,4> imgcoord;
+      bool operator<( const PixData_t& rhs ) const {
+	if ( tick < rhs.tick )
+	  return true;
+	return false;
+      };
+
+    };
+
+    struct ColumnPixels_t {
+
+      int col;
+      std::map<int,PixData_t> pixels;
+
+    };
+
+    typedef std::map< int, ColumnPixels_t > ColMap_t;
+    std::vector< ColMap_t > planemaps_v(3);
+
     int numpixfilled_pass0 = 0;
     int numpixfilled_pass1 = 0;
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
     for (int ipass=0; ipass<2; ipass++) {
       // first pass: Y-only. This is to provide guidance on how to break ambiguities
       // second pass: U,V planes
-    
       for (auto const& sch : sch_v) {
 	auto ch = sch.Channel();
 	auto const& wid   = ::supera::ChannelToWireID(ch);
@@ -73,13 +117,12 @@ namespace supera {
 	  continue;
       
 	auto& flowmap1    = flow_v.at(2*plane+0);
-	auto& flowmap2    = flow_v.at(2*plane+1);
-	auto& energyimg  = energy_v.at(plane);
-      
+	//auto& flowmap2    = flow_v.at(2*plane+1);
+	// auto& energyimg  = energy_v.at(plane);      
 	auto const& meta = flowmap1.meta();
 
 	// is the channel inside the meta window
-	size_t col = wid.Wire;
+	int col = wid.Wire;
 	if (col < meta.min_x()) continue;
 	if (meta.max_x() <= col) continue;
 	if (plane != meta.plane()) continue;
@@ -87,20 +130,45 @@ namespace supera {
 	// remove offset to get position inside image
 	col -= (size_t)(meta.min_x());
 
+	auto& planemap = planemaps_v.at(plane);
+	auto it_colpixels = planemap.find( col );
+	if ( it_colpixels==planemap.end() ) {
+	  // insert
+	  planemap[col] = ColumnPixels_t();
+	  planemap[col].pixels.clear();
+	  planemap[col].col = col;
+	  it_colpixels = planemap.find( col );
+	}
+
 	for (auto const& tick_ides : sch.TDCIDEMap()) {
+
           int tick = supera::TPCTDC2Tick(clockData, (double)(tick_ides.first)) + time_offset; // true deposition tick
 	  if (tick <= meta.min_y()) continue;
 	  if (tick >= meta.max_y()) continue;
 
 	  // Where is this tick in column vector?
-	  int row   = (int)meta.row(tick); // compressed position
-	  if ( row<0 || row>=(int)meta.rows() ) continue;
+	  //int row   = (int)meta.row(tick); // compressed position
+	  //if ( row<0 || row>=(int)meta.rows() ) continue;
+
+	  auto it_pixdata = it_colpixels->second.pixels.find( tick );
+	  double energy = 0.0;
+	  if ( it_pixdata==it_colpixels->second.pixels.end() ) {
+	    // first time at pixel
+	    PixData_t pixdata;
+	    pixdata.row = 0;
+	    pixdata.col = col;
+	    pixdata.tick = tick;
+	    pixdata.energy = 0.0;
+	    it_colpixels->second.pixels[tick] = pixdata;
+	    it_pixdata = it_colpixels->second.pixels.find( tick );
+	  }
 
 	  // now we loop over the energy depositions in this tick
-	  double energy = (double)energyimg.pixel(row,col); // use to keep track the most energetic energy deposition at this point
+	  //double energy = (double)energyimg.pixel(row,col); // use to keep track the most energetic energy deposition at this point
+	  energy = it_pixdata->second.energy;
 
 	  std::vector<double> pos3d(3);
-	  ::larcv::ROIType_t roi_type =::larcv::kROIBNB;
+	  //::larcv::ROIType_t roi_type =::larcv::kROIBNB;
 
 	  std::vector<int> imgcoords(4,-1);	  
 	  for (auto const& edep : tick_ides.second) {
@@ -108,6 +176,8 @@ namespace supera {
 	    if ( edep.energy<energy ) continue;
 
 	    energy = edep.energy;
+	    it_pixdata->second.energy = edep.energy;
+
 	    //trackid = edep.trackID;
 
 	    // we skip filling this position if Y-plane (pass=0) already filled this information during pass=0
@@ -138,130 +208,158 @@ namespace supera {
 
 	    pos3d[1] = y;
 	    pos3d[2] = z;
-	    imgcoords[0] = row;		    
+	    imgcoords[0] = tick;
 	    for (int p=0; p<3; p++) {
 	      imgcoords[p+1] = (int)(geo.WireCoordinate( pos3d, p )+0.5);
 	    }
-	    //LARCV_SINFO() << "   p=" << plane << " col=" << col
-	    //<< " wire=(" << imgcoords[1] << "," << imgcoords[2]<< "," << imgcoords[3] << ")" << std::endl;
+	    for (int i=0; i<4; i++) {
+	      it_pixdata->second.imgcoord[i] = imgcoords[i];
+	    }
+
+	    // LARCV_SINFO() << "   p=" << plane << " col=" << col
+	    // 		    << " wire=(" << imgcoords[1] << "," << imgcoords[2]<< "," << imgcoords[3] << ")" << std::endl;
 
 	    //  PID
 	    //roi_type = (::larcv::ROIType_t)temp_roi_type;
 	  }//edep loop
 
-	  if ( roi_type!=larcv::kROIUnknown && energy>0) {
-	    // we have non-zero energy deposition, valid edep
+	  // if ( roi_type!=larcv::kROIUnknown && energy>0) {
+	  //   // we have non-zero energy deposition, valid edep
 	  
-	    energyimg.set_pixel( row, col, energy );
-	    //trackidimg.set_pixel( row, col, trackid );
+	  //   energyimg.set_pixel( row, col, energy );
+	  //   //trackidimg.set_pixel( row, col, trackid );
 	    
-	    switch( plane ) {
-	    case 0:
-	      flowmap1.set_pixel( row, col, (float)imgcoords[1+1]-(float)imgcoords[0+1] ); //U->V
-	      flowmap2.set_pixel( row, col, (float)imgcoords[2+1]-(float)imgcoords[0+1] ); //U->Y
-	      break;
-	    case 1:
-	      flowmap1.set_pixel( row, col, (float)imgcoords[0+1]-(float)imgcoords[1+1] );
-	      flowmap2.set_pixel( row, col, (float)imgcoords[2+1]-(float)imgcoords[1+1] );
-	      break;
-	    case 2:
-	      // when filling the Y-plane, we set the other planes as well to keep everything consistent
-	      flowmap1.set_pixel( row, col, (float)imgcoords[0+1]-(float)imgcoords[2+1] ); // Y->U
-	      flowmap2.set_pixel( row, col, (float)imgcoords[1+1]-(float)imgcoords[2+1] ); // Y->V
-	      // flow_v.at( kU2Y ).set_pixel( row, imgcoords[0+1], (float)imgcoords[2+1]-(float)imgcoords[0+1] ); // U->Y
-	      // flow_v.at( kV2Y ).set_pixel( row, imgcoords[1+1], (float)imgcoords[2+1]-(float)imgcoords[1+1] ); // V->Y
-	      // flow_v.at( kU2V ).set_pixel( row, imgcoords[0+1], (float)imgcoords[1+1]-(float)imgcoords[0+1] ); // U->V
-	      // flow_v.at( kV2U ).set_pixel( row, imgcoords[1+1], (float)imgcoords[0+1]-(float)imgcoords[1+1] ); // V->U
-	      // energy_v.at(0).set_pixel( row, imgcoords[0+1], energy );
-	      // energy_v.at(1).set_pixel( row, imgcoords[1+1], energy );
-	      break;
-	    }
-	    if (ipass==0)
-	      numpixfilled_pass0++;
-	    else
-	      numpixfilled_pass1++;
-	  }//if parti
+	  //   switch( plane ) {
+	  //   case 0:
+	  //     flowmap1.set_pixel( row, col, (float)imgcoords[1+1]-(float)imgcoords[0+1] ); //U->V
+	  //     flowmap2.set_pixel( row, col, (float)imgcoords[2+1]-(float)imgcoords[0+1] ); //U->Y
+	  //     break;
+	  //   case 1:
+	  //     flowmap1.set_pixel( row, col, (float)imgcoords[0+1]-(float)imgcoords[1+1] );
+	  //     flowmap2.set_pixel( row, col, (float)imgcoords[2+1]-(float)imgcoords[1+1] );
+	  //     break;
+	  //   case 2:
+	  //     // when filling the Y-plane, we set the other planes as well to keep everything consistent
+	  //     flowmap1.set_pixel( row, col, (float)imgcoords[0+1]-(float)imgcoords[2+1] ); // Y->U
+	  //     flowmap2.set_pixel( row, col, (float)imgcoords[1+1]-(float)imgcoords[2+1] ); // Y->V
+	  //     // flow_v.at( kU2Y ).set_pixel( row, imgcoords[0+1], (float)imgcoords[2+1]-(float)imgcoords[0+1] ); // U->Y
+	  //     // flow_v.at( kV2Y ).set_pixel( row, imgcoords[1+1], (float)imgcoords[2+1]-(float)imgcoords[1+1] ); // V->Y
+	  //     // flow_v.at( kU2V ).set_pixel( row, imgcoords[0+1], (float)imgcoords[1+1]-(float)imgcoords[0+1] ); // U->V
+	  //     // flow_v.at( kV2U ).set_pixel( row, imgcoords[1+1], (float)imgcoords[0+1]-(float)imgcoords[1+1] ); // V->U
+	  //     // energy_v.at(0).set_pixel( row, imgcoords[0+1], energy );
+	  //     // energy_v.at(1).set_pixel( row, imgcoords[1+1], energy );
+	  //     break;
+	  //   }
+	  //   if (ipass==0)
+	  //     numpixfilled_pass0++;
+	  //   else
+	  //     numpixfilled_pass1++;
+	  // }//if parti
 	  
 	  //column[index] = roi_type;
+
+	  if (ipass==0)
+	    numpixfilled_pass0++;
+	  else
+	    numpixfilled_pass1++;
+
 	}
-      }
+	//std::cout << "plane[" << plane << "] col[" << col << "]: number of pixels in channel/column = " << planemap[col].pixels.size() << std::endl;
+      }//end of channel loop
       //break;
     }//end of pass loop
     
     
     LARCV_SINFO() << "LArFlowLAr2Image: num pixels filled pass0=" << numpixfilled_pass0 << " pass1=" << numpixfilled_pass1 << std::endl;
 
-    // max pool compression, we do it ourselves
-    //std::cout << "Max pool ourselves: compression factors (row,col)=(" << row_compression_factor.front() << "," << col_compression_factor.front() << ")" << std::endl;
-    
-    // make output, compressed images
-    std::vector<larcv::Image2D> img_out_v;
-    std::vector<larcv::Image2D> img_vis_v;
-    for ( auto const& img : flow_v ) {
-      const larcv::ImageMeta& meta = img.meta();
-      float origin_y = meta.min_y();
-      if ( tick_backward )
-	origin_y = meta.max_y();
-      larcv::ImageMeta meta_out(meta.width(), meta.height(), 
-				int( meta.rows()/row_compression_factor.at(meta.plane()) ), int( meta.cols()/col_compression_factor.at(meta.plane()) ),
-				meta.min_x(), origin_y,
-				meta.plane() );
-      larcv::Image2D img_out( meta_out );
-      img_out.paint(0.0);
-      img_out_v.emplace_back( std::move(img_out) );
-      larcv::Image2D vis_out( meta_out );
-      vis_out.paint(0.0);
-      img_vis_v.emplace_back( std::move(vis_out) );
-    }
-
+    // now fill output flow image
     int compressed_pixels_filled = 0;
-    for (size_t iidx=0; iidx<img_out_v.size(); iidx++) {
-      const larcv::Image2D& flowimg   = flow_v[iidx];
-      larcv::Image2D& imgout          = img_out_v[iidx];
-      size_t plane                    = flowimg.meta().plane();
-      const larcv::Image2D& energyimg = energy_v.at( plane );
+
+    for ( auto const& meta : meta_v ) {
+
+      int plane = meta.plane();
+      int origin_y = (int)meta.min_y();
+      auto& planemap = planemaps_v.at( plane );
+      //larcv::Image2D& energyimg = energy_v.at( plane );
 
       //std::cout << "outimg (row,col)=" << imgout.meta().rows() << "," << imgout.meta().cols() << ")" << std::endl;
-
-      for (int rout=0; rout<(int)imgout.meta().rows(); rout++) {
-	for (int clout=0; clout<(int)imgout.meta().cols(); clout++) {
+      //std::cout << "make out image: number of column pixels in plane=" << plane << ": " << planemap.size() << std::endl;
+      
+      for (int clout=0; clout<(int)meta.cols(); clout++) {
+	for (int rout=0; rout<(int)meta.rows(); rout++) {
 	  // find max pixel to transfer
-	  int rmax = 0;
-	  int cmax = 0;
-	  float enmax = 0;
-	  for (int dr=0; dr<(int)row_compression_factor.at(plane); dr++) {
-	    for (int dc=0; dc<(int)col_compression_factor.at(plane); dc++) {
+	  // int rmax = 0;
+	  // int cmax = 0;
+	  float enmax = 0.0;
+	  float flow1 = 0.0;
+	  float flow2 = 0.0;
+	  for (int dc=0; dc<(int)col_compression_factor.at(plane); dc++) {
+	    int c = clout*int(col_compression_factor.at(plane)) + dc;
+	    // get column of pixels
+	    auto it_colmap = planemap.find( c );
+	    if ( it_colmap==planemap.end() )
+	      continue; // no such column in this plane
+
+	    // get row, i.e. pixel
+	    for (int dr=0; dr<(int)row_compression_factor.at(plane); dr++) {
 	      
-	      int r = rout *int(row_compression_factor.at(plane)) + dr;
-	      int c = clout*int(col_compression_factor.at(plane)) + dc;
+	      int r = origin_y + rout *int(row_compression_factor.at(plane)) + dr;
 
-	      float pixenergy = energyimg.pixel( r, c );
-	      float flow      = flowimg.pixel(r,c);
+	      auto it_pixel = it_colmap->second.pixels.find( r );
+	      if ( it_pixel==it_colmap->second.pixels.end() )
+		continue; // no such row in this column of pixels
 
-	      if ( pixenergy>enmax && flow>-4000) {
-		enmax = pixenergy;
-		rmax = r;
-		cmax = c;
+	      float pixenergy = it_pixel->second.energy;
+
+	      //std::cout << "pixel(" << plane << "," << r << "," << c << ") energy=" << pixenergy << " --> outpixel(" << rout << "," << clout << ", e=" << enmax << ")" << std::endl;
+	      
+	      if ( pixenergy < enmax )
+		continue;
+
+	      std::array<int,4>& imgcoords = it_pixel->second.imgcoord;
+
+	      switch( plane ) {
+	      case 0:
+		flow1 = (float)imgcoords[1+1]-(float)imgcoords[0+1]; //U->V
+		flow2 = (float)imgcoords[2+1]-(float)imgcoords[0+1]; //U->Y
+		break;
+	      case 1:
+		flow1 = (float)imgcoords[0+1]-(float)imgcoords[1+1]; // V->U
+		flow2 = (float)imgcoords[2+1]-(float)imgcoords[1+1]; // V->Y
+		break;
+	      case 2:
+		// when filling the Y-plane, we set the other planes as well to keep everything consistent
+		flow1 = (float)imgcoords[0+1]-(float)imgcoords[2+1]; // Y->U
+		flow2 = (float)imgcoords[1+1]-(float)imgcoords[2+1]; // Y->V
+		break;
 	      }
 
-	    }
-	  }
+	      // set highest energy now
+	      enmax = pixenergy;
+	      // rmax = r;
+	      // cmax = c;
+	      //std::cout << "  update output pixel energy and flow: E=" << enmax << " flow1=" << flow1 << " flow2=" << flow2 << std::endl;
 
-	  // set the output
+	    }//end of loop over dc
+	  }//end of loop over rc
+
+	  // set the output, if found pixel
 	  if (enmax>0 ) {
-	    imgout.set_pixel( rout, clout, flowimg.pixel( rmax, cmax ) );
+	    //std::cout << "  fill pixel (" << plane << "," << rout << "," << clout << ") en=" << enmax << " flow1=" << flow1 << " flow2=" << flow2 << std::endl;
+	    auto& flowimg1 = flow_v.at( 2*plane + 0 );
+	    auto& flowimg2 = flow_v.at( 2*plane + 1 );
+	    flowimg1.set_pixel( rout, clout, flow1 );
+	    flowimg2.set_pixel( rout, clout, flow2 );
 	    compressed_pixels_filled++;
 	  }
 	}
       }
-    }//end of loop over index
+    }//end of planes (and meta for them)
 
+    LARCV_SINFO() << "compressed pixels filled: " << compressed_pixels_filled << std::endl;
 
-    //std::cout << "compressed pixels filled: " << compressed_pixels_filled << std::endl;
+    return flow_v;
 
-    //std::cout << "return image" << std::endl;
-
-    return img_out_v;
   }
 
   //

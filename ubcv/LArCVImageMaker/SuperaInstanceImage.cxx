@@ -22,6 +22,7 @@ namespace larcv {
     supera::ImageMetaMaker::configure(cfg);
     _origin = cfg.get<unsigned short>("Origin",0);
     m_ancestor_label = cfg.get<std::string>("AncestorImageLabel");
+
   }
 
   void SuperaInstanceImage::initialize()

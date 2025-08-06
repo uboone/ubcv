@@ -19,7 +19,8 @@ namespace supera {
 			 const std::vector<float>& row_compression_factor,
 			 const std::vector<float>& col_compression_factor,
 			 const int time_offset, const bool edep_at_anode=false,
-			 const bool tick_backward=true );
+			 const bool tick_backward=true, 
+			 const bool fill_with_uncompressed_image=false );
 
   std::vector<larcv::Image2D>
     SimEnergyDeposit2LArFlowImages( const std::vector<larcv::ImageMeta>& meta_v,

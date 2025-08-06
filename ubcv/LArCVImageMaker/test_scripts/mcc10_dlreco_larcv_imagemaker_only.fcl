@@ -19,7 +19,7 @@ litedata_wctagger.DataLookUpMap:
 END_PROLOG
 
 
-process_name: DLDeployMC5
+process_name: DLDeploy
 
 services:
 {
@@ -53,7 +53,6 @@ source:
 {
   module_type: RootInput
   maxEvents:   -1        # Number of events to read
-  saveMemoryObjectThreshold: 0
 }
 
 source_gen:
@@ -81,8 +80,6 @@ physics:
 {
  producers: {
    @table::dlprod_producers
-   @table::microboone_reco_data_producers
-   #ubdl: @local::microboone_ubdl
  }
 
  filters: {
@@ -94,23 +91,22 @@ physics:
    wctagger: @local::litedata_wctagger
  }
 
- reco: [ @sequence::microboone_reco_data_optical, 
-         "wcopflash",
-         "rns", 
-         "crtt0Correction",
-         "crthitcorrFirstPass",
-         "crthitcorr",
-         "crttzero",
-         "crttrack"]
-         #"opfiltercommonext" ]
- #trigger_paths: [reco]
+ #reco: [ @sequence::microboone_reco_data_optical, 
+ #        "wcopflash",
+ #        "rns", 
+ #        "crtt0Correction",
+ #        "crthitcorrFirstPass",
+ #        "crthitcorr",
+ #        "crttzero",
+ #        "crttrack"]
+ #        #"opfiltercommonext" ]
+ trigger_paths: []
 
 
  #dlnetpath: [ubdl]
  #stream: [opreco, reco2d, mcinfo, gaushitMCinfoBacktracker, wctagger, superaMCTruthOnly, out1]
  #stream: [opreco, mcinfo, wctagger, superaMCTruth]
- #stream: [opreco, mcinfo, superaMCTruth, out1]
- stream: [superaMCTruth5, out1]
+ stream: [superaMCTruth]
  end_paths: [stream]
  #trigger_paths: [ dlnetpath ]
 }
@@ -123,8 +119,8 @@ outputs:
    dataTier: "reconstructed"
    compressionLevel: 1
    saveMemoryObjectThreshold: 0
-   fileName:    "%ifb_mc5.root" #default file name, can override from command line with -o or --output
-   outputCommands: ["keep *_*_*_*", "drop *_*_*_DLDeployMC5"]
+   fileName:    "%ifb_%tc_ubdl.root" #default file name, can override from command line with -o or --output
+   outputCommands: ["keep *_*_*_*", "drop *_*_*_DLDeploy"]
    #outputCommands: ["keep *_*_*_*"]
  }
 }
@@ -133,7 +129,7 @@ outputs:
 microboone_tfile_metadata:
 {
   JSONFileName: [ "merged_dlreco.root.json" ]
-  GenerateTFileMetadata: [ true ]
+  GenerateTFileMetadata: [ false ]
   dataTier:              [ "merged_dlreco" ]
   fileFormat:            [ "root" ]
 }
@@ -142,31 +138,34 @@ microboone_tfile_metadata:
 #physics.producers.ubdl.CosmicMRCNNMode: "PyTorchCPU"
 
 # configure reco producers:
-physics.producers.saturation.HGProducer: "mixer"
-physics.producers.saturation.LGProducer: "mixer"
-physics.producers.wcopflash.OpDataProducerBeam: "mixer"
-physics.filters.crtveto: @local::UBCRTCosmicFilterBNBOFF
-physics.producers.crthitcorrFirstPass.IsOverlay: true
-physics.producers.crthitcorr.CrtHitsIn_Label1: "crthitcorrFirstPass"
+#physics.producers.saturation.HGProducer: "mixer"
+#physics.producers.saturation.LGProducer: "mixer"
+#physics.producers.wcopflash.OpDataProducerBeam: "mixer"
+#physics.filters.crtveto: @local::UBCRTCosmicFilterBNBOFF
+#physics.producers.crthitcorrFirstPass.IsOverlay: true
+#physics.producers.crthitcorr.CrtHitsIn_Label1: "crthitcorrFirstPass"
 
 # configure larlite
 # -- trigger --
 # MC
-physics.analyzers.opreco.DataLookUpMap.trigger: ["triggersim"]
+#physics.analyzers.opreco.DataLookUpMap.trigger: ["triggersim"]
 # -- CRT --
-physics.analyzers.opreco.DataLookUpMap.crthit:   ["crthitcorr"]
-physics.analyzers.opreco.DataLookUpMap.crttrack: ["crttrack"]
-physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
-physics.analyzers.opreco.DAQHeaderProducer: "daq"
-physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
+#physics.analyzers.opreco.DataLookUpMap.crthit:   ["crthitcorr"]
+#physics.analyzers.opreco.DataLookUpMap.crttrack: ["crttrack"]
+#physics.analyzers.opreco.DataLookUpMap.daqheadertimeuboone: ["daq"]
+#physics.analyzers.opreco.DAQHeaderProducer: "daq"
+#physics.analyzers.opreco.DAQHeaderTimeUBProducer: "daq"
 
-physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","wcopflash:beam","wcopflash:cosmic"]
-physics.analyzers.opreco.DataLookUpMap.opdigit: ["wcopflash:MergedBeam","wcopflash:MergedCosmic"]
-physics.analyzers.opreco.DataLookUpMap.ophit: []
-physics.analyzers.opreco.AssociationLookUpMap.ophit: []
-physics.analyzers.opreco.AssociationLookUpMap.opflash: []
-physics.analyzers.mcinfo.DataLookUpMap.mceventweight: []
+#physics.analyzers.opreco.DataLookUpMap.opflash: ["simpleFlashBeam","simpleFlashCosmic","wcopflash:beam","wcopflash:cosmic"]
+#physics.analyzers.opreco.DataLookUpMap.opdigit: ["wcopflash:MergedBeam","wcopflash:MergedCosmic"]
+#physics.analyzers.opreco.DataLookUpMap.ophit: []
+#physics.analyzers.opreco.AssociationLookUpMap.ophit: []
+#physics.analyzers.opreco.AssociationLookUpMap.opflash: []
+#physics.analyzers.mcinfo.DataLookUpMap.mceventweight: []
 #physics.analyzers.opreco.DataLookUpMap.ophit: ["ophitBeamNoRemap::DLDeploy","ophitBeam::DLDeploy","ophitBeamCalib::DLDeploy","ophitCosmicCalib::DLDeploy"]
 
 # configure truth supera
-#physics.analyzers.superaMCTruth.supera_params: "supera_mctruth_no_wcthrumu.fcl" # for no-WC debug only
+physics.analyzers.superaMCTruth.supera_params: "supera_mctruth_set2.fcl" # MC only: segment image
+#physics.analyzers.superaMCTruth.supera_params: "supera_mctruth_set3.fcl" # MC only: instance+ancestor image
+#physics.analyzers.superaMCTruth.supera_params: "supera_mctruth_set5.fcl"  # MC only: larflow image
+#physics.analyzers.superaMCTruth.supera_params: "supera_mctruth_set5_larflow_compress.fcl"  # MC only: instance+ancestor image

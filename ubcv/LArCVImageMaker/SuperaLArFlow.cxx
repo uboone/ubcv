@@ -26,13 +26,18 @@ namespace larcv {
     _chstatus_producer = cfg.get<std::string>("ChStatusProducer");
     _simch_producer    = cfg.get<std::string>("LArSimChProducer","");
     _simedep_producer  = cfg.get<std::string>("LArSimEdepProducer","");
-    if ( !_simch_producer.empty() && _simedep_producer.empty() )
+    if ( !_simch_producer.empty() && _simedep_producer.empty() ) {
       _use_edep = false;
-    else if ( _simch_producer.empty() && !_simedep_producer.empty() )
+      LARCV_NORMAL() << "Configured to use SimChannel" << std::endl;
+    }
+    else if ( _simch_producer.empty() && !_simedep_producer.empty() ) {
       _use_edep = true;
+      LARCV_NORMAL() << "Configured to use SimEdep" << std::endl;
+    }
     else {
       throw std::runtime_error("SuperaLArFlow: must specifc only one SimCh or SimEdep producer");
     }
+
     _edep_at_anode     = cfg.get<bool>("EdepAtAnode",true);
     _tick_backward     = cfg.get<bool>("TickBackward",false); // for DLGen1 - deprecated
   }
