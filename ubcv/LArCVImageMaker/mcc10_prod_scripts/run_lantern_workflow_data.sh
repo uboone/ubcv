@@ -72,7 +72,7 @@ for tree in $inputTrees; do
   rootcp ssnet_ubspurn_output.root:${tree} ${baseinput}
 done
 
-CMD="python3 $LARMATCH_DIR/deploy_larmatchme.py --config-file ${CONFIG_FILE} --supera $baseinput --weights ${LARMATCH_DIR}/${WEIGHT_FILE} --output $lm_outfile --min-score 0.5 --adc-name wire --chstatus-name wire --device-name cpu"
+CMD="python3 $LARMATCH_DIR/deploy_larmatchme.py --config-file ${CONFIG_FILE} --supera $baseinput --weights ${LARMATCH_DIR}/${WEIGHT_FILE} --output $lm_outfile --min-score 0.5 --adc-name wire --chstatus-name wire --device-name cpu --use-skip-limit"
 echo $CMD
 $CMD
 
@@ -80,7 +80,7 @@ CMD="python3 $RECO_TEST_DIR/run_kpsrecoman.py --input-dlmerged ${baseinput} --in
 echo $CMD
 $CMD
 
-CMD="python3 $NTMAKER_DIR/make_dlgen2_flat_ntuples.py -f ${reco_basename}_kpsrecomanagerana.root -t $baseinput -o $ntuple_outfile -m $LARPID_MODEL --ignoreWeights"
+CMD="python3 $NTMAKER_DIR/make_dlgen2_flat_ntuples.py -f ${reco_basename}_kpsrecomanagerana.root -t $baseinput -o $ntuple_outfile -m $LARPID_MODEL --ignoreWeights --noEvtSkipping"
 echo $CMD
 $CMD
 
@@ -89,8 +89,11 @@ CMD="python3 ${NTMAKER_DIR}/extract_and_compress_cosmicreco.py larflowreco_larli
 echo $CMD
 $CMD
 
+echo "extract crt and opflash info from merged_dlreco"
+rootcp merged_dlreco_with_ssnet.root:crthit_*_tree merged_dlreco_with_ssnet.root:crttrack_*_tree merged_dlreco_with_ssnet.root:opflash_*_tree merged_dlreco_with_ssnet.root:opdigit_*_tree extract_from_merged.root
+
 echo "add compressed cosmic tracks to kpsrecomanagerana file"
-hadd larflowreco_kpsrecomanagerana_wcosmic.root compressed_cosmic_components.root larflowreco_kpsrecomanagerana.root
+hadd larflowreco_kpsrecomanagerana_wcosmic.root compressed_cosmic_components.root larflowreco_kpsrecomanagerana.root extract_from_merged.root
 mv larflowreco_kpsrecomanagerana_wcosmic.root larflowreco_kpsrecomanagerana.root
 
 echo "cleaning up intermediate files"
@@ -98,6 +101,7 @@ rm ssnet_output.root ssnet_ubspurn_output.root merged_dlreco_with_ssnet.root
 rm larmatchme_larlite.root larmatchme_larcv.root larflowreco_larlite.root larflowreco_larcv.root
 rm compressed_cosmic_components.root
 rm temp.root
+rm extract_from_merged.root
 
 echo "done!"
 
