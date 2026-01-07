@@ -37,9 +37,9 @@ outputs:
 # Configuration for TFileMetadataMicroBooNE service
 microboone_tfile_metadata:
 {
-  JSONFileName: [ "larflowreco_kpsrecomanagerana.root.json", "flat_ntuple.root.json" ]
-  GenerateTFileMetadata: [ true, true ]
-  dataTier:              [ "lanternreco", "flat_ntuple" ]
-  fileFormat:            [ "root", "root" ]
+  JSONFileName: [ "larflowreco_kpsrecomanagerana.root.json", "flat_ntuple.root.json" , "merged_dlreco.root.json"]
+  GenerateTFileMetadata: [ true, true, true ]
+  dataTier:              [ "lanternreco", "flat_ntuple", "merged_dlreco" ]
+  fileFormat:            [ "root", "root", "root" ]
 }
 

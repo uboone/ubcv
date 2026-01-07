@@ -38,7 +38,7 @@ larsoftout=$(find . -maxdepth 1 -type f -name 'merged_dlreco*.root' -printf '%f\
 baseinput="merged_dlreco_with_ssnet.root"
 CONFIG_FILE="${LANTERN_SCRIPTS}/config_larmatchme_deploycpu.yaml"
 WEIGHT_FILE="larmatch_ckpt78k.pt"
-LARPID_MODEL="${LARPID_DIR}/LArPID_default_network_weights.pt"
+LARPID_MODEL="${LARPID_DIR}/LArPID_alternate_network_weights.pt"
 
 echo "larsoftout: $larsoftout"
 echo "baseinput: $baseinput"
@@ -76,11 +76,11 @@ CMD="python3 $LARMATCH_DIR/deploy_larmatchme.py --config-file ${CONFIG_FILE} --s
 echo $CMD
 $CMD
 
-CMD="python3 $RECO_TEST_DIR/run_kpsrecoman.py --input-dlmerged ${baseinput} --input-larflow ${baselm} --output ${reco_outfile} -mc --products min --save-all-keypoints --loglevel 3"
+CMD="python3 $RECO_TEST_DIR/run_kpsrecoman.py --input-dlmerged ${baseinput} --input-larflow ${baselm} --output ${reco_outfile} --products min --save-all-keypoints --loglevel 3"
 echo $CMD
 $CMD
 
-CMD="python3 $NTMAKER_DIR/make_dlgen2_flat_ntuples.py -f ${reco_basename}_kpsrecomanagerana.root -t $baseinput -o $ntuple_outfile -m $LARPID_MODEL -mc --ignoreWeights --noEvtSkipping"
+CMD="python3 $NTMAKER_DIR/make_dlgen2_flat_ntuples.py -f ${reco_basename}_kpsrecomanagerana.root -t $baseinput -o $ntuple_outfile -m $LARPID_MODEL --ignoreWeights --noEvtSkipping"
 echo $CMD
 $CMD
 

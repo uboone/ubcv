@@ -38,7 +38,7 @@ larsoftout=$(find . -maxdepth 1 -type f -name 'merged_dlreco*.root' -printf '%f\
 baseinput="merged_dlreco_with_ssnet.root"
 CONFIG_FILE="${LANTERN_SCRIPTS}/config_larmatchme_deploycpu.yaml"
 WEIGHT_FILE="larmatch_ckpt78k.pt"
-LARPID_MODEL="${LARPID_DIR}/LArPID_default_network_weights.pt"
+LARPID_MODEL="${LARPID_DIR}/LArPID_alternate_network_weights.pt"
 
 echo "larsoftout: $larsoftout"
 echo "baseinput: $baseinput"
@@ -72,7 +72,7 @@ for tree in $inputTrees; do
   rootcp ssnet_ubspurn_output.root:${tree} ${baseinput}
 done
 
-CMD="python3 $LARMATCH_DIR/deploy_larmatchme.py --config-file ${CONFIG_FILE} --supera $baseinput --weights ${LARMATCH_DIR}/${WEIGHT_FILE} --output $lm_outfile --min-score 0.5 --adc-name wire --chstatus-name wire --device-name cpu --use-skip-limit"
+CMD="python3 $LARMATCH_DIR/deploy_larmatchme.py --config-file ${CONFIG_FILE} --supera $baseinput --weights ${LARMATCH_DIR}/${WEIGHT_FILE} --output $lm_outfile --min-score 0.5 --adc-name wire --chstatus-name wire --device-name cpu"
 echo $CMD
 $CMD
 
