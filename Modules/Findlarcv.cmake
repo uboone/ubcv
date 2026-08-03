@@ -45,8 +45,8 @@ if(NOT larcv_FOUND)
   # First hunt for the larcv include directory.
 
   message("Finding package larcv")
-  #find_file(_larcv_h NAMES DataFormat HINTS ENV LARCV_INCDIR NO_CACHE)
-  find_file(_larcv_h NAMES larcv HINTS ENV LARCV_INCDIR NO_CACHE)
+  #find_file(_larcv_h NAMES DataFormat HINTS ENV LARCV_INCDIR NO_CACHE NO_DEFAULT_PATH)
+  find_file(_larcv_h NAMES larcv HINTS ENV LARCV_INCDIR NO_CACHE NO_DEFAULT_PATH)
   if(_larcv_h)
     get_filename_component(_larcv_include_dir ${_larcv_h} DIRECTORY)
     message("Found larcv include directory ${_larcv_include_dir}")
@@ -63,7 +63,7 @@ if(NOT larcv_FOUND)
 
       # Hunt for this library.
 
-      find_library(_larcv_lib_path LIBRARY NAMES LArCVAppImageMod HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      find_library(_larcv_lib_path LIBRARY NAMES LArCVAppImageMod HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larcv library ${_larcv_lib_path}")
 
       # Make target.
@@ -81,7 +81,7 @@ if(NOT larcv_FOUND)
 
       # Hunt for this library.
 
-      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreBase HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreBase HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larcv library ${_larcv_lib_path}")
 
       # Make target.
@@ -99,7 +99,7 @@ if(NOT larcv_FOUND)
 
       # Hunt for this library.
 
-      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreCPPUtil HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreCPPUtil HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larcv library ${_larcv_lib_path}")
 
       # Make target.
@@ -117,7 +117,7 @@ if(NOT larcv_FOUND)
 
       # Hunt for this library.
 
-      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreCVUtil HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreCVUtil HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larcv library ${_larcv_lib_path}")
 
       # Make target.
@@ -135,7 +135,7 @@ if(NOT larcv_FOUND)
 
       # Hunt for this library.
 
-      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreDataFormat HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreDataFormat HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larcv library ${_larcv_lib_path}")
 
       # Make target.
@@ -153,7 +153,7 @@ if(NOT larcv_FOUND)
 
       # Hunt for this library.
 
-      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreJSON HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreJSON HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larcv library ${_larcv_lib_path}")
 
       # Make target.
@@ -171,7 +171,7 @@ if(NOT larcv_FOUND)
 
       # Hunt for this library.
 
-      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreProcessor HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreProcessor HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larcv library ${_larcv_lib_path}")
 
       # Make target.
@@ -189,7 +189,7 @@ if(NOT larcv_FOUND)
 
       # Hunt for this library.
 
-      find_library(_larcv_lib_path LIBRARY NAMES LArCVCorePyUtil HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      find_library(_larcv_lib_path LIBRARY NAMES LArCVCorePyUtil HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larcv library ${_larcv_lib_path}")
 
       # Make target.
@@ -207,7 +207,7 @@ if(NOT larcv_FOUND)
 
       # Hunt for this library.
 
-      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreROOTUtil HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreROOTUtil HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larcv library ${_larcv_lib_path}")
 
       # Make target.
@@ -225,7 +225,7 @@ if(NOT larcv_FOUND)
 
       # Hunt for this library.
 
-      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreTorchUtil HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+      find_library(_larcv_lib_path LIBRARY NAMES LArCVCoreTorchUtil HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larcv library ${_larcv_lib_path}")
 
       # Make target.
@@ -261,7 +261,7 @@ if(NOT larcv_FOUND)
     #
     #  # Hunt for this library.
     #
-    #  find_library(_larcv_lib_path LIBRARY NAMES larcv HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE)
+    #  find_library(_larcv_lib_path LIBRARY NAMES larcv HINTS ENV LARCV_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
     #  message("Found larcv library ${_larcv_lib_path}")
     #
     #  # Make taret.

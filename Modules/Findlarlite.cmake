@@ -47,8 +47,8 @@ if(NOT larlite_FOUND)
   # First hunt for the larlite include directory.
 
   message("Finding package larlite")
-  #find_file(_larlite_h NAMES DataFormat HINTS ENV LARLITE_COREDIR NO_CACHE)
-  find_file(_larlite_h NAMES larlite HINTS ENV LARLITE_INCDIR NO_CACHE)
+  #find_file(_larlite_h NAMES DataFormat HINTS ENV LARLITE_COREDIR NO_CACHE NO_DEFAULT_PATH)
+  find_file(_larlite_h NAMES larlite HINTS ENV LARLITE_INCDIR NO_CACHE NO_DEFAULT_PATH)
   if(_larlite_h)
     get_filename_component(_larlite_include_dir ${_larlite_h} DIRECTORY)
     message("Found larlite include directory ${_larlite_include_dir}")
@@ -65,8 +65,8 @@ if(NOT larlite_FOUND)
 
       # Hunt for this library.
 
-      #find_library(_larlite_lib_path LIBRARY NAMES LArLite_Base HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
-      find_library(_larlite_lib_path LIBRARY NAMES larlite_Base HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
+      #find_library(_larlite_lib_path LIBRARY NAMES LArLite_Base HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
+      find_library(_larlite_lib_path LIBRARY NAMES larlite_Base HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larlite library ${_larlite_lib_path}")
 
       # Make target.
@@ -84,8 +84,8 @@ if(NOT larlite_FOUND)
 
       # Hunt for this library.
 
-      #find_library(_larlite_lib_path LIBRARY NAMES LArLite_DataFormat HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
-      find_library(_larlite_lib_path LIBRARY NAMES larlite_DataFormat HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
+      #find_library(_larlite_lib_path LIBRARY NAMES LArLite_DataFormat HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
+      find_library(_larlite_lib_path LIBRARY NAMES larlite_DataFormat HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larlite library ${_larlite_lib_path}")
 
       # Make target.
@@ -104,8 +104,8 @@ if(NOT larlite_FOUND)
 
       # Hunt for this library.
 
-      #find_library(_larlite_lib_path LIBRARY NAMES LArLite_Analysis HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
-      find_library(_larlite_lib_path LIBRARY NAMES larlite_Analysis HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
+      #find_library(_larlite_lib_path LIBRARY NAMES LArLite_Analysis HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
+      find_library(_larlite_lib_path LIBRARY NAMES larlite_Analysis HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larlite library ${_larlite_lib_path}")
 
       # Make target.
@@ -124,8 +124,8 @@ if(NOT larlite_FOUND)
 
       # Hunt for this library.
 
-      #find_library(_larlite_lib_path LIBRARY NAMES LArLite_LArUtil HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
-      find_library(_larlite_lib_path LIBRARY NAMES larlite_LArUtil HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE)
+      #find_library(_larlite_lib_path LIBRARY NAMES LArLite_LArUtil HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
+      find_library(_larlite_lib_path LIBRARY NAMES larlite_LArUtil HINTS ENV LARLITE_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found larlite library ${_larlite_lib_path}")
 
       # Make target.

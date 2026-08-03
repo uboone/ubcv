@@ -32,7 +32,7 @@ if(NOT ublarcvapp_FOUND)
   # First hunt for the ublarcvapp include directory.
 
   message("Finding package ublarcvapp")
-  find_file(_ublarcvapp_h NAMES ublarcvapp HINTS ENV UBLARCVAPP_INCDIR NO_CACHE)
+  find_file(_ublarcvapp_h NAMES ublarcvapp HINTS ENV UBLARCVAPP_INCDIR NO_CACHE NO_DEFAULT_PATH)
   if(_ublarcvapp_h)
     get_filename_component(_ublarcvapp_include_dir ${_ublarcvapp_h} DIRECTORY)
     message("Found ublarcvapp include directory ${_ublarcvapp_include_dir}")
@@ -49,7 +49,7 @@ if(NOT ublarcvapp_FOUND)
 
       # Hunt for this library.
 
-      find_library(_ublarcvapp_lib_path LIBRARY NAMES LArCVApp_MCTools HINTS ENV UBLARCVAPP_LIBDIR REQUIRED NO_CACHE)
+      find_library(_ublarcvapp_lib_path LIBRARY NAMES LArCVApp_MCTools HINTS ENV UBLARCVAPP_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found ublarcvapp library ${_ublarcvapp_lib_path}")
 
       # Make target.
@@ -67,7 +67,7 @@ if(NOT ublarcvapp_FOUND)
 
       # Hunt for this library.
 
-      find_library(_ublarcvapp_lib_path LIBRARY NAMES LArCVApp_dbscan HINTS ENV UBLARCVAPP_LIBDIR REQUIRED NO_CACHE)
+      find_library(_ublarcvapp_lib_path LIBRARY NAMES LArCVApp_dbscan HINTS ENV UBLARCVAPP_LIBDIR REQUIRED NO_CACHE NO_DEFAULT_PATH)
       message("Found ublarcvapp library ${_ublarcvapp_lib_path}")
 
       # Make target.
