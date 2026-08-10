@@ -248,9 +248,9 @@ fwdir	product_dir	scripts
 #
 ####################################
 product		version		qual	flags		<table_format=2>
-ubdl		v2_me_06_03b	-       optional
-ubevt		v10_22_00	-
-ubreco          v10_22_00    -
+ubdl		v2_me_06_03c	-       optional
+ubevt		v10_23_00	-
+ubreco          v10_23_00    -
 cetmodules	v3_24_01	-	only_for_build
 end_product_list
 ####################################
