@@ -5,12 +5,12 @@ physics.reco: [ doublePMTFilter,
                 cosmicPMTFilter,
                 @sequence::microboone_reco_data_optical,
                 "wcopflash",
-                "rns", 
-                "crtt0Correction",
-                "crthitcorr",
-                "crttzero",
-                "crttrack" ]
+                "rns"] 
 physics.producers.saturation.HGProducer:           "doublePMTFilter"
 physics.producers.saturation.HGProducerCosmic:     "cosmicPMTFilter"
 physics.producers.wcopflash.OpDataProducerBeam:    "doublePMTFilter"
 physics.producers.wcopflash.OpDataProducerCosmic:  "cosmicPMTFilter"
+physics.producers.wcopflash.OpDataProducerBeamLG:    "pmtreadout"
+physics.producers.wcopflash.OpDataProducerCosmicLG:  "pmtreadout"
+physics.analyzers.opreco.DataLookUpMap.crthit:   []
+physics.analyzers.opreco.DataLookUpMap.crttrack: []
