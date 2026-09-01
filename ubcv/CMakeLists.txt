@@ -1,4 +1,6 @@
 if(Torch_FOUND)
-  add_subdirectory(LArCVImageMaker)
-  add_subdirectory(ubdldata)
+  if(larcv_FOUND)
+    add_subdirectory(LArCVImageMaker)
+    add_subdirectory(ubdldata)
+  endif()
 endif()
